@@ -70,7 +70,7 @@ public class EventMonitoringControlPanel extends JPanel {
     public EventMonitoringControlPanel(TimeBarViewer viewer, TimeBarMarkerImpl marker, int initalSecondsDisplayed) {
         _viewer = viewer;
         _marker = marker;
-        this.setPreferredSize(new Dimension(1000, 200));
+        this.setPreferredSize(new Dimension(1000, 150));
        
         
         
@@ -95,7 +95,7 @@ public class EventMonitoringControlPanel extends JPanel {
                 .getPreferredSize().height));
         add(_timeScaleSlider);
 
-        final double b = 1.0 / 10.0; // additional factor to reduce the absolut values in the exponent
+        final double b = 1.0 / 10.0; // additional factor to reduce the absolute values in the exponent
         final double faktor = (min - max) / (1 - Math.pow(2, slidermax * b)); // factor for the exp function
         final double c = (min - faktor);
 
@@ -191,13 +191,13 @@ public class EventMonitoringControlPanel extends JPanel {
         add(uniformHeightCheck);
         
      
-        TextField tf = new TextField();
-        tf.setText("Display Area");
-        tf.setEditable(false);
+        //TextField tf = new TextField();
+        //tf.setText("Display Area");
+        //tf.setEditable(false);
         //tf.multiline = true;//设置多行显示
-        tf.setPreferredSize(new Dimension(1200, 100));
-        add(tf);
-        tf.setBounds(10,90,1000,100);
+        //tf.setPreferredSize(new Dimension(1200, 100));
+        //add(tf);
+        //tf.setBounds(10,90,1000,100);
     
     }
 
