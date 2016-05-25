@@ -53,8 +53,12 @@ public class DBConnection {
     	Connection connection= null;
     	try {
              	Class.forName("oracle.jdbc.driver.OracleDriver");
+//             	connection = DriverManager.getConnection(
+//                                "jdbc:oracle:thin:@localhost:1521/PDBORCL", "pdbadmin", "learnin");
              	connection = DriverManager.getConnection(
-                                "jdbc:oracle:thin:@localhost:1521/PDBORCL", "pdbadmin", "learnin");
+                        "jdbc:oracle:thin:fga_user/fga" + 
+				"@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=ligeti.cs.iit.edu)(PORT=1521)))(CONNECT_DATA=(SID=ORCL)))");
+             	
     	} catch (ClassNotFoundException e) {
              	e.printStackTrace();
     	} catch (SQLException e) {
