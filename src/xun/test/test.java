@@ -1,6 +1,6 @@
 package xun.test;
 
-import gprom.gui.DBConnection;
+import gui.DBConnection;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,8 +14,6 @@ public class test {
 		while(sets.next()){
 //			System.out.println(sets.g)
 			System.out.println(sets.getString(sets.findColumn("DBUSERNAME")));
-		}
-		
+		}	
 	}
-
 }

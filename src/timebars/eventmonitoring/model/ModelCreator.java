@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-package de.jaret.examples.timebars.eventmonitoring.model;
+package timebars.eventmonitoring.model;
 
 import java.io.UnsupportedEncodingException;
 import java.sql.ResultSet;
@@ -40,7 +40,7 @@ import de.jaret.util.ui.timebars.model.DefaultTimeBarNode;
 import de.jaret.util.ui.timebars.model.HierarchicalTimeBarModel;
 import de.jaret.util.ui.timebars.model.TimeBarModel;
 import de.jaret.util.ui.timebars.model.TimeBarNode;
-import gprom.gui.*;
+import gui.*;
 
 /**
  * Simple model creator creating a hierachcial or a flat model and adds some

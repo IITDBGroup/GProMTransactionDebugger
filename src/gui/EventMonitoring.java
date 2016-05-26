@@ -1,4 +1,4 @@
-package gprom.gui;
+package gui;
 
 import java.awt.Container;
 import java.awt.GridLayout;
@@ -8,8 +8,8 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 
-import de.jaret.examples.timebars.eventmonitoring.swing.EventMonitoringExample;
-import de.jaret.examples.timebars.events.swing.SwingEventExample;
+import timebars.eventmonitoring.swing.EventMonitoringExample;
+import timebars.events.swing.SwingEventExample;
 
 public class EventMonitoring {
 	public static void main(String[] args) {

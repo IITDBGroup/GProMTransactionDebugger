@@ -1,4 +1,4 @@
-package gprom.gui;
+package gui;
 import java.sql.*;
 
 /**

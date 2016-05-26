@@ -1,7 +1,7 @@
 /**
  * 
  */
-package de.jaret.examples.timebars.eventmonitoring.swing;
+package timebars.eventmonitoring.swing;
 
 import java.io.IOException;
 import java.net.URISyntaxException;

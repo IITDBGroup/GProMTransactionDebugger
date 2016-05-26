@@ -17,14 +17,14 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-package de.jaret.examples.timebars.events.swing;
+package timebars.events.swing;
 
 import java.awt.BorderLayout;
 
 import javax.swing.JFrame;
 
-import de.jaret.examples.timebars.eventmonitoring.model.ModelCreator;
-import de.jaret.examples.timebars.eventmonitoring.swing.renderer.EventRenderer;
+import timebars.eventmonitoring.model.ModelCreator;
+import timebars.eventmonitoring.swing.renderer.EventRenderer;
 import de.jaret.util.date.Interval;
 import de.jaret.util.ui.timebars.TimeBarViewerInterface;
 import de.jaret.util.ui.timebars.mod.DefaultIntervalModificator;

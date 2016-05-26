@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-package de.jaret.examples.timebars.eventmonitoring.swing;
+package timebars.eventmonitoring.swing;
 
 import java.awt.BorderLayout;
 import java.awt.Button;
@@ -75,12 +75,12 @@ import javax.swing.border.BevelBorder;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
-import de.jaret.examples.timebars.eventmonitoring.model.CollectingTimeBarNode;
-import de.jaret.examples.timebars.eventmonitoring.model.EventInterval;
-import de.jaret.examples.timebars.eventmonitoring.model.EventTimeBarRow;
-import de.jaret.examples.timebars.eventmonitoring.model.ModelCreator;
-import de.jaret.examples.timebars.eventmonitoring.swing.renderer.EventMonitorHeaderRenderer;
-import de.jaret.examples.timebars.eventmonitoring.swing.renderer.EventRenderer;
+import timebars.eventmonitoring.model.CollectingTimeBarNode;
+import timebars.eventmonitoring.model.EventInterval;
+import timebars.eventmonitoring.model.EventTimeBarRow;
+import timebars.eventmonitoring.model.ModelCreator;
+import timebars.eventmonitoring.swing.renderer.EventMonitorHeaderRenderer;
+import timebars.eventmonitoring.swing.renderer.EventRenderer;
 import de.jaret.util.date.Interval;
 import de.jaret.util.date.JaretDate;
 import de.jaret.util.ui.timebars.TimeBarMarker;
