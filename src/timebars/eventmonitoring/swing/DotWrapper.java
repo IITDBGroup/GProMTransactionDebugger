@@ -85,7 +85,9 @@ public class DotWrapper {
 //		dotPath = PropertyManager.getInstance().getProperty("DotCommand");
 		
 //		dotPath = "/usr/local/bin/dot";
-		dotPath = "/usr/local/Cellar/graphviz/2.38.0/bin/dot";
+//		dotPath = "/usr/local/Cellar/graphviz/2.38.0/bin/dot"; 
+		dotPath = "/usr/bin/dot";
+		// graphviz path
 		
 		inFile = getDotFile(DOTIN_FILENAME);
 		outFile = getDotFile(DOTOUT_FILENAME);
@@ -140,8 +142,9 @@ public class DotWrapper {
 //		uri = URI.create("/Users/xun/Documents/java_workspace/gprom-gui/" + name);
 		
 		
-		result = new File("/Users/xun/Documents/java_workspace/gprom-gui/" + name);
-		
+//		result = new File("/Users/xun/Documents/java_workspace/gprom-gui/" + name);
+		result = new File(this.getClass().getResource("/").getPath() + name); // use relative path
+//		System.out.println(this.getClass().getResource("/").getPath());
 //		System.out.println("hello");
 		if(!result.exists())
 			result.createNewFile();

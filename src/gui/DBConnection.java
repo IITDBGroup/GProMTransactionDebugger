@@ -40,7 +40,7 @@ public class DBConnection {
     	ResultSet resultSet = null;
 		try {
 			statement = connection.createStatement();
-			query ="SELECT DISTINCT VERSIONS_XID, VERSIONS_STARTTIME FROM employee VERSIONS BETWEEN SCN MINVALUE AND MAXVALUE ORDER BY VERSIONS_XID";//UNIFIED_AUDIT_TRAIL  SYS.fga_log$
+			query ="SELECT DISTINCT VERSIONS_XID, VERSIONS_STARTTIME FROM hr.employee VERSIONS BETWEEN SCN MINVALUE AND MAXVALUE ORDER BY VERSIONS_XID";//UNIFIED_AUDIT_TRAIL  SYS.fga_log$
         	resultSet = statement.executeQuery(query);
 		}catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -54,7 +54,7 @@ public class DBConnection {
     	try {
              	Class.forName("oracle.jdbc.driver.OracleDriver");
              	connection = DriverManager.getConnection(
-                                "jdbc:oracle:thin:@localhost:1521/PDBORCL", "pdbadmin", "learnin");
+                                "jdbc:oracle:thin:@10.0.0.103:1521/orcl", "sys as sysdba", "oracle");//104.194.111.226 需要根据自己的机器来配置ip
     	} catch (ClassNotFoundException e) {
              	e.printStackTrace();
     	} catch (SQLException e) {

@@ -127,7 +127,7 @@ public class EventMonitoringExample {
         try {
             File srcfile = new File(src);
             if (!srcfile.exists()) {
-                System.out.println("文件不存在");
+                System.out.println("需要被压缩的文件不存在");
                 return;
             }
             BufferedImage image = ImageIO.read(srcfile);
@@ -657,7 +657,7 @@ public class EventMonitoringExample {
 //					        jp9.setBorder(BorderFactory.createLineBorder(Color.gray,3));
 					        
 					createThumbnail("/Users/xun/Documents/python_workspace/SqlGui/src/dotFlow.png", "/Users/xun/Documents/java_workspace/gprom-gui/test2.png", 300, 400);
-					File file = new File("/Users/xun/Documents/java_workspace/gprom-gui/test2.png");
+					File file = new File(new File(this.getClass().getResource("/").getPath()).getParent() + "/test2.png"); //use relative path
 					BufferedImage image;
 							try {
 								image = ImageIO.read(file);
