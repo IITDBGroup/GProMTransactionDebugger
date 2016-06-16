@@ -158,14 +158,17 @@ public class ModelCreator {
 //						resultSet.getTimestamp("NTIMESTAMP#"));
 				byte byBuffer[] =  resultSet.getBytes(resultSet
 						.findColumn("TRANSACTION_ID"));
+
 				StringBuilder sb=new StringBuilder("");
+				
 				for (byte element: byBuffer )
 				{
-				sb.append(String.valueOf(element));
+					sb.append(String.valueOf(element));
 				}
-				
+
 				String strRead=sb.toString();
 //				System.out.println(strRead);
+
 				
 				//添加需要的属性
 				//第一个属性找到sql对应的属性名  dbusername换sql对应属性
@@ -210,14 +213,15 @@ try {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		/**flash_back_nodes*/
 		HashMap<String, TransactionNode> map1 = new HashMap<String, TransactionNode>();
 		for(int k = 0; k < nodesCommit.size(); k++){   //Insert Transaction nodes into the hashMap.
 			map1.put(nodesCommit.get(k).getTransactionId(), nodesCommit.get(k));
-			}
+		}
 		
 
 		for (String key : map1.keySet()){
-			System.out.println("bbb" + key);
+			System.out.println("flash_back_transaction_ID:bbb" + key);
 		}
 		
 		
@@ -226,7 +230,7 @@ try {
 		
 		
 		
-		
+		/**audit_log_nodes*/
 		HashMap<String, ListNode> map = new HashMap<String, ListNode>();
 		for(int k = 0; k < nodes.size(); k++){   //Insert Transaction nodes into the hashMap.
 			if(!map.containsKey(nodes.get(k).getTransactionId())){
@@ -253,13 +257,12 @@ try {
 //		} 
 		
 		for (String key : map.keySet()){
-			
 			if(map1.containsKey(key)){
 				
 				DefaultRowHeader header = new DefaultRowHeader("T_ID "
 						+ key);
 				EventTimeBarRow row = new EventTimeBarRow(header);
-				System.out.println("aaa" + key);
+				System.out.println("audit_log_transaction_ID:aaa" + key);
 				
 				if(map1.containsKey(key)){
 					System.out.println("True");
@@ -276,7 +279,7 @@ try {
 				
 				if (map.get(key).Size() == 1){
 					
-					System.out.println(map.get(key).GetNode(map.get(key).Size() - 1).getTimeStamp().toString());
+					System.out.println("transaction start time" + map.get(key).GetNode(map.get(key).Size() - 1).getTimeStamp().toString());
 					System.out.println("commit" + map1.get(key).getTimeStamp().toString());
 					
 					
@@ -304,7 +307,7 @@ try {
 						System.out.println(map.get(key).GetNode(g).getTimeStamp().toString());
 						System.out.println(map.get(key).GetNode(g + 1).getTimeStamp().toString());
 						System.out.println("commit" + map1.get(key).getTimeStamp().toString());
-
+						System.out.println("transaction node" + key);
 						
 						start.setDateTime(map.get(key).GetNode(g).getTimeStamp().getDate(),
 								(map.get(key).GetNode(g).getTimeStamp().getMonth() + 1), map.get(key).GetNode(g).getTimeStamp().getYear() + 1900,

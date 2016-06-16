@@ -91,7 +91,8 @@ public class DotWrapper {
 		
 		inFile = getDotFile(DOTIN_FILENAME);
 		outFile = getDotFile(DOTOUT_FILENAME);
-		
+		System.out.println(inFile);
+		System.out.println(outFile);
 		dotCommand = new ProcessBuilder ();
 		dotCommand.command(dotPath, "-Tpng", "-o", outFile.getAbsolutePath(), inFile.getAbsolutePath());
 		

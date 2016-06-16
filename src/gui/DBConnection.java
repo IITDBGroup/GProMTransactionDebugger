@@ -54,7 +54,7 @@ public class DBConnection {
     	try {
              	Class.forName("oracle.jdbc.driver.OracleDriver");
              	connection = DriverManager.getConnection(
-                                "jdbc:oracle:thin:@10.0.0.103:1521/orcl", "sys as sysdba", "oracle");//104.194.111.226 需要根据自己的机器来配置ip
+                                "jdbc:oracle:thin:@104.194.106.54:1521/orcl", "sys as sysdba", "oracle");//104.194.111.226 需要根据自己的机器来配置ip
     	} catch (ClassNotFoundException e) {
              	e.printStackTrace();
     	} catch (SQLException e) {

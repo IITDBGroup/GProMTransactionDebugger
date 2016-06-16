@@ -109,7 +109,11 @@ import de.jaret.util.ui.timebars.swing.renderer.DefaultTitleRenderer;
 public class EventMonitoringExample {
 	TimeBarViewer _tbv;
 	TimeBarMarkerImpl _tm;
-
+	
+	
+	private TimeBarRow currentRow = null; 
+	private final static int DEBUGGER_LEFT_PADDING =  135;
+	private final static int DEBUGGER_CELL_WIDTH =  295;
 	private final static boolean HIERARCHICAL = false;
 
 	public static void main(String[] args) {
@@ -295,6 +299,12 @@ public class EventMonitoringExample {
 				public void mouseClicked(MouseEvent e) {
 					Point origin2 = e.getPoint();
 					TimeBarRow row2 = _tbv.getRowForXY(origin2.x, origin2.y);
+					currentRow  = row2;
+					//if click empty row , then return
+					if (row2 == null) {
+						return;
+					}
+					
 					// EventInterval interval = (EventInterval)
 					// flatModel.getRow(0).getIntervals().get(0);
 					String sql = "";
@@ -302,6 +312,7 @@ public class EventMonitoringExample {
 					String osName = "";
 					String sessionid = "";
 					String beginTime = "";
+					//TODO give these statements a scrollable pane
 					JFrame jf1 = new JFrame(tns);
 					jf1.setSize(520, 600);
 					//jf1.setBounds(100, 50, 520, 800);
@@ -323,10 +334,8 @@ public class EventMonitoringExample {
 						  try {
 							dw.init();
 						} catch (URISyntaxException e1) {
-							// TODO Auto-generated catch block
 							e1.printStackTrace();
 						} catch (IOException e1) {
-							// TODO Auto-generated catch block
 							e1.printStackTrace();
 						}
 
@@ -354,7 +363,6 @@ public class EventMonitoringExample {
 //							JLabel label = new JLabel(new ImageIcon(image));
 //							jf.add(label);
 //						} catch (IOException e1) {
-//							// TODO Auto-generated catch block
 //							e1.printStackTrace();
 //						}
 //					
@@ -497,55 +505,75 @@ public class EventMonitoringExample {
 						  
 						  
 						  
-						    JFrame f = new JFrame("Debug Panel");
-					        f.setSize(1200, 600);
+						    JFrame debuggerFrame = new JFrame("Debug Panel");
+					        debuggerFrame.setSize(1200, 600);
 					        
 					        JPanel jp1 = new JPanel();
-					        JPanel jp2 = new JPanel();
-					        JPanel jp3 = new JPanel();
+//					        JPanel jp2 = new JPanel();
+//					        JPanel jp3 = new JPanel();
 					        JTextArea ja1=new JTextArea(5,20);
-					        JTextArea ja2=new JTextArea(5,20);
-					        JTextArea ja3=new JTextArea(5,20);
+//					        JTextArea ja2=new JTextArea(5,20);
+//					        JTextArea ja3=new JTextArea(5,20);
 					        
 //					        ja1.setFont(Bold);
-
 					        
-					        String str1 = "\n\n Original Table";
-					        String str2 = "\n UPDATE account \n SET bal=bal-35 \n WHERE cust='Alice' AND typ='Checking'";
-					        String str3 = "\n UPDATE account \n SET bal=bal+35 \n WHERE cust='Alice' AND typ='Savings'";
-					        ja1.setText(str1);
-					        ja2.setText(str2);
-					        ja3.setText(str3);
+					       
+					        String originalTable_str = "\n\n Original Table";
+					        //TODO display transaction
+					        for (int i = 0; i < currentRow.getIntervals().size(); i++) {
+					        	EventInterval currentInterval = (EventInterval)currentRow.getIntervals().get(i);
+					        	String originalStmt = currentInterval.getSql();
+					        	System.out.println(originalStmt);
+					        	JPanel jp = new JPanel();
+					        	JTextArea ja=new JTextArea(5,20);
+					        	ja.setEditable(false);
+					        	ja.setText(originalStmt);
+					        	ja.setLineWrap(true);
+					        	jp.add(ja);
+					        	debuggerFrame.add(jp);
+					        	jp.setBorder(BorderFactory.createLineBorder(Color.gray,3));
+					        	jp.setBounds(DEBUGGER_LEFT_PADDING + (i + 1) * (DEBUGGER_CELL_WIDTH), 5, 300, 95);
+					        	ja.setBounds(0, 10, 5, 20);
+					        	
+					        	if (i == 3) {
+					        		break;
+					        	}
+					        }
+//					        String str2 = "\n UPDATE account \n SET bal=bal-35 \n WHERE cust='Alice' AND typ='Checking'";
+//					        String str3 = "\n UPDATE account \n SET bal=bal+35 \n WHERE cust='Alice' AND typ='Savings'";
+					        ja1.setText(originalTable_str);
+//					        ja2.setText(str2);
+//					        ja3.setText(str3);
 					        
 //					        ja1.setCaretColor(Color.BLUE);
 //					        ja2.setCaretColor(Color.BLUE);
 //					        ja3.setCaretColor(Color.BLUE);
 					        
 					        ja1.setEditable(false);
-					        ja2.setEditable(false);
-					        ja3.setEditable(false);
+//					        ja2.setEditable(false);
+//					        ja3.setEditable(false);
 					        
 					        jp1.add(ja1);
-					        jp2.add(ja2);
-					        jp3.add(ja3);
+//					        jp2.add(ja2);
+//					        jp3.add(ja3);
 					        
 					        
-					        f.setLayout(null);
+					        debuggerFrame.setLayout(null);
 					        
-					        f.add(jp1);
-					        f.add(jp2);
-					        f.add(jp3);
-
-					        jp1.setBounds(135, 5, 300, 95);
+					        debuggerFrame.add(jp1);
+//					        f.add(jp2);
+//					        f.add(jp3);
+					        
+					        jp1.setBounds(DEBUGGER_LEFT_PADDING, 5, 300, 95);
 					        jp1.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-					        jp2.setBounds(430, 5, 300, 95);
-					        jp2.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-					        jp3.setBounds(728, 5, 300, 95);
-					        jp3.setBorder(BorderFactory.createLineBorder(Color.gray,3));
+//					        jp2.setBounds(430, 5, 300, 95);
+//					        jp2.setBorder(BorderFactory.createLineBorder(Color.gray,3));
+//					        jp3.setBounds(728, 5, 300, 95);
+//					        jp3.setBorder(BorderFactory.createLineBorder(Color.gray,3));
 
 					        ja1.setBounds(0, 10, 5, 20);
-					        ja2.setBounds(0, 10, 5, 20);
-					        ja3.setBounds(0, 10, 5, 20);
+//					        ja2.setBounds(0, 10, 5, 20);
+//					        ja3.setBounds(0, 10, 5, 20);
 					        
 					        
 					        
@@ -559,14 +587,14 @@ public class EventMonitoringExample {
 					        jp5.setBorder(BorderFactory.createLineBorder(Color.gray,3));
 					        jp6.setBounds(728, 100, 300, 100);
 					        jp6.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-					        f.add(jp4);
-					        f.add(jp5);
-					        f.add(jp6);
+					        debuggerFrame.add(jp4);
+					        debuggerFrame.add(jp5);
+					        debuggerFrame.add(jp6);
 					      
 					        //f.getContentPane().add(jp4);
 					        //f.getContentPane().add(jp5);
 					        //f.getContentPane().add(jp6);
-					        
+					        //TODO add GProm query result
 					        String[] cn4 = {"cust","typ","bal"};
 					        String[] cn5 = {"cust","typ","bal"};
 					        String[] cn6 = {"cust","typ","bal"};
@@ -644,7 +672,7 @@ public class EventMonitoringExample {
 					        JPanel jpF = new JPanel();
 					        jpF.setBounds(135, 200, 893, 200);
 					        jpF.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-					        f.add(jpF);
+					        debuggerFrame.add(jpF);
 					        //third line
 //					        JPanel jp7 = new JPanel();
 //					        JPanel jp8 = new JPanel();
@@ -672,7 +700,6 @@ public class EventMonitoringExample {
 								//label1.setBounds(0, 10, 5, 10);
 								
 							} catch (IOException e1) {
-								// TODO Auto-generated catch block
 								e1.printStackTrace();
 							}
 					        
@@ -694,9 +721,9 @@ public class EventMonitoringExample {
 					        jp12.setBorder(BorderFactory.createLineBorder(Color.gray,3));
 					        jp13.setBounds(35, 200, 100, 200);
 					        jp13.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-					        f.add(jp11);
-					        f.add(jp12);
-					        f.add(jp13);
+					        debuggerFrame.add(jp11);
+					        debuggerFrame.add(jp12);
+					        debuggerFrame.add(jp13);
 					        JLabel jl1 = new JLabel("SQL");
 					        JLabel jl2 = new JLabel("TABLE");
 					        JLabel jl3 = new JLabel("GRAPH");
@@ -721,11 +748,11 @@ public class EventMonitoringExample {
 					        
 					        //jb1.setBorder(BorderFactory.createLineBorder(Color.gray,3));
 					        //jb2.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-					        f.add(jb1);
-					        f.add(jb2);
-					        f.add(jb3);
-					        f.add(jb4);
-					        f.add(jb5);
+					        debuggerFrame.add(jb1);
+					        debuggerFrame.add(jb2);
+					        debuggerFrame.add(jb3);
+					        debuggerFrame.add(jb4);
+					        debuggerFrame.add(jb5);
 					        
 							jb2.addActionListener(new ActionListener()
 							{
@@ -921,7 +948,6 @@ public class EventMonitoringExample {
 										//label1.setBounds(0, 10, 5, 10);
 										
 									} catch (IOException e1) {
-										// TODO Auto-generated catch block
 										e1.printStackTrace();
 									}
 							        
@@ -994,13 +1020,13 @@ public class EventMonitoringExample {
 							});
 					        
 					        
-					        f.setVisible(true);
+					        debuggerFrame.setVisible(true);
 					  }
 					});
 					
 
-					
-					JPanel jpTns = new JPanel(new GridLayout(8,1));
+					//TODO get provence frame
+					JPanel jpTns = new JPanel(new GridLayout(row2.getIntervals().size(),1));
 					//startBt.setPreferredSize(new Dimension(100, 20));
 //					container.add(startBt);
 					
@@ -1076,6 +1102,7 @@ public class EventMonitoringExample {
 					
 					
 					int m = 1;
+					System.out.println("size of the interval list: " + row2.getIntervals().size());
 					for(int i=0; i < row2.getIntervals().size(); i++){
 						EventInterval interval = (EventInterval) row2
 								.getIntervals().get(i);
@@ -1085,6 +1112,7 @@ public class EventMonitoringExample {
 //						sessionid = sessionid + " " + interval.getSessionId();
 						sql = interval.getSql();
 						tns = row2.getRowHeader().getLabel();
+						System.out.println(sql);
 					
 						// String id = interval.get
 //						beginTime = beginTime + " " + interval.getBegin()
@@ -1109,15 +1137,20 @@ public class EventMonitoringExample {
 //						tf.setPreferredSize(new Dimension(500, 100));
 //						container.add(tf);
 //						tf.setBounds(10, 90, 100, 100);
-						if (m == 1){
-							sql = "update account set bal=bal-35 where cust='Alice' and typ='Checking'";
-							m++;
-						}
-						else if(m == 2)
-						{
-							sql = "update account set bal=bal+35 where cust='Alice' and typ='Savings'";
-							m++;
-						}
+
+						
+//						if (m == 1){
+//							sql = "update account set bal=bal-35 where cust='Alice' and typ='Checking'";
+//							m++;
+//						}
+//						else if(m == 2)
+//						{
+//							sql = "update account set bal=bal+35 where cust='Alice' and typ='Savings'";
+//							m++;
+//						}
+						
+						
+						
 						TextArea tf2 = new TextArea();
 //						tf2.setText("start time:"+beginTime +"\n os username:"+osName+"\n session id:"+sessionid);
 						tf2.setText(" SQL:" + sql + "\n Start Time:"+beginTime );
@@ -1131,11 +1164,17 @@ public class EventMonitoringExample {
 						tf2.setBounds(10, 90, 100, 100);
 						jpTns.add(tf2);
 						
-						if(m == 3)
-							break;
+//						if(m == 3)
+//							break;
 					}
-					jpTns.setBounds(0,200,520,800);
-					jf1.add(jpTns);
+					
+//					jpTns.setBounds(0,200,520, row2.getIntervals().size() * 300);
+					JScrollPane scrollPane = new JScrollPane(jpTns);
+					jpTns.setPreferredSize(new Dimension(520, row2.getIntervals().size() * 100));
+					scrollPane.setBounds(0, 200, 520, 350);
+					
+//					jpTns.revalidate();
+					jf1.add(scrollPane);
 					//JScrollPane scrollPane=new JScrollPane(jp);
 //					scrollPane.setViewportView(jp);
 //					scrollPane.setViewportBorder(BorderFactory

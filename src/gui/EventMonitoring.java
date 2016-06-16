@@ -11,7 +11,7 @@ import javax.swing.JFrame;
 import timebars.eventmonitoring.swing.EventMonitoringExample;
 import timebars.events.swing.SwingEventExample;
 
-public class EventMonitoring {
+class EventMonitoring {
 	public static void main(String[] args) {
     	JFrame f = new JFrame(SwingEventExample.class.getName());
         f.setSize(800, 500);
