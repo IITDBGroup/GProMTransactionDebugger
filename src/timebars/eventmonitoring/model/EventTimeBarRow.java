@@ -30,8 +30,17 @@ import de.jaret.util.ui.timebars.model.TimeBarRowHeader;
  */
 public class EventTimeBarRow extends DefaultTimeBarRowModel {
     protected boolean _expanded = false;
+    private String XID  = "";
+    		
+    public String getXID() {
+		return XID;
+	}
 
-    public boolean isExpanded() {
+	public void setXID(String xID) {
+		XID = xID;
+	}
+
+	public boolean isExpanded() {
         return _expanded;
     }
 
