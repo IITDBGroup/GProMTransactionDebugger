@@ -4,11 +4,19 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -28,7 +36,7 @@ import process.GpromProcess;
 import timebars.eventmonitoring.model.EventInterval;
 import timebars.eventmonitoring.model.EventTimeBarRow;
 
-public class TransactionDebuggerFrame extends JFrame implements ActionListener{
+public class TransactionDebuggerFrame extends JFrame implements ActionListener, ComponentListener{
 	/**
 	 * 
 	 */
@@ -36,11 +44,25 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener{
 	
 	private final static int DEBUGGER_LEFT_PADDING =  135;
 	private final static int DEBUGGER_CELL_WIDTH =  295;
+	private final static int XFORBUTTONS = 1060;
+	private final static int WIDTHFORMAINSCROLLPANE = DEBUGGER_CELL_WIDTH * (3) + 8;
+	private final static int HEIGHTFORMAINSCROLLPANE = 195;
+	private final static int WIDTHFORGRAPHPANEL = 893;
+	private final static int HEIGHTFORGRAPHPANEL = 200;
+	
 	private JButton refresh_button = null;
     private JButton opt_internal_button = null;
     private JButton add_stmt_button = null;
     private JButton del_stmt_button = null;
     private JButton show_hide_button = null;
+    JScrollPane main_scrollPane = null;
+    JPanel graphPanel = null;
+    JLabel imageLabel = null;
+    JPanel panel_table = null;
+    JPanel panel_graph = null; 
+	private int initialWidth = 0;
+	private int initialHeight = 0;
+	private List<JButton> buttons = new ArrayList<JButton>();
 	
 	
 	private EventTimeBarRow currentRow;
@@ -49,6 +71,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener{
 		this.currentRow = row;
 		setup();
 		setupListeners();
+		initialWidth = this.getWidth();
+		initialHeight = this.getHeight();
 	}
 	
 	
@@ -70,8 +94,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener{
 				
 				JPanel stmt_table_panel = new JPanel();
 				stmt_table_panel.setPreferredSize(new Dimension(DEBUGGER_CELL_WIDTH * (currentRow.getIntervals().size() + 1), 300));
-				JScrollPane main_scrollPane = new JScrollPane(stmt_table_panel);
-				main_scrollPane.setBounds(DEBUGGER_LEFT_PADDING, 5, DEBUGGER_CELL_WIDTH * (3) + 8, 195);
+				main_scrollPane = new JScrollPane(stmt_table_panel);
+				main_scrollPane.setBounds(DEBUGGER_LEFT_PADDING, 5, WIDTHFORMAINSCROLLPANE, HEIGHTFORMAINSCROLLPANE);
 		        JPanel jp1 = new JPanel();
 //		        JPanel jp2 = new JPanel();
 //		        JPanel jp3 = new JPanel();
@@ -142,13 +166,51 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener{
 		        
 		        
 		        //second line
-		        //TODO add GProm query result
+		        // add GProm query result
 		        String sql = GpromProcess.getTransactionIntermediateSQL(currentRow.getXID());
-		        System.out.println(sql);
+//		        System.out.println(sql);
 		        ResultSet rs = GpromProcess.getTransactionIntermediateSQLOutput(sql);
-		       
+		        ResultSetMetaData rsmd = null;
+		        try {
+					rsmd = rs.getMetaData();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
 		        for (int i = 0; i < currentRow.getIntervals().size() + 1; i++) {
-		        	DebuggerTableModel tm = new DebuggerTableModel(rs, i);
+		        	
+		        	List<Integer> indexList = new  ArrayList<Integer>();
+		        	String currentTableName = null;
+		        	try {
+						//index
+		        		for(int j = 1; j < rsmd.getColumnCount() + 1; j++) {
+							if ( i == 0 && Pattern.matches("PROV_(?!U).*" ,rsmd.getColumnName(j))) {
+								indexList.add(j);
+							} else if (Pattern.matches("PROV_U" + i + ".*" ,rsmd.getColumnName(j))) {
+								indexList.add(j);
+							}
+						}
+		        		
+						//tablename
+						if (currentTableName == null) {
+							Pattern p=Pattern.compile("PROV_(?!U)(\\w*)_.*|PROV_U" + i + "__(\\w*)_.*"); 
+							Matcher m=p.matcher(rsmd.getColumnName(indexList.get(0))); 
+							if (!m.find()) {
+								System.out.println("regular expression succeed!");
+							}
+							if (i == 0) {
+								currentTableName = m.group(1);	
+							} else {
+								currentTableName = m.group(2);
+							}
+							
+						}
+						
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+//		        	System.out.println("index: " + indexList  + currentTableName);
+		        	
+		        	DebuggerTableModel tm = new DebuggerTableModel(rs, indexList);
 		        	JPanel jp = new JPanel();
 		        	jp.setLayout(null);
 		        	jp.setBounds(DEBUGGER_CELL_WIDTH * i , 100, 300, 205);
@@ -161,7 +223,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener{
 		        	
 		        	table.setFillsViewportHeight(true);
 		        	table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-		        	JLabel tableName = new JLabel("account", JLabel.CENTER);
+		        	JLabel tableName = new JLabel(currentTableName, JLabel.CENTER);
 		        	tableName.setBounds(0, 0, 300, 20);
 		        	jp.add(tableName);
 		        	jp.add(scrollPane);
@@ -262,10 +324,11 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener{
 //		        jp6.add(ta6.getTableHeader());
 //		        jp6.add(ta6Name);
 		        
-		        JPanel jpF = new JPanel();
-		        jpF.setBounds(135, 200, 893, 200);
-		        jpF.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-		        this.add(jpF);
+		        graphPanel = new JPanel();
+		        graphPanel.setLayout(null);
+		        graphPanel.setBounds(DEBUGGER_LEFT_PADDING, 200, WIDTHFORGRAPHPANEL, HEIGHTFORGRAPHPANEL);
+		        graphPanel.setBorder(BorderFactory.createLineBorder(Color.gray,3));
+		        
 		        //third line
 //		        JPanel jp7 = new JPanel();
 //		        JPanel jp8 = new JPanel();
@@ -282,11 +345,14 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener{
 		BufferedImage image;
 				try {
 					image = ImageIO.read(file);
-					JLabel label1 = new JLabel(new ImageIcon(image));
+					imageLabel = new JLabel(new ImageIcon(image));
+					imageLabel.setBounds(graphPanel.getWidth() / 2 - 300 / 2, 0, 300, 200);
+					
+					
 //					JLabel label2 = new JLabel(new ImageIcon(image));
 //					JLabel label3 = new JLabel(new ImageIcon(image));
 					
-					jpF.add(label1);
+					graphPanel.add(imageLabel);
 //					jp8.add(label2);
 //					jp9.add(label3);
 					
@@ -295,7 +361,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener{
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
-		        
+				this.add(graphPanel);
 		        
 		               
 		        
@@ -306,23 +372,27 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener{
 		        
 		        //first column
 		        JPanel jp11 = new JPanel();
-		        JPanel jp12 = new JPanel();
-		        JPanel jp13 = new JPanel();
+		        panel_table  = new JPanel();
+		        panel_graph = new JPanel();
+		        panel_table.setLayout(null);
+		        panel_graph.setLayout(null);
 		        jp11.setBounds(35, 5, 100, 95);
 		        jp11.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-		        jp12.setBounds(35, 100, 100, 100);
-		        jp12.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-		        jp13.setBounds(35, 200, 100, 200);
-		        jp13.setBorder(BorderFactory.createLineBorder(Color.gray,3));
+		        panel_table.setBounds(35, 100, 100, 100);
+		        panel_table.setBorder(BorderFactory.createLineBorder(Color.gray,3));
+		        panel_graph.setBounds(35, 200, 100, 200);
+		        panel_graph.setBorder(BorderFactory.createLineBorder(Color.gray,3));
 		        this.add(jp11);
-		        this.add(jp12);
-		        this.add(jp13);
+		        this.add(panel_table);
+		        this.add(panel_graph);
 		        JLabel jl1 = new JLabel("SQL");
 		        JLabel jl2 = new JLabel("TABLE");
 		        JLabel jl3 = new JLabel("GRAPH");
+		        jl2.setBounds(35,5,100,10);
+		        jl3.setBounds(35,5,100,10);
 		        jp11.add(jl1);
-		        jp12.add(jl2);
-		        jp13.add(jl3);
+		        panel_table.add(jl2);
+		        panel_graph.add(jl3);
 		        
 		        //Right buttons
 		        refresh_button = new JButton("Refresh");
@@ -333,12 +403,16 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener{
 
 		        //jb3.setHorizontalAlignment(JButton.RIGHT);
 		        
-		        refresh_button.setBounds(1060, 30, 105, 55);
-		        opt_internal_button.setBounds(1060, 85, 105, 55);
-		        add_stmt_button.setBounds(1060, 140, 105, 55);
-		        del_stmt_button.setBounds(1060, 195, 105, 55);
-		        show_hide_button.setBounds(1060, 250, 105, 55);
-		        
+		        refresh_button.setBounds(XFORBUTTONS, 30, 105, 55);
+		        opt_internal_button.setBounds(XFORBUTTONS, 85, 105, 55);
+		        add_stmt_button.setBounds(XFORBUTTONS, 140, 105, 55);
+		        del_stmt_button.setBounds(XFORBUTTONS, 195, 105, 55);
+		        show_hide_button.setBounds(XFORBUTTONS, 250, 105, 55);
+		        buttons.add(refresh_button);
+		        buttons.add(opt_internal_button);
+		        buttons.add(add_stmt_button);
+		        buttons.add(del_stmt_button);
+		        buttons.add(show_hide_button);
 		        //jb1.setBorder(BorderFactory.createLineBorder(Color.gray,3));
 		        //jb2.setBorder(BorderFactory.createLineBorder(Color.gray,3));
 		        this.add(refresh_button);
@@ -346,9 +420,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener{
 		        this.add(add_stmt_button);
 		        this.add(del_stmt_button);
 		        this.add(show_hide_button);
-		       
 		        this.setVisible(true);
-
 	}
 
 
@@ -360,6 +432,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener{
 	     add_stmt_button.addActionListener(this);
 	     del_stmt_button.addActionListener(this);
 	     show_hide_button.addActionListener(this);
+	     this.addComponentListener(this);
 	}
 
 
@@ -372,5 +445,49 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener{
 		      f.setSize(950, 600);
 		}
 	}
+
+
+	private void update() {
+		System.out.println("x: " + this.getWidth() + "y: " + this.getHeight());
+		if (this.getWidth() > initialWidth) {
+			int newXforButtons = XFORBUTTONS + this.getWidth() - initialWidth;
+			System.out.println("offset: " + newXforButtons);
+			for (int i = 0; i < buttons.size(); i++) {
+				JButton button = buttons.get(i);
+//				this.remove(button);
+				button.setBounds(newXforButtons, 30 + i * (55), 105, 55);
+//				this.revalidate();
+//				this.add(button);
+			}
+			int newWidthForMSP = WIDTHFORMAINSCROLLPANE + this.getWidth() - initialWidth;
+			main_scrollPane.setBounds(DEBUGGER_LEFT_PADDING, 5, newWidthForMSP, main_scrollPane.getHeight());
+			int newWidthForGP = WIDTHFORGRAPHPANEL + this.getWidth() - initialWidth;
+			graphPanel.setBounds(DEBUGGER_LEFT_PADDING, 200, newWidthForGP, graphPanel.getHeight());
+			imageLabel.setBounds(graphPanel.getWidth() / 2 - 300 / 2, imageLabel.getY(), 300, 200);
+			panel_table.setBounds(35, 100, 100 + this.getWidth() - initialWidth, panel_table.getHeight());
+			panel_graph.setBounds(35, 200, 100 + this.getWidth() - initialWidth, panel_graph.getHeight());
+		}
+		
+		if (this.getHeight() > initialHeight) {
+			int newHeightForMSP = HEIGHTFORGRAPHPANEL + this.getHeight() - initialHeight;
+			main_scrollPane.setBounds(DEBUGGER_LEFT_PADDING, 5, main_scrollPane.getWidth(), newHeightForMSP);
+			int newHeightForGP = HEIGHTFORGRAPHPANEL + this.getHeight() - initialHeight;
+			graphPanel.setBounds(DEBUGGER_LEFT_PADDING, 200  + this.getHeight() - initialHeight, graphPanel.getWidth(), HEIGHTFORGRAPHPANEL);
+	        panel_table.setBounds(35, 100, panel_table.getWidth(), 100 + this.getHeight() - initialHeight);
+	        panel_graph.setBounds(35, 200 + this.getHeight() - initialHeight, panel_graph.getWidth(), 200);
+		}
+//		this.revalidate();
+	}
+
+	@Override
+	public void componentResized(ComponentEvent e) {
+		update();
+	}
+	@Override
+	public void componentMoved(ComponentEvent e) {}
+	@Override
+	public void componentShown(ComponentEvent e) {}
+	@Override
+	public void componentHidden(ComponentEvent e) {}
 
 }
