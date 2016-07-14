@@ -71,7 +71,7 @@ public class GpromProcess implements DBUtility{
 			process = pb.start();
 			int errorInt = process.waitFor();
 			if (errorInt != 0) {
-				System.out.println("Some error with Gprom Process");
+				System.out.println("Some error with Gprom Process: " + errorInt);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -80,9 +80,10 @@ public class GpromProcess implements DBUtility{
 		}
 		String sql = streamtoString(process.getInputStream()).trim();
 		sql = sql.substring(0, sql.length() - 1); //get rid of semicolon
-//		System.out.println(sql);
+		System.out.println(sql);
 		return sql;
 	}
+	
 	
 	
 	private static String streamtoString(InputStream inputStream) {

@@ -55,7 +55,7 @@ public class DebuggerTableModel extends AbstractTableModel {
 		}
 
 //		return rowCount;
-		return 9999999;
+		return rowCount;
 	}
 
 	@Override
@@ -91,9 +91,9 @@ public class DebuggerTableModel extends AbstractTableModel {
 		if (columnIndex == 0) {
 			return (Object)("t" + (rowIndex) + "[" + stmtIndex + "]");	
 		}
-		if (rowIndex > 1) {
-			return (Object)"Dummy text";
-		}
+//		if (rowIndex > 1) {
+//			return (Object)"Dummy text";
+//		}
 		Object result = null;
 //		System.out.println("get Value called" + rowIndex + "??" +columnIndex);
 		
