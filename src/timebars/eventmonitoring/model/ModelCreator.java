@@ -31,6 +31,7 @@ import java.util.Random;
 
 import javax.swing.text.html.HTMLDocument.Iterator;
 
+import dbConnection.*;
 import de.jaret.util.date.JaretDate;
 import de.jaret.util.ui.timebars.model.AddingTimeBarNode;
 import de.jaret.util.ui.timebars.model.DefaultHierarchicalTimeBarModel;
@@ -40,7 +41,6 @@ import de.jaret.util.ui.timebars.model.DefaultTimeBarNode;
 import de.jaret.util.ui.timebars.model.HierarchicalTimeBarModel;
 import de.jaret.util.ui.timebars.model.TimeBarModel;
 import de.jaret.util.ui.timebars.model.TimeBarNode;
-import gui.*;
 
 /**
  * Simple model creator creating a hierachcial or a flat model and adds some
@@ -262,8 +262,9 @@ try {
 				DefaultRowHeader header = new DefaultRowHeader("T_ID "
 						+ key);
 				EventTimeBarRow row = new EventTimeBarRow(header);
-				System.out.println("audit_log_transaction_ID:aaa" + key);
 				
+				System.out.println("audit_log_transaction_ID:aaa" + key);
+				row.setXID(key);
 				if(map1.containsKey(key)){
 					System.out.println("True");
 				}
