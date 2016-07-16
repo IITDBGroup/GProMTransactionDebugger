@@ -48,7 +48,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	private final static int WIDTHFORMAINSCROLLPANE = DEBUGGER_CELL_WIDTH * (3) + 8;
 	private final static int HEIGHTFORMAINSCROLLPANE = 195;
 	private final static int WIDTHFORGRAPHPANEL = 893;
-	private final static int HEIGHTFORGRAPHPANEL = 200;
+	private final static int HEIGHTFORGRAPHPANEL = 250; //
 	
 	private JButton refresh_button = null;
     private JButton opt_internal_button = null;
@@ -346,7 +346,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				try {
 					image = ImageIO.read(file);
 					imageLabel = new JLabel(new ImageIcon(image));
-					imageLabel.setBounds(graphPanel.getWidth() / 2 - 300 / 2, 0, 300, 200);
+					imageLabel.setBounds(graphPanel.getWidth() / 2 - 300 / 2, 0, 450, 250);
 					
 					
 //					JLabel label2 = new JLabel(new ImageIcon(image));
