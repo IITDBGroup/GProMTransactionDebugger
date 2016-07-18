@@ -6,6 +6,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -36,7 +38,7 @@ import process.GpromProcess;
 import timebars.eventmonitoring.model.EventInterval;
 import timebars.eventmonitoring.model.EventTimeBarRow;
 
-public class TransactionDebuggerFrame extends JFrame implements ActionListener, ComponentListener{
+public class TransactionDebuggerFrame extends JFrame implements ActionListener, ComponentListener, MouseListener{
 	/**
 	 * 
 	 */
@@ -63,7 +65,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	private int initialWidth = 0;
 	private int initialHeight = 0;
 	private List<JButton> buttons = new ArrayList<JButton>();
-	
+	private List<JTable>	tables = new ArrayList<JTable>();
 	
 	private EventTimeBarRow currentRow;
 	public TransactionDebuggerFrame(EventTimeBarRow row) {
@@ -210,13 +212,14 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					}
 //		        	System.out.println("index: " + indexList  + currentTableName);
 		        	
-		        	DebuggerTableModel tm = new DebuggerTableModel(rs, indexList);
+		        	DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i);
 		        	JPanel jp = new JPanel();
 		        	jp.setLayout(null);
 		        	jp.setBounds(DEBUGGER_CELL_WIDTH * i , 100, 300, 205);
 		        	jp.setBorder(BorderFactory.createLineBorder(Color.gray,3));
 		        	stmt_table_panel.add(jp);
 		        	JTable table = new JTable(tm);
+		        	tables.add(table);
 		        	JScrollPane scrollPane = new JScrollPane(table);
 //		        	scrollPane.setBorder(BorderFactory.createLineBorder(Color.gray,3));
 		        	scrollPane.setBounds(5, 20, 290, 185);
@@ -433,6 +436,9 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	     del_stmt_button.addActionListener(this);
 	     show_hide_button.addActionListener(this);
 	     this.addComponentListener(this);
+	     for (int i = 0; i < tables.size(); i++) {
+	    	 tables.get(i).addMouseListener(this);
+	     }
 	}
 
 
@@ -489,5 +495,40 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	public void componentShown(ComponentEvent e) {}
 	@Override
 	public void componentHidden(ComponentEvent e) {}
+
+
+
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		for(int i = 0; i < tables.size(); i++) {
+			tables.get(i).clearSelection();
+		}
+		JTable table = (JTable) e.getSource();
+		for(int i = 0; i < tables.size(); i++) {
+			if (tables.get(i) == table) {
+				int index = tables.get(0).rowAtPoint(e.getPoint());
+				index++;		
+				System.out.println("t" + index+ "[" + i + "]");
+				index--;
+				for (int j = 0; j < i + 1; j++) {
+					tables.get(j).setRowSelectionInterval(index, index);
+				}
+				
+				
+				
+			}
+		}
+		
+		
+	}
+	@Override
+	public void mousePressed(MouseEvent e) { }
+	@Override
+	public void mouseReleased(MouseEvent e) { }
+	@Override
+	public void mouseEntered(MouseEvent e) { }
+	@Override
+	public void mouseExited(MouseEvent e) { }
 
 }

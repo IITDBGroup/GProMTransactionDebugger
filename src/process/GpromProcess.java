@@ -65,7 +65,7 @@ public class GpromProcess implements DBUtility{
 //		ProcessBuilder pb = new ProcessBuilder("./test/testrewriter",  "-host",  HOST,  "-db",  SID, 
 //				"-port", PORT, "-user",  USERNAME,  "-passwd", PASSWORD, "-log", "-loglevel",  "0",  "-sql",
 //				"select * from employee;", "-activate", "treefiy_prov_rewrite_input");
-		pb.directory(new File("/home/david/git/provenance-rewriter-prototype/"));// Gprom absolute path
+		pb.directory(new File("/home/kyao4/provenance-rewriter-prototype/"));// Gprom absolute path
 		Process process = null;
 		try {
 			process = pb.start();

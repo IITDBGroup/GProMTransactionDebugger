@@ -21,7 +21,7 @@ public class DebuggerTableModel extends AbstractTableModel {
 	private List<Integer> indexList = null;
 	
 	
-	public DebuggerTableModel(ResultSet rs, List<Integer> indexList) {
+	public DebuggerTableModel(ResultSet rs, List<Integer> indexList, int stmtIndex) {
 		super();
 		this.rs = rs;
 		try {
@@ -38,6 +38,7 @@ public class DebuggerTableModel extends AbstractTableModel {
 //			System.out.println("connect oracle database succeed！");
 		}
 //		this.sql = sql;
+		this.stmtIndex = stmtIndex;
 	}
 	
 
@@ -55,7 +56,7 @@ public class DebuggerTableModel extends AbstractTableModel {
 		}
 
 //		return rowCount;
-		return rowCount;
+		return 999999;
 	}
 
 	@Override
@@ -91,9 +92,9 @@ public class DebuggerTableModel extends AbstractTableModel {
 		if (columnIndex == 0) {
 			return (Object)("t" + (rowIndex) + "[" + stmtIndex + "]");	
 		}
-//		if (rowIndex > 1) {
-//			return (Object)"Dummy text";
-//		}
+		if (rowIndex > 1) {
+			return (Object)"Dummy text";
+		}
 		Object result = null;
 //		System.out.println("get Value called" + rowIndex + "??" +columnIndex);
 		
