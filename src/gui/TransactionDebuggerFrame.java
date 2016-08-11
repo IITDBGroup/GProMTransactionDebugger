@@ -16,7 +16,9 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -178,8 +180,11 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
+
+
 		        for (int i = 0; i < currentRow.getIntervals().size() + 1; i++) {
-		        	
+			        //set up indexList 
+
 		        	List<Integer> indexList = new  ArrayList<Integer>();
 		        	String currentTableName = null;
 		        	try {
@@ -211,7 +216,6 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 						e.printStackTrace();
 					}
 //		        	System.out.println("index: " + indexList  + currentTableName);
-		        	
 		        	DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i);
 		        	JPanel jp = new JPanel();
 		        	jp.setLayout(null);
@@ -231,7 +235,35 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		        	jp.add(tableName);
 		        	jp.add(scrollPane);
 		        
-		        	
+		        	//setup Provenance map
+		        	try {
+		        		rs.first();
+		        		int countRowNum = 0;
+		        		while(true) {
+		        			if (i >= currentRow.getIntervals().size() + 1|| i == 0) break; // i start from 0, but U" " start from 1, we only need to add map for tables except the first
+		        			int flag = rs.getInt("U" + (i));
+			        		System.out.println("output" + flag + "?" + i);
+			        		
+			        		if (flag == 1) {
+			        			DebuggerTableModel model = (DebuggerTableModel) table.getModel();
+			        			model.setPrevTupleIndex("t" + (countRowNum + 1) + "[" + (i) + "]", "t" + (countRowNum + 1) + "[" + (i - 1) + "]");
+//			        			if (tables.size() >= 2) {
+//			        				DebuggerTableModel lastModel = (DebuggerTableModel) tables.get(tables.size() - 2).getModel();
+//					        		lastModel.setNextTupleIndex(targetIndex, tupleIndex);
+//			        			}
+			        			
+			        		}
+			        		if (!rs.next()) break;
+			        		countRowNum++;
+		        		}
+		        		rs.first();
+	
+		        	} catch(SQLException e) {
+		        		System.out.println(e);
+		        	}
+		        	System.out.println("tableIndex: " + i);
+		        	System.out.println("prev" + tm.getPrevRelation());
+		        	System.out.println("next" + tm.getNextRelation());
 		        	
 		        }
 		       this.add(main_scrollPane);
@@ -506,22 +538,66 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		}
 		JTable table = (JTable) e.getSource();
 		for(int i = 0; i < tables.size(); i++) {
-			if (tables.get(i) == table) {
-				int index = tables.get(0).rowAtPoint(e.getPoint());
+			JTable currentTable = tables.get(i);
+			if (currentTable == table) {
+				int index = currentTable.rowAtPoint(e.getPoint());
+				currentTable.setRowSelectionInterval(index, index);
+				
+				// get the index for next table that need to be highlighted
+				
 				index++;		
 				System.out.println("t" + index+ "[" + i + "]");
-				index--;
-				for (int j = 0; j < i + 1; j++) {
-					tables.get(j).setRowSelectionInterval(index, index);
-				}
+//				index--;
 				
+				highlightTables( i, "t" + (index) + "[" + i + "]");
 				
-				
+//				
+//				for (int j = 0; j < i + 1; j++) {
+//					tables.get(j).setRowSelectionInterval(index, index);
+//				}
 			}
 		}
 		
 		
 	}
+
+
+	private void highlightTables(int currentTableIndex, String tupleIndex) {
+		JTable currentTable = tables.get(currentTableIndex);
+		//get the index for row we want to highlight
+		Pattern pattern = Pattern.compile("t(\\d*)\\[(\\d*)\\]");
+		Matcher matcher = pattern.matcher(tupleIndex);
+		String rowIndex = "";
+	    String tableIndex = "";
+		if (matcher.matches()) {
+		    rowIndex = matcher.group(1);
+		    tableIndex = matcher.group(2);
+		    System.out.println(rowIndex + ", " + tableIndex);
+		}
+		//highlight table
+		currentTable.setRowSelectionInterval(Integer.parseInt(rowIndex) - 1, Integer.parseInt(rowIndex) - 1);
+		System.out.println("currentTupeIndex" + tupleIndex + "  tableIndex" + currentTableIndex);
+		if (currentTableIndex <= -1) {
+			return;
+		}
+		List<String> provenanceList = ((DebuggerTableModel)tables.get(currentTableIndex).getModel()).getPrevRelation().get(tupleIndex);
+		if (provenanceList == null) {
+			return;
+		}
+		System.out.println(((DebuggerTableModel)tables.get(currentTableIndex).getModel()).getPrevRelation());
+		System.out.println(tupleIndex);
+		System.out.println(provenanceList);
+
+
+		for (int i = 0; i < provenanceList.size(); i++) {
+			String nextTupleIndex = provenanceList.get(i);
+			highlightTables(--currentTableIndex, nextTupleIndex);
+		}
+	}
+
+
+
+
 	@Override
 	public void mousePressed(MouseEvent e) { }
 	@Override

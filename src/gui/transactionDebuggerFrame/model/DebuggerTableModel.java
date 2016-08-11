@@ -4,7 +4,9 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import javax.swing.SwingUtilities;
@@ -19,7 +21,8 @@ public class DebuggerTableModel extends AbstractTableModel {
 	private DBManager dbManager = null;
 	private int stmtIndex;
 	private List<Integer> indexList = null;
-	
+	private Map<String, List<String>> prevRelation = new HashMap<String, List<String>>();
+	private Map<String, List<String>> nextRelation = new HashMap<String, List<String>>();
 	
 	public DebuggerTableModel(ResultSet rs, List<Integer> indexList, int stmtIndex) {
 		super();
@@ -39,9 +42,32 @@ public class DebuggerTableModel extends AbstractTableModel {
 		}
 //		this.sql = sql;
 		this.stmtIndex = stmtIndex;
+
+	}
+
+	public void setPrevTupleIndex(String targetIndex, String tupleIndex) {
+		List<String> list = prevRelation.get(targetIndex);
+		if (list == null) {
+			list = new ArrayList<String>();
+			prevRelation.put(targetIndex, list);
+		}
+		list.add(tupleIndex);
+//		System.out.println("prev" + prevRelation);
+
 	}
 	
-
+	public void setNextTupleIndex(String targetIndex, String tupleIndex) {
+		List<String> list = nextRelation.get(targetIndex);
+		if (list == null) {
+			list = new ArrayList<String>();
+			nextRelation.put(targetIndex, list);
+			
+		}
+		list.add(tupleIndex);
+//		System.out.println("next" + nextRelation);
+	}
+	
+	
 	
 	@Override
 	public int getRowCount(){
@@ -55,8 +81,8 @@ public class DebuggerTableModel extends AbstractTableModel {
 			e.printStackTrace();
 		}
 
-//		return rowCount;
-		return 999999;
+		return rowCount;
+//		return 999999;
 	}
 
 	@Override
@@ -92,9 +118,9 @@ public class DebuggerTableModel extends AbstractTableModel {
 		if (columnIndex == 0) {
 			return (Object)("t" + (rowIndex) + "[" + stmtIndex + "]");	
 		}
-		if (rowIndex > 1) {
-			return (Object)"Dummy text";
-		}
+//		if (rowIndex > 1) {
+//			return (Object)"Dummy text";
+//		}
 		Object result = null;
 //		System.out.println("get Value called" + rowIndex + "??" +columnIndex);
 		
@@ -116,4 +142,17 @@ public class DebuggerTableModel extends AbstractTableModel {
         //no matter where the cell appears onscreen.
     	return true;
     }
+    
+	public int getStmtIndex() {
+		return stmtIndex;
+	}
+	
+	public Map<String, List<String>> getPrevRelation() {
+		return prevRelation;
+	}
+
+	public Map<String, List<String>> getNextRelation() {
+		return nextRelation;
+	}
+    
 }

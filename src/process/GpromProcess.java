@@ -27,6 +27,7 @@ public class GpromProcess implements DBUtility{
 //	
 	
 	public static ResultSet getTransactionIntermediateSQLOutput(String sql) {
+		sql = "select * from test_table"; //fake table
 //		ProcessBuilder pb = new ProcessBuilder("./test/testrewriter",  "-host",  HOST,  "-db",  SID, 
 //				"-port", PORT, "-user",  USERNAME,  "-passwd", PASSWORD, "-log", "-loglevel",  "0",  "-sql",
 //				"SELECT * FROM employee;", "-activate", "treefiy_prov_rewrite_input");
