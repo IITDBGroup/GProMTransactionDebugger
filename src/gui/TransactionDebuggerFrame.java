@@ -6,6 +6,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +16,9 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,7 +40,7 @@ import process.GpromProcess;
 import timebars.eventmonitoring.model.EventInterval;
 import timebars.eventmonitoring.model.EventTimeBarRow;
 
-public class TransactionDebuggerFrame extends JFrame implements ActionListener, ComponentListener{
+public class TransactionDebuggerFrame extends JFrame implements ActionListener, ComponentListener, MouseListener{
 	/**
 	 * 
 	 */
@@ -48,7 +52,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	private final static int WIDTHFORMAINSCROLLPANE = DEBUGGER_CELL_WIDTH * (3) + 8;
 	private final static int HEIGHTFORMAINSCROLLPANE = 195;
 	private final static int WIDTHFORGRAPHPANEL = 893;
-	private final static int HEIGHTFORGRAPHPANEL = 200;
+	private final static int HEIGHTFORGRAPHPANEL = 250; //
 	
 	private JButton refresh_button = null;
     private JButton opt_internal_button = null;
@@ -63,7 +67,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	private int initialWidth = 0;
 	private int initialHeight = 0;
 	private List<JButton> buttons = new ArrayList<JButton>();
-	
+	private List<JTable>	tables = new ArrayList<JTable>();
 	
 	private EventTimeBarRow currentRow;
 	public TransactionDebuggerFrame(EventTimeBarRow row) {
@@ -176,8 +180,11 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
+
+
 		        for (int i = 0; i < currentRow.getIntervals().size() + 1; i++) {
-		        	
+			        //set up indexList 
+
 		        	List<Integer> indexList = new  ArrayList<Integer>();
 		        	String currentTableName = null;
 		        	try {
@@ -209,14 +216,14 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 						e.printStackTrace();
 					}
 //		        	System.out.println("index: " + indexList  + currentTableName);
-		        	
-		        	DebuggerTableModel tm = new DebuggerTableModel(rs, indexList);
+		        	DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i);
 		        	JPanel jp = new JPanel();
 		        	jp.setLayout(null);
 		        	jp.setBounds(DEBUGGER_CELL_WIDTH * i , 100, 300, 205);
 		        	jp.setBorder(BorderFactory.createLineBorder(Color.gray,3));
 		        	stmt_table_panel.add(jp);
 		        	JTable table = new JTable(tm);
+		        	tables.add(table);
 		        	JScrollPane scrollPane = new JScrollPane(table);
 //		        	scrollPane.setBorder(BorderFactory.createLineBorder(Color.gray,3));
 		        	scrollPane.setBounds(5, 20, 290, 185);
@@ -228,7 +235,35 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		        	jp.add(tableName);
 		        	jp.add(scrollPane);
 		        
-		        	
+		        	//setup Provenance map
+		        	try {
+		        		rs.first();
+		        		int countRowNum = 0;
+		        		while(true) {
+		        			if (i >= currentRow.getIntervals().size() + 1|| i == 0) break; // i start from 0, but U" " start from 1, we only need to add map for tables except the first
+		        			int flag = rs.getInt("U" + (i));
+			        		System.out.println("output" + flag + "?" + i);
+			        		
+			        		if (flag == 1) {
+			        			DebuggerTableModel model = (DebuggerTableModel) table.getModel();
+			        			model.setPrevTupleIndex("t" + (countRowNum + 1) + "[" + (i) + "]", "t" + (countRowNum + 1) + "[" + (i - 1) + "]");
+//			        			if (tables.size() >= 2) {
+//			        				DebuggerTableModel lastModel = (DebuggerTableModel) tables.get(tables.size() - 2).getModel();
+//					        		lastModel.setNextTupleIndex(targetIndex, tupleIndex);
+//			        			}
+			        			
+			        		}
+			        		if (!rs.next()) break;
+			        		countRowNum++;
+		        		}
+		        		rs.first();
+	
+		        	} catch(SQLException e) {
+		        		System.out.println(e);
+		        	}
+		        	System.out.println("tableIndex: " + i);
+		        	System.out.println("prev" + tm.getPrevRelation());
+		        	System.out.println("next" + tm.getNextRelation());
 		        	
 		        }
 		       this.add(main_scrollPane);
@@ -346,7 +381,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				try {
 					image = ImageIO.read(file);
 					imageLabel = new JLabel(new ImageIcon(image));
-					imageLabel.setBounds(graphPanel.getWidth() / 2 - 300 / 2, 0, 300, 200);
+					imageLabel.setBounds(graphPanel.getWidth() / 2 - 300 / 2, 0, 450, 250);
 					
 					
 //					JLabel label2 = new JLabel(new ImageIcon(image));
@@ -433,6 +468,9 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	     del_stmt_button.addActionListener(this);
 	     show_hide_button.addActionListener(this);
 	     this.addComponentListener(this);
+	     for (int i = 0; i < tables.size(); i++) {
+	    	 tables.get(i).addMouseListener(this);
+	     }
 	}
 
 
@@ -489,5 +527,84 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	public void componentShown(ComponentEvent e) {}
 	@Override
 	public void componentHidden(ComponentEvent e) {}
+
+
+
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		for(int i = 0; i < tables.size(); i++) {
+			tables.get(i).clearSelection();
+		}
+		JTable table = (JTable) e.getSource();
+		for(int i = 0; i < tables.size(); i++) {
+			JTable currentTable = tables.get(i);
+			if (currentTable == table) {
+				int index = currentTable.rowAtPoint(e.getPoint());
+				currentTable.setRowSelectionInterval(index, index);
+				
+				// get the index for next table that need to be highlighted
+				
+				index++;		
+				System.out.println("t" + index+ "[" + i + "]");
+//				index--;
+				
+				highlightTables( i, "t" + (index) + "[" + i + "]");
+				
+//				
+//				for (int j = 0; j < i + 1; j++) {
+//					tables.get(j).setRowSelectionInterval(index, index);
+//				}
+			}
+		}
+		
+		
+	}
+
+
+	private void highlightTables(int currentTableIndex, String tupleIndex) {
+		JTable currentTable = tables.get(currentTableIndex);
+		//get the index for row we want to highlight
+		Pattern pattern = Pattern.compile("t(\\d*)\\[(\\d*)\\]");
+		Matcher matcher = pattern.matcher(tupleIndex);
+		String rowIndex = "";
+	    String tableIndex = "";
+		if (matcher.matches()) {
+		    rowIndex = matcher.group(1);
+		    tableIndex = matcher.group(2);
+		    System.out.println(rowIndex + ", " + tableIndex);
+		}
+		//highlight table
+		currentTable.setRowSelectionInterval(Integer.parseInt(rowIndex) - 1, Integer.parseInt(rowIndex) - 1);
+		System.out.println("currentTupeIndex" + tupleIndex + "  tableIndex" + currentTableIndex);
+		if (currentTableIndex <= -1) {
+			return;
+		}
+		List<String> provenanceList = ((DebuggerTableModel)tables.get(currentTableIndex).getModel()).getPrevRelation().get(tupleIndex);
+		if (provenanceList == null) {
+			return;
+		}
+		System.out.println(((DebuggerTableModel)tables.get(currentTableIndex).getModel()).getPrevRelation());
+		System.out.println(tupleIndex);
+		System.out.println(provenanceList);
+
+
+		for (int i = 0; i < provenanceList.size(); i++) {
+			String nextTupleIndex = provenanceList.get(i);
+			highlightTables(--currentTableIndex, nextTupleIndex);
+		}
+	}
+
+
+
+
+	@Override
+	public void mousePressed(MouseEvent e) { }
+	@Override
+	public void mouseReleased(MouseEvent e) { }
+	@Override
+	public void mouseEntered(MouseEvent e) { }
+	@Override
+	public void mouseExited(MouseEvent e) { }
 
 }

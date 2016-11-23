@@ -27,31 +27,13 @@ public class GpromProcess implements DBUtility{
 //	
 	
 	public static ResultSet getTransactionIntermediateSQLOutput(String sql) {
-//		ProcessBuilder pb = new ProcessBuilder("./test/testrewriter",  "-host",  HOST,  "-db",  SID, 
-//				"-port", PORT, "-user",  USERNAME,  "-passwd", PASSWORD, "-log", "-loglevel",  "0",  "-sql",
-//				"SELECT * FROM employee;", "-activate", "treefiy_prov_rewrite_input");
-//		pb.directory(new File("/home/kyao4/provenance-rewriter-prototype/"));// Gprom absolute path
-//		Process process = null;
-//		try {
-//			process = pb.start();
-//			int errorInt = process.waitFor();
-//			if (errorInt != 0) {
-//				System.out.println("Some error with Gprom Process");
-//			}
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//		}
+		sql = "select * from test_table"; //fake table
 		DBManager dbManager = DBManager.getInstance();
 		if (dbManager.getConnection() == null) {
 			System.out.println("connect oracle database failed！");
 		} else {
 //			System.out.println("connect oracle database succeed！");
 		}
-//		String sql = streamtoString(process.getInputStream()).trim();
-//		sql = sql.substring(0, sql.length() - 1); //get rid of semicolon
-//		System.out.println(sql);
 		ResultSet result = dbManager.executeQuery(sql);
 //		dbManager.close();
 		return result;
@@ -71,7 +53,7 @@ public class GpromProcess implements DBUtility{
 			process = pb.start();
 			int errorInt = process.waitFor();
 			if (errorInt != 0) {
-				System.out.println("Some error with Gprom Process");
+				System.out.println("Some error with Gprom Process: " + errorInt);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -80,9 +62,10 @@ public class GpromProcess implements DBUtility{
 		}
 		String sql = streamtoString(process.getInputStream()).trim();
 		sql = sql.substring(0, sql.length() - 1); //get rid of semicolon
-//		System.out.println(sql);
+		System.out.println(sql);
 		return sql;
 	}
+	
 	
 	
 	private static String streamtoString(InputStream inputStream) {
