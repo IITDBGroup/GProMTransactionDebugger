@@ -56,6 +56,9 @@ public class DebuggerTableModel extends AbstractTableModel {
 
 	}
 	
+	
+
+	
 	public void setNextTupleIndex(String targetIndex, String tupleIndex) {
 		List<String> list = nextRelation.get(targetIndex);
 		if (list == null) {
@@ -66,7 +69,10 @@ public class DebuggerTableModel extends AbstractTableModel {
 		list.add(tupleIndex);
 //		System.out.println("next" + nextRelation);
 	}
-	
+public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<String>>myHashNext) {
+		myHashPre = prevRelation;
+		myHashNext = nextRelation;
+	}
 	
 	
 	@Override
@@ -154,5 +160,12 @@ public class DebuggerTableModel extends AbstractTableModel {
 	public Map<String, List<String>> getNextRelation() {
 		return nextRelation;
 	}
+	
+//	public void getGraph(int level) {
+//		System.out.println(x);
+//	}
+	
+	
+	
     
 }

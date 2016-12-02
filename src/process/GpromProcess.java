@@ -27,7 +27,7 @@ public class GpromProcess implements DBUtility{
 //	
 	
 	public static ResultSet getTransactionIntermediateSQLOutput(String sql) {
-		sql = "select * from test_table"; //fake table
+//		sql = "select * from test_table"; //fake table
 		DBManager dbManager = DBManager.getInstance();
 		if (dbManager.getConnection() == null) {
 			System.out.println("connect oracle database failed！");
@@ -47,7 +47,7 @@ public class GpromProcess implements DBUtility{
 //		ProcessBuilder pb = new ProcessBuilder("./test/testrewriter",  "-host",  HOST,  "-db",  SID, 
 //				"-port", PORT, "-user",  USERNAME,  "-passwd", PASSWORD, "-log", "-loglevel",  "0",  "-sql",
 //				"select * from employee;", "-activate", "treefiy_prov_rewrite_input");
-		pb.directory(new File("/home/kyao4/provenance-rewriter-prototype/"));// Gprom absolute path
+		pb.directory(new File("/Users/pengyuanli/Documents/GProM/provenance-rewriter-prototype/"));// Gprom absolute path
 		Process process = null;
 		try {
 			process = pb.start();
