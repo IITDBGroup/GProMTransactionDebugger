@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-package gui;
+package org.gprom.tdebug.main;
 
 import java.awt.BorderLayout;
 import java.awt.Button;
@@ -76,6 +76,12 @@ import javax.swing.border.BevelBorder;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
+import org.apache.log4j.Logger;
+import org.gprom.tdebug.cli_process.DotWrapper;
+import org.gprom.tdebug.cli_process.GpromProcess;
+import org.gprom.tdebug.db_connection.DBConfig;
+import org.gprom.tdebug.db_connection.DBManager;
+
 import timebars.eventmonitoring.model.CollectingTimeBarNode;
 import timebars.eventmonitoring.model.EventInterval;
 import timebars.eventmonitoring.model.EventTimeBarRow;
@@ -101,26 +107,28 @@ import de.jaret.util.ui.timebars.strategy.IIntervalSelectionStrategy;
 import de.jaret.util.ui.timebars.swing.TimeBarViewer;
 import de.jaret.util.ui.timebars.swing.renderer.DefaultHierarchyRenderer;
 import de.jaret.util.ui.timebars.swing.renderer.DefaultTitleRenderer;
-import process.DotWrapper;
-import process.GpromProcess;
 
 
 /**
- * Example showing events (non modificable).
+ * GProM Transaction Debugger main entry point.
  * 
  * @author Peter Kliem
  * @version $Id: EventMonitoringExample.java 1073 2010-11-22 21:25:33Z kliem $
  */
 public class EventMonitoringMain {
+	
+	static Logger log = Logger.getLogger(EventMonitoringMain.class);
+	
 	TimeBarViewer _tbv;
 	TimeBarMarkerImpl _tm;
-	
 	
 	private EventTimeBarRow currentRow = null; 
 
 	private final static boolean HIERARCHICAL = false;
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
+		DBConfig.inst.loadProperties();
+		DBManager.getInstance().getConnection();
 		EventMonitoringMain example = new EventMonitoringMain();
 		example.run();
 	}
@@ -244,7 +252,7 @@ public class EventMonitoringMain {
 					if (row2 == null) {
 						return;
 					}
-					System.out.println("get XID in frame: " + currentRow.getXID());
+					log.info("get XID in frame: " + currentRow.getXID());
 					TransactionDetailFrame frame = new TransactionDetailFrame(currentRow, _tbv);
 					frame.setSize(520, 600);
 					//jf1.setBounds(100, 50, 520, 800);
@@ -315,30 +323,30 @@ public class EventMonitoringMain {
 
 			public void intervalChangeCancelled(TimeBarRow row,
 					Interval interval) {
-				System.out.println("CHANGE CANCELLED " + row + " " + interval);
+				log.info("CHANGE CANCELLED " + row + " " + interval);
 			}
 
 			public void intervalChangeStarted(TimeBarRow row, Interval interval) {
-				System.out.println("CHANGE STARTED " + row + " " + interval);
+				log.info("CHANGE STARTED " + row + " " + interval);
 			}
 
 			public void intervalChanged(TimeBarRow row, Interval interval,
 					JaretDate oldBegin, JaretDate oldEnd) {
-				System.out.println("CHANGE DONE " + row + " " + interval);
+				log.info("CHANGE DONE " + row + " " + interval);
 			}
 
 			public void intervalIntermediateChange(TimeBarRow row,
 					Interval interval, JaretDate oldBegin, JaretDate oldEnd) {
-				System.out.println("CHANGE INTERMEDIATE " + row + " "
+				log.info("CHANGE INTERMEDIATE " + row + " "
 						+ interval);
 			}
 
 			public void markerDragStarted(TimeBarMarker marker) {
-				System.out.println("Marker drag started " + marker);
+				log.info("Marker drag started " + marker);
 			}
 
 			public void markerDragStopped(TimeBarMarker marker) {
-				System.out.println("Marker drag stopped " + marker);
+				log.info("Marker drag stopped " + marker);
 			}
 
 		});
@@ -349,7 +357,7 @@ public class EventMonitoringMain {
 
 					@Override
 					public void propertyChange(PropertyChangeEvent evt) {
-						System.out.println("Start changed to "
+						log.info("Start changed to "
 								+ evt.getNewValue());
 
 					}
@@ -377,7 +385,7 @@ public class EventMonitoringMain {
 		// add a popup menu for EventIntervals
 		Action action = new AbstractAction("IntervalAction") {
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("run " + getValue(NAME));
+				log.info("run " + getValue(NAME));
 			}
 		};
 		JPopupMenu pop = new JPopupMenu("Operations");
@@ -387,7 +395,7 @@ public class EventMonitoringMain {
 		// add a popup menu for the body
 		final Action bodyaction = new AbstractAction("BodyAction") {
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("run " + getValue(NAME));
+				log.info("run " + getValue(NAME));
 			}
 		};
 		pop = new JPopupMenu("Operations");
@@ -405,10 +413,10 @@ public class EventMonitoringMain {
 		pop.addPopupMenuListener(new PopupMenuListener() {
 
 			public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-				System.out.println(_tbv.getPopUpInformation().getLeft());
-				System.out.println(_tbv.getPopUpInformation().getRight()
+				log.info(_tbv.getPopUpInformation().getLeft());
+				log.info(_tbv.getPopUpInformation().getRight()
 						.toDisplayString());
-				//System.out.println("222222222");
+				//log.info("222222222");
 
 				if (_tbv.getPopUpInformation().getRight().getHours() > 9) {
 					bodyaction.setEnabled(false);
@@ -431,7 +439,7 @@ public class EventMonitoringMain {
 		// add a popup menu for the hierarchy
 		action = new AbstractAction("HierarchyAction") {
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("run " + getValue(NAME));
+				log.info("run " + getValue(NAME));
 			}
 		};
 
@@ -442,7 +450,7 @@ public class EventMonitoringMain {
 		// add a popup menu for the header
 		action = new AbstractAction("HeaderAction") {
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("run " + getValue(NAME));
+				log.info("run " + getValue(NAME));
 			}
 		};
 		pop = new JPopupMenu("Operations");
@@ -452,7 +460,7 @@ public class EventMonitoringMain {
 		// add a popup menu for the time scale
 		action = new AbstractAction("TimeScaleAction") {
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("run " + getValue(NAME));
+				log.info("run " + getValue(NAME));
 			}
 		};
 
@@ -463,7 +471,7 @@ public class EventMonitoringMain {
 		// add a popup menu for the title area
 		action = new AbstractAction("TitleAction") {
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("run " + getValue(NAME));
+				log.info("run " + getValue(NAME));
 			}
 		};
 		pop = new JPopupMenu("Operations");
@@ -524,8 +532,8 @@ public class EventMonitoringMain {
 	class TimeBarViewerDragGestureListener implements DragGestureListener {
 		public void dragGestureRecognized(DragGestureEvent e) {
 			Component c = e.getComponent();
-			System.out.println("component " + c);
-			System.out.println(e.getDragOrigin());
+			log.info("component " + c);
+			log.info(e.getDragOrigin());
 
 			boolean markerDragging = _tbv.getDelegate()
 					.isMarkerDraggingInProgress();

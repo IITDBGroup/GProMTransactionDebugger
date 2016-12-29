@@ -1,5 +1,5 @@
 
-package gui;
+package org.gprom.tdebug.main;
 
 import java.awt.Image;
 import java.awt.image.BufferedImage;

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package process;
+package org.gprom.tdebug.cli_process;
 
 import java.io.IOException;
 import java.net.URISyntaxException;

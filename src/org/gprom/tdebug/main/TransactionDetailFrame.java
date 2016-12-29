@@ -1,4 +1,4 @@
-package gui;
+package org.gprom.tdebug.main;
 
 import java.awt.Color;
 import java.awt.Dimension;

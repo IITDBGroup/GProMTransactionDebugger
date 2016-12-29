@@ -1,18 +1,14 @@
 /**
  * 
  */
-package process;
+package org.gprom.tdebug.cli_process;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.apache.log4j.Logger;

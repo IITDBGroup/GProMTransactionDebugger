@@ -1,4 +1,4 @@
-package gui.transactionDebuggerFrame.model;
+package org.gprom.tdebug.gui.mainfraim.model;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -7,18 +7,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
-import javax.swing.SwingUtilities;
 import javax.swing.table.AbstractTableModel;
 
-import dbConnection.DBManager;
+import org.apache.log4j.Logger;
 
 public class DebuggerTableModel extends AbstractTableModel {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	static Logger log = Logger.getLogger(DebuggerTableModel.class);
+	
 	private ResultSet rs = null;
 	private ResultSetMetaData rsmd = null;
-	private DBManager dbManager = null;
 	private int stmtIndex;
 	private List<Integer> indexList = null;
 	private Map<String, List<String>> prevRelation = new HashMap<String, List<String>>();
@@ -34,13 +37,6 @@ public class DebuggerTableModel extends AbstractTableModel {
 		}
 		this.indexList = indexList;
 		
-		dbManager = DBManager.getInstance();
-		if (dbManager.getConnection() == null) {
-			System.out.println("connect oracle database failed");
-		} else {
-//			System.out.println("connect oracle database succeed！");
-		}
-//		this.sql = sql;
 		this.stmtIndex = stmtIndex;
 
 	}
@@ -52,7 +48,7 @@ public class DebuggerTableModel extends AbstractTableModel {
 			prevRelation.put(targetIndex, list);
 		}
 		list.add(tupleIndex);
-//		System.out.println("prev" + prevRelation);
+//		log.info("prev" + prevRelation);
 
 	}
 	
@@ -67,7 +63,7 @@ public class DebuggerTableModel extends AbstractTableModel {
 			
 		}
 		list.add(tupleIndex);
-//		System.out.println("next" + nextRelation);
+//		log.info("next" + nextRelation);
 	}
 public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<String>>myHashNext) {
 		myHashPre = prevRelation;
@@ -81,7 +77,7 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
 		try {
 			rs.last();
 			rowCount = rs.getRow();
-//			System.out.println("row count:" + rowCount);
+//			log.info("row count:" + rowCount);
 			rs.first();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -94,7 +90,7 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
 	@Override
 	public int getColumnCount() {
 //		try {
-//			System.out.println("column count:" + rsmd.getColumnCount());
+//			log.info("column count:" + rsmd.getColumnCount());
 //			return rsmd.getColumnCount() + 1; //+ 1 because we need to add the index of tuple
 			return indexList.size() + 2; // because we only need to access the part of result set
 //		} catch (SQLException e) {
@@ -112,7 +108,7 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
         		return "TransID";
 			//return rsmd.getColumnName(indexList.get(--col)); // -- make index start from 0
         	col = col - 2; 
-        	System.out.println("col = "+(col));
+        	log.info("col = "+(col));
         	return rsmd.getColumnName(indexList.get(col));
         } catch (SQLException e) {
 			e.printStackTrace();
@@ -139,7 +135,7 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
 //			return (Object)"Dummy text";
 //		}
 		Object result = null;
-//		System.out.println("get Value called" + rowIndex + "??" +columnIndex);
+//		log.info("get Value called" + rowIndex + "??" +columnIndex);
 		columnIndex = columnIndex - 2;
 		columnIndex = indexList.get(columnIndex);// -- make index start from 0
 		try {
@@ -178,7 +174,7 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
 	}
 	
 //	public void getGraph(int level) {
-//		System.out.println(x);
+//		log.info(x);
 //	}
 	
 	

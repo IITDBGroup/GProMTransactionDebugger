@@ -1,18 +1,17 @@
 
-package dbConnection;
+package org.gprom.tdebug.db_connection;
 
-import java.sql.DriverManager;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-
-import de.jaret.util.ui.timebars.*;
-
+import java.util.Properties;
 
 
 
-public class DBConnection implements DBUtility {
+
+public class DBConnection {
 	
 	
     
@@ -59,7 +58,7 @@ public class DBConnection implements DBUtility {
     	try {
              	Class.forName("oracle.jdbc.driver.OracleDriver");
              	connection = DriverManager.getConnection(
-                                "jdbc:oracle:thin:@"+ HOST + ":" + PORT + "/" + SID, USERNAME, PASSWORD);//104.194.106.54  需要根据自己的机器来配置ip
+                                "jdbc:oracle:thin:@"); //+ DEFAULT_HOST + ":" + DEFAULT_PORT + "/" + DEFAULT_SID, DEFAULT_USERNAME, DEFAULT_PASSWORD);//104.194.106.54  需要根据自己的机器来配置ip
     	} catch (ClassNotFoundException e) {
              	e.printStackTrace();
     	} catch (SQLException e) {
@@ -67,4 +66,5 @@ public class DBConnection implements DBUtility {
     	}
     	return connection;
 	}
+
 }

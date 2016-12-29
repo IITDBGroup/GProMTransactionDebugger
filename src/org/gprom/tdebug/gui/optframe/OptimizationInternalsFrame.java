@@ -1,4 +1,4 @@
-package gui.transactionDebuggerFrame;
+package org.gprom.tdebug.gui.optframe;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -19,11 +19,10 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
+import org.gprom.tdebug.main.GUIUtility;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.DefaultGraph;
-
-import gui.GUIUtility;
 
 public class OptimizationInternalsFrame extends JFrame implements ActionListener
 {

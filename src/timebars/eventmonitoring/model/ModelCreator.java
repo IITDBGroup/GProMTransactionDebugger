@@ -31,7 +31,10 @@ import java.util.Random;
 
 import javax.swing.text.html.HTMLDocument.Iterator;
 
-import dbConnection.*;
+import org.apache.log4j.Logger;
+import org.gprom.tdebug.db_connection.*;
+import org.gprom.util.LoggerUtil;
+
 import de.jaret.util.date.JaretDate;
 import de.jaret.util.ui.timebars.model.AddingTimeBarNode;
 import de.jaret.util.ui.timebars.model.DefaultHierarchicalTimeBarModel;
@@ -51,6 +54,8 @@ import de.jaret.util.ui.timebars.model.TimeBarNode;
  */
 public class ModelCreator {
 
+	static Logger log = Logger.getLogger(ModelCreator.class); 
+	
 	static Random _random = new Random(12345);
 
 	public static HierarchicalTimeBarModel createHierarchicalModel() {
@@ -122,8 +127,16 @@ public class ModelCreator {
 		JaretDate end = new JaretDate();
 		end.setDateTime(1, 2, 2009, 0, 0, 0);
 		//使用sql获取数据库信息
-		ResultSet resultSet = DBConnection.getData();
-		ResultSet resultSetCommit = DBConnection.getDataCommit();
+		ResultSet resultSet = null;
+		ResultSet resultSetCommit = null;
+		try {
+			resultSet = DBManager.getInstance().getData();
+			resultSetCommit = DBManager.getInstance().getDataCommit();
+		}
+		catch (Exception e1) {
+			LoggerUtil.logException(e1, log);
+		}
+
 
 		DefaultTimeBarModel model = new DefaultTimeBarModel();
 		

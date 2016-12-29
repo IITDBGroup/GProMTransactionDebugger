@@ -1,31 +1,25 @@
-package gui;
+package org.gprom.tdebug.main;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -33,34 +27,22 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
-import javax.swing.ListSelectionModel;
-import javax.swing.border.LineBorder;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.TableModel;
 
-import gui.transactionDebuggerFrame.OptimizationInternalsFrame;
-import gui.transactionDebuggerFrame.model.DebuggerTableModel;
-import process.GpromProcess;
-import timebars.eventmonitoring.model.EventInterval;
-import timebars.eventmonitoring.model.EventTimeBarRow;
-
-//
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-//import org.graphstream.graph.Graph;
-//import org.graphstream.graph.Node;
-//import org.graphstream.graph.implementations.DefaultGraph;
-import org.graphstream.graph.*;
-import org.graphstream.graph.implementations.*;
+import org.apache.log4j.Logger;
+import org.gprom.tdebug.cli_process.GpromProcess;
+import org.gprom.tdebug.db_connection.DBManager;
+import org.gprom.tdebug.gui.mainfraim.model.DebuggerTableModel;
+import org.gprom.tdebug.gui.optframe.OptimizationInternalsFrame;
+import org.gprom.util.LoggerUtil;
+import org.graphstream.graph.Graph;
+import org.graphstream.graph.Node;
+import org.graphstream.graph.implementations.DefaultGraph;
 import org.graphstream.ui.view.View;
 //
 import org.graphstream.ui.view.Viewer;
+
+import timebars.eventmonitoring.model.EventInterval;
+import timebars.eventmonitoring.model.EventTimeBarRow;
 
 
 
@@ -84,6 +66,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	private final static int WIDTHFORGRAPHPANEL = 893;
 	private final static int HEIGHTFORGRAPHPANEL = 250; //
 
+	static Logger log = Logger.getLogger(TransactionDebuggerFrame.class);
+	
 	private JButton refresh_button = null;
 	private JButton opt_internal_button = null;
 	private JButton add_stmt_button = null;
@@ -160,7 +144,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		{
 			EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i);
 			String originalStmt = currentInterval.getSql();
-			System.out.println(originalStmt);
+			log.info(originalStmt);
 			JPanel jp = new JPanel();
 			JTextArea ja = new JTextArea(5, 20);
 			ja.setEditable(false);
@@ -196,17 +180,17 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		// second line
 		// add GProm query result
 		String sql = GpromProcess.getTransactionIntermediateSQL(currentRow.getXID());
-		ResultSet rs = GpromProcess.getTransactionIntermediateSQLOutput(sql);
+		ResultSet rs = DBManager.getInstance().executeQuery(sql);
 		ResultSetMetaData rsmd = null;
 		try
 		{
 			rsmd = rs.getMetaData();
 		} catch (SQLException e)
 		{
-			e.printStackTrace();
+			LoggerUtil.logException(e,log);;
 		}
 
-		System.out.println("current row size : "+currentRow.getIntervals().size() );
+		log.info("current row size : "+currentRow.getIntervals().size() );
 		for (int i = 0; i < currentRow.getIntervals().size() + 1; i++)
 		{
 			// set up indexList
@@ -215,17 +199,17 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			try
 			{
 				// index
-				System.out.println("test columncont + 1 = "+rsmd.getColumnCount());
+				log.info("test columncont + 1 = "+rsmd.getColumnCount());
 				for (int j = 1; j < rsmd.getColumnCount() + 1; j++)
 				{
 					if (i == 0 && Pattern.matches("PROV_(?!U).*", rsmd.getColumnName(j)))
 					{
-						System.out.println("i=0, j = "+j);
+						log.info("i=0, j = "+j);
 						indexList.add(j);
 					} 
 					else if (Pattern.matches("PROV_U" + i + ".*", rsmd.getColumnName(j)))
 					{
-						System.out.println("i !=0, j = "+j);
+						log.info("i !=0, j = "+j);
 						indexList.add(j);
 					}
 				}
@@ -237,7 +221,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					Matcher m = p.matcher(rsmd.getColumnName(indexList.get(0)));
 					if (!m.find())
 					{
-						System.out.println("regular expression succeed!");
+						log.info("regular expression succeed!");
 					}
 					if (i == 0)
 					{
@@ -252,9 +236,9 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			} 
 			catch (SQLException e)
 			{
-				e.printStackTrace();
+				LoggerUtil.logException(e,log);;
 			}
-			// System.out.println("index: " + indexList + currentTableName);
+			// log.info("index: " + indexList + currentTableName);
 			DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i);
 			JPanel jp = new JPanel();
 			jp.setLayout(null);
@@ -289,10 +273,10 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 //					if (i >= currentRow.getIntervals().size() + 1 || i == 0)
 //						break; // i start from 0, but U" " start from 1, we only
 //								// need to add map for tables except the first
-//					System.out.println("test outpu4");
+//					log.info("test outpu4");
 //					int flag = rs.getInt("U" + (i));
-//					System.out.println("output" + flag + "?" + i);
-//					System.out.println("test output");
+//					log.info("output" + flag + "?" + i);
+//					log.info("test output");
 //
 //					if (flag == 1)
 //					{
@@ -314,12 +298,12 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 //
 //			} catch (SQLException e)
 //			{
-//				System.out.println(e);
+//				log.info(e);
 //			}
 			
-//			System.out.println("tableIndex: " + i);
-//			System.out.println("prev" + tm.getPrevRelation());
-//			System.out.println("next" + tm.getNextRelation());
+//			log.info("tableIndex: " + i);
+//			log.info("prev" + tm.getPrevRelation());
+//			log.info("next" + tm.getNextRelation());
 //			prevT = tm.getPrevRelation();
 //			nextT = tm.getNextRelation();
 		}
@@ -463,7 +447,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 //			//selModel; 
 ////            int row = tables.get(i).getSelectedRow();
 ////            
-////            System.out.println("row id is "+row);
+////            log.info("row id is "+row);
 //			//tables.get(i).getSelectionModel().
 
 		}
@@ -477,7 +461,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 ////			if(! selModel.isSelectionEmpty())
 ////			{
 ////				int row = selModel.getAnchorSelectionIndex();
-////				System.out.println("row id is "+row);
+////				log.info("row id is "+row);
 ////			}
 ////		}
 //		for (int i = 0; i < tables.size(); i++)
@@ -505,7 +489,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 ////				// get the index for next table that need to be highlighted
 ////
 ////				index++;
-////				System.out.println("t" + index + "[" + i + "]");
+////				log.info("t" + index + "[" + i + "]");
 ////				// index--;
 ////
 ////				highlightTables(i, "t" + (index) + "[" + i + "]");
@@ -540,11 +524,11 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 //	private void update()
 //	{
-//		System.out.println("x: " + this.getWidth() + "y: " + this.getHeight());
+//		log.info("x: " + this.getWidth() + "y: " + this.getHeight());
 //		if (this.getWidth() > initialWidth)
 //		{
 //			int newXforButtons = XFORBUTTONS + this.getWidth() - initialWidth;
-//			System.out.println("offset: " + newXforButtons);
+//			log.info("offset: " + newXforButtons);
 //			for (int i = 0; i < buttons.size(); i++)
 //			{
 //				JButton button = buttons.get(i);
@@ -608,17 +592,17 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 //		{
 //			JTable currentTable = tables.get(i);
 //			int row = currentTable.getSelectedRow();
-//			System.out.println("row : "+row);
+//			log.info("row : "+row);
 //			TableModel selModel = currentTable.getModel();
 //			if (currentTable == table)
 //			{
 //				
 //				String id = selModel.getValueAt(row, 0).toString();
-//				System.out.println("id : "+id);
+//				log.info("id : "+id);
 //				String id1 = selModel.getValueAt(row, 1).toString();
-//				System.out.println("id1 : "+id1);
+//				log.info("id1 : "+id1);
 ////				String id2 = selModel.getValueAt(row, 2).toString();
-////				System.out.println("id2 : "+id2);
+////				log.info("id2 : "+id2);
 //				
 //				int index = currentTable.rowAtPoint(e.getPoint());
 //								
@@ -634,7 +618,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 //				// get the index for next table that need to be highlighted
 //
 //				index++;
-//				System.out.println("t" + index + "[" + i + "]");
+//				log.info("t" + index + "[" + i + "]");
 //				// index--;
 //
 //				highlightTables(i, "t" + (index) + "[" + i + "]");
@@ -678,7 +662,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				// get the index for next table that need to be highlighted
 
 //				index++;
-//				System.out.println("t" + index + "[" + i + "]");
+//				log.info("t" + index + "[" + i + "]");
 				// index--;
 
 
@@ -705,11 +689,11 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		{
 			rowIndex = matcher.group(1);
 			tableIndex = matcher.group(2);
-			System.out.println(rowIndex + ", " + tableIndex);
+			log.info(rowIndex + ", " + tableIndex);
 		}
 		// highlight table
 		currentTable.setRowSelectionInterval(Integer.parseInt(rowIndex) - 1, Integer.parseInt(rowIndex) - 1);
-		System.out.println("currentTupeIndex" + tupleIndex + "  tableIndex" + currentTableIndex);
+		log.info("currentTupeIndex" + tupleIndex + "  tableIndex" + currentTableIndex);
 		if (currentTableIndex <= -1)
 		{
 			return;
@@ -720,9 +704,9 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		{
 			return;
 		}
-		System.out.println(((DebuggerTableModel) tables.get(currentTableIndex).getModel()).getPrevRelation());
-		System.out.println(tupleIndex);
-		System.out.println(provenanceList);
+		log.info(((DebuggerTableModel) tables.get(currentTableIndex).getModel()).getPrevRelation());
+		log.info(tupleIndex);
+		log.info(provenanceList);
 
 		for (int i = 0; i < provenanceList.size(); i++)
 		{
@@ -831,8 +815,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 //		prev.put("t[1]3", list);
 //		list.clear();
 //		
-//		System.out.println(next.size());
-//		System.out.println(next.get("t[1]0"));
+//		log.info(next.size());
+//		log.info(next.get("t[1]0"));
 		
 		
 		
@@ -862,9 +846,9 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 //		int attribute = 0;
 //		int edgeNum = 0;
 //		for(int i = 0; i < level; i++) {
-////			System.out.println(i);
+////			log.info(i);
 //			String start = "t[1]" + String.valueOf(i);
-////			System.out.println(start);
+////			log.info(start);
 //
 //			if(!nodes.contains(start)) {
 //				nodes.add(start);
@@ -882,7 +866,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 //				}
 //				for(int j = 0; j < next.get(start).size();j++) {
 //					String subnode = next.get(start).get(j);
-//					System.out.println(subnode);
+//					log.info(subnode);
 ////					nodes.add(next.get(start).get(j)));
 //					nodes.add(subnode);
 //					graph.setAttribute("xy", attribute, 0);
@@ -951,7 +935,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 //		
 //		graph.display();
 //		int level = 1;
-//		System.out.println("prevT size:" + nextT.size());
+//		log.info("prevT size:" + nextT.size());
 
 		ArrayList<Node> nodes = new ArrayList<Node>();
 		int attribute = 0;
@@ -965,7 +949,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			tempNode.addAttribute("label", nodeName);
 			nodes.add(tempNode);
 		}
-//		System.out.println(nodes.size());
+//		log.info(nodes.size());
 		
 		for(int i = 0; i < level; i++) {
 			graph.addEdge("u" + String.valueOf(i), nodes.get(i), nodes.get(i + 1), true);
