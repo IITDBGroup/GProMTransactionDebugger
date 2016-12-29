@@ -152,12 +152,15 @@ public class ModelCreator {
 		try {
 			
 			while (resultSet.next()) {
-//				node = new TransactionNode(resultSet.getString(resultSet
-//						.findColumn("LSQLTEXT")), resultSet.getInt(resultSet
-//						.findColumn("SCN")),
-//						resultSet.getTimestamp("NTIMESTAMP#"));
+
+
+				//used for UNIFIED_AUDIT_TRAIL
+//				byte byBuffer[] =  resultSet.getBytes(resultSet
+//						.findColumn("TRANSACTION_ID"));
+				
+				//used for SYS.FGA_LOG$
 				byte byBuffer[] =  resultSet.getBytes(resultSet
-						.findColumn("TRANSACTION_ID"));
+						.findColumn("XID"));
 
 				StringBuilder sb=new StringBuilder("");
 				
@@ -172,10 +175,36 @@ public class ModelCreator {
 				
 				//添加需要的属性
 				//第一个属性找到sql对应的属性名  dbusername换sql对应属性
-				node = new TransactionNode(resultSet.getString(resultSet
-						.findColumn("SQL_TEXT")), strRead,
-						resultSet.getTimestamp("EVENT_TIMESTAMP"),resultSet.getString("OS_USERNAME"),resultSet.getString("SESSIONID"), resultSet.getString("TRANSACTION_ID"),
-						resultSet.getString("ACTION_NAME"));
+				//used for UNIFIED_AUDIT_TRAIL
+//				node = new TransactionNode(resultSet.getString(resultSet
+//						.findColumn("SQL_TEXT")), strRead,
+//						resultSet.getTimestamp("EVENT_TIMESTAMP"),
+//						resultSet.getString("OS_USERNAME"),
+//						resultSet.getString("SESSIONID"), 
+//						resultSet.getString("TRANSACTION_ID"),
+//						resultSet.getString("ACTION_NAME"));
+
+				//used for SYS.FGA_LOG$
+				String stmtType = resultSet.getString("STMT_TYPE");
+				String actionName = null;
+                if (stmtType.equals("1"))
+                	actionName = "SELECT";
+                else if(stmtType.equals("2"))
+                	actionName = "INSERT";
+                else if(stmtType.equals("4"))
+                	actionName = "UPDATE";
+                else if(stmtType.equals("8"))
+                	actionName = "DELETE";
+				
+				
+				node = new TransactionNode(
+						resultSet.getString(resultSet.findColumn("LSQLTEXT")), 
+						strRead,
+						resultSet.getTimestamp("NTIMESTAMP#"),
+						resultSet.getString("OSUID"),
+						resultSet.getString("SESSIONID"), 
+						resultSet.getString("XID"),
+						actionName);
 				
 				nodes.add(node);
 			}

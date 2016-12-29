@@ -104,6 +104,7 @@ import de.jaret.util.ui.timebars.swing.renderer.DefaultTitleRenderer;
 import process.DotWrapper;
 import process.GpromProcess;
 
+
 /**
  * Example showing events (non modificable).
  * 

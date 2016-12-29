@@ -1,7 +1,11 @@
 package gui;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
@@ -11,14 +15,11 @@ import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,45 +33,95 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
+import javax.swing.ListSelectionModel;
+import javax.swing.border.LineBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.TableModel;
 
 import gui.transactionDebuggerFrame.OptimizationInternalsFrame;
 import gui.transactionDebuggerFrame.model.DebuggerTableModel;
-import process.DotWrapper;
 import process.GpromProcess;
 import timebars.eventmonitoring.model.EventInterval;
 import timebars.eventmonitoring.model.EventTimeBarRow;
 
-public class TransactionDebuggerFrame extends JFrame implements ActionListener, ComponentListener, MouseListener{
+//
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+//import org.graphstream.graph.Graph;
+//import org.graphstream.graph.Node;
+//import org.graphstream.graph.implementations.DefaultGraph;
+import org.graphstream.graph.*;
+import org.graphstream.graph.implementations.*;
+import org.graphstream.ui.view.View;
+//
+import org.graphstream.ui.view.Viewer;
+
+
+
+
+
+
+
+
+public class TransactionDebuggerFrame extends JFrame implements ActionListener, ComponentListener, MouseListener
+{
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 869036626552676746L;
-	
-	private final static int DEBUGGER_LEFT_PADDING =  135;
-	private final static int DEBUGGER_CELL_WIDTH =  295;
+
+	private final static int DEBUGGER_LEFT_PADDING = 135;
+	private final static int DEBUGGER_CELL_WIDTH = 295;
 	private final static int XFORBUTTONS = 1060;
 	private final static int WIDTHFORMAINSCROLLPANE = DEBUGGER_CELL_WIDTH * (3) + 8;
-	private final static int HEIGHTFORMAINSCROLLPANE = 195;
+	private final static int HEIGHTFORMAINSCROLLPANE = 245;
 	private final static int WIDTHFORGRAPHPANEL = 893;
 	private final static int HEIGHTFORGRAPHPANEL = 250; //
-	
+
 	private JButton refresh_button = null;
-    private JButton opt_internal_button = null;
-    private JButton add_stmt_button = null;
-    private JButton del_stmt_button = null;
-    private JButton show_hide_button = null;
-    JScrollPane main_scrollPane = null;
-    JPanel graphPanel = null;
-    JLabel imageLabel = null;
-    JPanel panel_table = null;
-    JPanel panel_graph = null; 
+	private JButton opt_internal_button = null;
+	private JButton add_stmt_button = null;
+	private JButton del_stmt_button = null;
+	private JButton show_hide_button = null;
+	
+//	private JButton getG1 = null;
+//	private JButton getG2 = null;
+//	private JButton getG3 = null;
+	
+	
+	Map<String, List<String>> nextT = new HashMap<String, List<String>>();
+	Map<String, List<String>> prevT = new HashMap<String, List<String>>();
+	Map<Node, Node> mapNode = new HashMap<>();
+	
+	
+	JScrollPane main_scrollPane = null;
+//	JPanel graphPanel = null;
+	JPanel panel_view = null;
+	JLabel imageLabel = null;
+	JPanel stmt_table_panel = null;
+	
+	//used to store label (SQL, table, graph) in the first column
+	JPanel panel_table = null;
+	JPanel panel_graph = null;
+	JPanel panel_SQL = null;
+	
+	
 	private int initialWidth = 0;
 	private int initialHeight = 0;
 	private List<JButton> buttons = new ArrayList<JButton>();
-	private List<JTable>	tables = new ArrayList<JTable>();
-	
+	private List<JTable> tables = new ArrayList<JTable>();
+
 	private EventTimeBarRow currentRow;
-	public TransactionDebuggerFrame(EventTimeBarRow row) {
+	
+
+	public TransactionDebuggerFrame(EventTimeBarRow row)
+	{
 		super();
 		this.currentRow = row;
 		setup();
@@ -78,533 +129,993 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		initialWidth = this.getWidth();
 		initialHeight = this.getHeight();
 	}
-	
-	
-	
-	
-	private void setup() {
-	//load dot png
-		DotWrapper dw = new DotWrapper();
-		try {
-			dw.init();
-		} catch (URISyntaxException e1) {
-			e1.printStackTrace();
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-  
+
+	private void setup()
+	{
+		// load dot png
+		// DotWrapper dw = new DotWrapper();
+		// try {
+		// dw.init();
+		// } catch (URISyntaxException e1) {
+		// e1.printStackTrace();
+		// } catch (IOException e1) {
+		// e1.printStackTrace();
+		// }
+
 		setTitle("Debug Panel");
 		setSize(1200, 600);
-				
-				JPanel stmt_table_panel = new JPanel();
-				stmt_table_panel.setPreferredSize(new Dimension(DEBUGGER_CELL_WIDTH * (currentRow.getIntervals().size() + 1), 300));
-				main_scrollPane = new JScrollPane(stmt_table_panel);
-				main_scrollPane.setBounds(DEBUGGER_LEFT_PADDING, 5, WIDTHFORMAINSCROLLPANE, HEIGHTFORMAINSCROLLPANE);
-		        JPanel jp1 = new JPanel();
-//		        JPanel jp2 = new JPanel();
-//		        JPanel jp3 = new JPanel();
-		        JTextArea ja1=new JTextArea(5,20);
-//		        JTextArea ja2=new JTextArea(5,20);
-//		        JTextArea ja3=new JTextArea(5,20);
-		        
-//		        ja1.setFont(Bold);
-		        
-		       
-		        String originalTable_str = "\n\n Original Table";
-		        // display transaction
-		        for (int i = 0; i < currentRow.getIntervals().size(); i++) {
-		        	EventInterval currentInterval = (EventInterval)currentRow.getIntervals().get(i);
-		        	String originalStmt = currentInterval.getSql();
-		        	System.out.println(originalStmt);
-		        	JPanel jp = new JPanel();
-		        	JTextArea ja=new JTextArea(5,20);
-		        	ja.setEditable(false);
-		        	ja.setText(originalStmt);
-		        	ja.setLineWrap(true);
-		        	jp.add(ja);
-		        	stmt_table_panel.add(jp);
-		        	jp.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-		        	jp.setBounds(DEBUGGER_CELL_WIDTH * (i + 1), 0, 300, 95);
-		        	ja.setBounds(0, 10, 5, 20);
-		        	
-//		        	if (i == 3) {
-//		        		break;
-//		        	}
-		        }
-//		        String str2 = "\n UPDATE account \n SET bal=bal-35 \n WHERE cust='Alice' AND typ='Checking'";
-//		        String str3 = "\n UPDATE account \n SET bal=bal+35 \n WHERE cust='Alice' AND typ='Savings'";
-		        ja1.setText(originalTable_str);
-//		        ja2.setText(str2);
-//		        ja3.setText(str3);
-		        
-//		        ja1.setCaretColor(Color.BLUE);
-//		        ja2.setCaretColor(Color.BLUE);
-//		        ja3.setCaretColor(Color.BLUE);
-		        
-		        ja1.setEditable(false);
-//		        ja2.setEditable(false);
-//		        ja3.setEditable(false);
-		        
-		        jp1.add(ja1);
-//		        jp2.add(ja2);
-//		        jp3.add(ja3);
-		        
-		        
-		        this.setLayout(null);
-		        stmt_table_panel.setLayout(null);
-		        stmt_table_panel.add(jp1);
-//		        f.add(jp2);
-//		        f.add(jp3);
-		        
-		        jp1.setBounds(0, 0, 300, 95);
-		        jp1.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-//		        jp2.setBounds(430, 5, 300, 95);
-//		        jp2.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-//		        jp3.setBounds(728, 5, 300, 95);
-//		        jp3.setBorder(BorderFactory.createLineBorder(Color.gray,3));
 
-		        ja1.setBounds(0, 10, 5, 20);
-//		        ja2.setBounds(0, 10, 5, 20);
-//		        ja3.setBounds(0, 10, 5, 20);
-		        
-		        
-		        
-		        //second line
-		        // add GProm query result
-		        String sql = GpromProcess.getTransactionIntermediateSQL(currentRow.getXID());
-//		        System.out.println(sql);
-		        ResultSet rs = GpromProcess.getTransactionIntermediateSQLOutput(sql);
-		        ResultSetMetaData rsmd = null;
-		        try {
-					rsmd = rs.getMetaData();
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
+		stmt_table_panel = new JPanel();
+		stmt_table_panel
+				.setPreferredSize(new Dimension(DEBUGGER_CELL_WIDTH * (currentRow.getIntervals().size() + 1), 300));
+		main_scrollPane = new JScrollPane(stmt_table_panel);
+		main_scrollPane.setBounds(DEBUGGER_LEFT_PADDING, 5, WIDTHFORMAINSCROLLPANE, HEIGHTFORMAINSCROLLPANE);
+		JPanel jp1 = new JPanel();
+		JTextArea ja1 = new JTextArea(5, 20);
+		// ja1.setFont(Bold);
 
+		String originalTable_str = "\n\n Original Table";
+		// display transaction
+		for (int i = 0; i < currentRow.getIntervals().size(); i++)
+		{
+			EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i);
+			String originalStmt = currentInterval.getSql();
+			System.out.println(originalStmt);
+			JPanel jp = new JPanel();
+			JTextArea ja = new JTextArea(5, 20);
+			ja.setEditable(false);
+			ja.setText(originalStmt);
+			ja.setLineWrap(true);
+			jp.add(ja);
+			stmt_table_panel.add(jp);
+			jp.setBorder(BorderFactory.createLineBorder(Color.gray, 3));
+			jp.setBounds(DEBUGGER_CELL_WIDTH * (i + 1), 0, 300, 95);
+			ja.setBounds(0, 10, 5, 20);
 
-		        for (int i = 0; i < currentRow.getIntervals().size() + 1; i++) {
-			        //set up indexList 
-
-		        	List<Integer> indexList = new  ArrayList<Integer>();
-		        	String currentTableName = null;
-		        	try {
-						//index
-		        		for(int j = 1; j < rsmd.getColumnCount() + 1; j++) {
-							if ( i == 0 && Pattern.matches("PROV_(?!U).*" ,rsmd.getColumnName(j))) {
-								indexList.add(j);
-							} else if (Pattern.matches("PROV_U" + i + ".*" ,rsmd.getColumnName(j))) {
-								indexList.add(j);
-							}
-						}
-		        		
-						//tablename
-						if (currentTableName == null) {
-							Pattern p=Pattern.compile("PROV_(?!U)(\\w*)_.*|PROV_U" + i + "__(\\w*)_.*"); 
-							Matcher m=p.matcher(rsmd.getColumnName(indexList.get(0))); 
-							if (!m.find()) {
-								System.out.println("regular expression succeed!");
-							}
-							if (i == 0) {
-								currentTableName = m.group(1);	
-							} else {
-								currentTableName = m.group(2);
-							}
-							
-						}
-						
-					} catch (SQLException e) {
-						e.printStackTrace();
-					}
-//		        	System.out.println("index: " + indexList  + currentTableName);
-		        	DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i);
-		        	JPanel jp = new JPanel();
-		        	jp.setLayout(null);
-		        	jp.setBounds(DEBUGGER_CELL_WIDTH * i , 100, 300, 205);
-		        	jp.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-		        	stmt_table_panel.add(jp);
-		        	JTable table = new JTable(tm);
-		        	tables.add(table);
-		        	JScrollPane scrollPane = new JScrollPane(table);
-//		        	scrollPane.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-		        	scrollPane.setBounds(5, 20, 290, 185);
-		        	
-		        	table.setFillsViewportHeight(true);
-		        	table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-		        	JLabel tableName = new JLabel(currentTableName, JLabel.CENTER);
-		        	tableName.setBounds(0, 0, 300, 20);
-		        	jp.add(tableName);
-		        	jp.add(scrollPane);
-		        
-		        	//setup Provenance map
-		        	try {
-		        		rs.first();
-		        		int countRowNum = 0;
-		        		while(true) {
-		        			if (i >= currentRow.getIntervals().size() + 1|| i == 0) break; // i start from 0, but U" " start from 1, we only need to add map for tables except the first
-		        			int flag = rs.getInt("U" + (i));
-			        		System.out.println("output" + flag + "?" + i);
-			        		
-			        		if (flag == 1) {
-			        			DebuggerTableModel model = (DebuggerTableModel) table.getModel();
-			        			model.setPrevTupleIndex("t" + (countRowNum + 1) + "[" + (i) + "]", "t" + (countRowNum + 1) + "[" + (i - 1) + "]");
-//			        			if (tables.size() >= 2) {
-//			        				DebuggerTableModel lastModel = (DebuggerTableModel) tables.get(tables.size() - 2).getModel();
-//					        		lastModel.setNextTupleIndex(targetIndex, tupleIndex);
-//			        			}
-			        			
-			        		}
-			        		if (!rs.next()) break;
-			        		countRowNum++;
-		        		}
-		        		rs.first();
-	
-		        	} catch(SQLException e) {
-		        		System.out.println(e);
-		        	}
-		        	System.out.println("tableIndex: " + i);
-		        	System.out.println("prev" + tm.getPrevRelation());
-		        	System.out.println("next" + tm.getNextRelation());
-		        	
-		        }
-		       this.add(main_scrollPane);
-//		        JPanel jp4 = new JPanel();
-//		        JPanel jp5 = new JPanel();
-//		        JPanel jp6 = new JPanel();
-//		        jp4.setBounds(135, 100, 300, 100);
-//		        jp4.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-//		        jp5.setBounds(430, 100, 300, 100);
-//		        jp5.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-//		        jp6.setBounds(728, 100, 300, 100);
-//		        jp6.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-//		        this.add(jp4);
-//		        this.add(jp5);
-//		        this.add(jp6);
-		      
-		        //f.getContentPane().add(jp4);
-		        //f.getContentPane().add(jp5);
-		        //f.getContentPane().add(jp6);
-		       
-
-//		        String[] cn4 = {"cust","typ","bal"};
-//		        String[] cn5 = {"cust","typ","bal"};
-//		        String[] cn6 = {"cust","typ","bal"};
-//		        Object[][] cd4 = {{"Alice","Checkings","50"},{"Alice","Savings","30"},{"Peter","Savings","60"},{"Mike","Checking","45"}};
-//		        Object[][] cd5 = {{"Alice","Checkings","15"},{"Alice","Savings","30"},{"Peter","Savings","60"},{"Mick","Checking","45"}};
-//		        Object[][] cd6 = {{"Alice","Checkings","15"},{"Alice","Savings","45"},{"Peter","Savings","60"},{"Mick","Checking","45"}};
-//		        
-//		        JTable ta4 = new JTable(cd4,cn4);
-//		        JTable ta5 = new JTable(cd5,cn5);
-//		        JTable ta6 = new JTable(tm);
-//		        //set first panel jp4
-//		        JLabel lb41 = new JLabel("t1[0]");
-//		        JLabel lb42 = new JLabel("t2[0]");
-//		        JLabel lb43 = new JLabel("t3[0]");
-//		        JLabel ta4Name = new JLabel("account", JLabel.CENTER);
-//
-//		        jp4.setLayout(null);
-//		        lb41.setBounds(260, 40, 30, 20);
-//		        lb42.setBounds(260, 56, 30, 20);
-//		        lb43.setBounds(260, 73, 30, 20);
-//                ta4.setBounds(8,40, 245, 50);
-//                ta4.getTableHeader().setBounds(8,25,245,15);
-//                ta4Name.setBounds(8,2,245,20);
-//		        
-//		        jp4.add(lb41);
-//		        jp4.add(lb42);
-//		        jp4.add(lb43);
-//		        jp4.add(ta4);
-//		        jp4.add(ta4.getTableHeader());
-//		        jp4.add(ta4Name);
-//		        
-//		        
-//		        //set second panel jp5
-//		        JLabel lb51 = new JLabel("t1[1]");
-//		        JLabel lb52 = new JLabel("t2[1]");
-//		        JLabel lb53 = new JLabel("t3[1]");
-//		        JLabel ta5Name = new JLabel("account", JLabel.CENTER);
-//		        
-//		        jp5.setLayout(null);
-//		        lb51.setBounds(260, 40, 30, 20);
-//		        lb52.setBounds(260, 56, 30, 20);
-//		        lb53.setBounds(260, 73, 30, 20);
-//                ta5.setBounds(8,40, 245, 50);
-//                ta5.getTableHeader().setBounds(8,25,245,15);
-//                ta5Name.setBounds(8,2,245,20);
-//		        
-//                jp5.add(lb51);
-//		        jp5.add(lb52);
-//		        jp5.add(lb53);					        
-//		        jp5.add(ta5);
-//		        jp5.add(ta5.getTableHeader());
-//		        jp5.add(ta5Name);
-//		        
-//		        //set second panel jp5
-//		        JLabel lb61 = new JLabel("t1[2]");
-//		        JLabel lb62 = new JLabel("t2[2]");
-//		        JLabel lb63 = new JLabel("t3[2]");
-//		        JLabel ta6Name = new JLabel("account", JLabel.CENTER);
-//		        
-//		        jp6.setLayout(null);
-//		        lb61.setBounds(260, 40, 30, 20);
-//		        lb62.setBounds(260, 56, 30, 20);
-//		        lb63.setBounds(260, 73, 30, 20);
-//                ta6.setBounds(8,40, 245, 50);
-//                ta6.getTableHeader().setBounds(8,25,245,15);
-//                ta6Name.setBounds(8,2,245,20);
-//		        
-//                jp6.add(lb61);
-//		        jp6.add(lb62);
-//		        jp6.add(lb63);	
-//		        jp6.add(ta6);
-//		        jp6.add(ta6.getTableHeader());
-//		        jp6.add(ta6Name);
-		        
-		        graphPanel = new JPanel();
-		        graphPanel.setLayout(null);
-		        graphPanel.setBounds(DEBUGGER_LEFT_PADDING, 200, WIDTHFORGRAPHPANEL, HEIGHTFORGRAPHPANEL);
-		        graphPanel.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-		        
-		        //third line
-//		        JPanel jp7 = new JPanel();
-//		        JPanel jp8 = new JPanel();
-//		        JPanel jp9 = new JPanel();
-//		        jp7.setBounds(135, 165, 260, 200);
-//		        jp7.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-//		        jp8.setBounds(390, 165, 260, 200);
-//		        jp8.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-//		        jp9.setBounds(648, 165, 260, 200);
-//		        jp9.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-		        
-		GUIUtility.createThumbnail("/Users/xun/Documents/python_workspace/SqlGui/src/dotFlow.png", "/Users/xun/Documents/java_workspace/gprom-gui/test2.png", 300, 400);
-		File file = new File(new File(this.getClass().getResource("/").getPath()).getParent() + "/test2.png"); //use relative path
-		BufferedImage image;
-				try {
-					image = ImageIO.read(file);
-					imageLabel = new JLabel(new ImageIcon(image));
-					imageLabel.setBounds(graphPanel.getWidth() / 2 - 300 / 2, 0, 450, 250);
-					
-					
-//					JLabel label2 = new JLabel(new ImageIcon(image));
-//					JLabel label3 = new JLabel(new ImageIcon(image));
-					
-					graphPanel.add(imageLabel);
-//					jp8.add(label2);
-//					jp9.add(label3);
-					
-					//label1.setBounds(0, 10, 5, 10);
-					
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
-				this.add(graphPanel);
-		        
-		               
-		        
-//		        f.add(jp7);
-//		        f.add(jp8);
-//		        f.add(jp9);
-		        
-		        
-		        //first column
-		        JPanel jp11 = new JPanel();
-		        panel_table  = new JPanel();
-		        panel_graph = new JPanel();
-		        panel_table.setLayout(null);
-		        panel_graph.setLayout(null);
-		        jp11.setBounds(35, 5, 100, 95);
-		        jp11.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-		        panel_table.setBounds(35, 100, 100, 100);
-		        panel_table.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-		        panel_graph.setBounds(35, 200, 100, 200);
-		        panel_graph.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-		        this.add(jp11);
-		        this.add(panel_table);
-		        this.add(panel_graph);
-		        JLabel jl1 = new JLabel("SQL");
-		        JLabel jl2 = new JLabel("TABLE");
-		        JLabel jl3 = new JLabel("GRAPH");
-		        jl2.setBounds(35,5,100,10);
-		        jl3.setBounds(35,5,100,10);
-		        jp11.add(jl1);
-		        panel_table.add(jl2);
-		        panel_graph.add(jl3);
-		        
-		        //Right buttons
-		        refresh_button = new JButton("Refresh");
-		        opt_internal_button = new JButton("<html>Optimizer<br>Internals</html>");
-		        add_stmt_button = new JButton("<html>&nbsp;&nbsp; Add<br>Statement</html>");
-		        del_stmt_button = new JButton("<html>&nbsp; Delete<br>Statement</html>");
-		        show_hide_button = new JButton("<html>Show/Hide<br>Unaffected<br> &nbsp;&nbsp;&nbsp;Rows</html>");
-
-		        //jb3.setHorizontalAlignment(JButton.RIGHT);
-		        
-		        refresh_button.setBounds(XFORBUTTONS, 30, 105, 55);
-		        opt_internal_button.setBounds(XFORBUTTONS, 85, 105, 55);
-		        add_stmt_button.setBounds(XFORBUTTONS, 140, 105, 55);
-		        del_stmt_button.setBounds(XFORBUTTONS, 195, 105, 55);
-		        show_hide_button.setBounds(XFORBUTTONS, 250, 105, 55);
-		        buttons.add(refresh_button);
-		        buttons.add(opt_internal_button);
-		        buttons.add(add_stmt_button);
-		        buttons.add(del_stmt_button);
-		        buttons.add(show_hide_button);
-		        //jb1.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-		        //jb2.setBorder(BorderFactory.createLineBorder(Color.gray,3));
-		        this.add(refresh_button);
-		        this.add(opt_internal_button);
-		        this.add(add_stmt_button);
-		        this.add(del_stmt_button);
-		        this.add(show_hide_button);
-		        this.setVisible(true);
-	}
-
-
-
-
-	private void setupListeners() {
-		 refresh_button.addActionListener(this);
-	     opt_internal_button.addActionListener(this);
-	     add_stmt_button.addActionListener(this);
-	     del_stmt_button.addActionListener(this);
-	     show_hide_button.addActionListener(this);
-	     this.addComponentListener(this);
-	     for (int i = 0; i < tables.size(); i++) {
-	    	 tables.get(i).addMouseListener(this);
-	     }
-	}
-
-
-
-
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		if(e.getSource() == opt_internal_button) {
-			  OptimizationInternalsFrame f = new OptimizationInternalsFrame("GProM Optimization Internals");
-		      f.setSize(950, 600);
+			// if (i == 3) {
+			// break;
+			// }
 		}
-	}
+		// String str2 = "\n UPDATE account \n SET bal=bal-35 \n WHERE
+		// cust='Alice' AND typ='Checking'";
+		// String str3 = "\n UPDATE account \n SET bal=bal+35 \n WHERE
+		// cust='Alice' AND typ='Savings'";
+		ja1.setText(originalTable_str);
+		// ja1.setCaretColor(Color.BLUE);
+		ja1.setEditable(false);
+		jp1.add(ja1);
 
+		this.setLayout(null);
+		stmt_table_panel.setLayout(null);
+		stmt_table_panel.add(jp1);
 
-	private void update() {
-		System.out.println("x: " + this.getWidth() + "y: " + this.getHeight());
-		if (this.getWidth() > initialWidth) {
-			int newXforButtons = XFORBUTTONS + this.getWidth() - initialWidth;
-			System.out.println("offset: " + newXforButtons);
-			for (int i = 0; i < buttons.size(); i++) {
-				JButton button = buttons.get(i);
-//				this.remove(button);
-				button.setBounds(newXforButtons, 30 + i * (55), 105, 55);
-//				this.revalidate();
-//				this.add(button);
+		jp1.setBounds(0, 0, 300, 95);
+		jp1.setBorder(BorderFactory.createLineBorder(Color.gray, 3));
+		ja1.setBounds(0, 10, 5, 20);
+
+		// second line
+		// add GProm query result
+		String sql = GpromProcess.getTransactionIntermediateSQL(currentRow.getXID());
+		ResultSet rs = GpromProcess.getTransactionIntermediateSQLOutput(sql);
+		ResultSetMetaData rsmd = null;
+		try
+		{
+			rsmd = rs.getMetaData();
+		} catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+
+		System.out.println("current row size : "+currentRow.getIntervals().size() );
+		for (int i = 0; i < currentRow.getIntervals().size() + 1; i++)
+		{
+			// set up indexList
+			List<Integer> indexList = new ArrayList<Integer>();
+			String currentTableName = null;
+			try
+			{
+				// index
+				System.out.println("test columncont + 1 = "+rsmd.getColumnCount());
+				for (int j = 1; j < rsmd.getColumnCount() + 1; j++)
+				{
+					if (i == 0 && Pattern.matches("PROV_(?!U).*", rsmd.getColumnName(j)))
+					{
+						System.out.println("i=0, j = "+j);
+						indexList.add(j);
+					} 
+					else if (Pattern.matches("PROV_U" + i + ".*", rsmd.getColumnName(j)))
+					{
+						System.out.println("i !=0, j = "+j);
+						indexList.add(j);
+					}
+				}
+
+				// tablename
+				if (currentTableName == null)
+				{
+					Pattern p = Pattern.compile("PROV_(?!U)(\\w*)_.*|PROV_U" + i + "__(\\w*)_.*");
+					Matcher m = p.matcher(rsmd.getColumnName(indexList.get(0)));
+					if (!m.find())
+					{
+						System.out.println("regular expression succeed!");
+					}
+					if (i == 0)
+					{
+						currentTableName = m.group(1);
+					} else
+					{
+						currentTableName = m.group(2);
+					}
+
+				}
+
+			} 
+			catch (SQLException e)
+			{
+				e.printStackTrace();
 			}
-			int newWidthForMSP = WIDTHFORMAINSCROLLPANE + this.getWidth() - initialWidth;
-			main_scrollPane.setBounds(DEBUGGER_LEFT_PADDING, 5, newWidthForMSP, main_scrollPane.getHeight());
-			int newWidthForGP = WIDTHFORGRAPHPANEL + this.getWidth() - initialWidth;
-			graphPanel.setBounds(DEBUGGER_LEFT_PADDING, 200, newWidthForGP, graphPanel.getHeight());
-			imageLabel.setBounds(graphPanel.getWidth() / 2 - 300 / 2, imageLabel.getY(), 300, 200);
-			panel_table.setBounds(35, 100, 100 + this.getWidth() - initialWidth, panel_table.getHeight());
-			panel_graph.setBounds(35, 200, 100 + this.getWidth() - initialWidth, panel_graph.getHeight());
+			// System.out.println("index: " + indexList + currentTableName);
+			DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i);
+			JPanel jp = new JPanel();
+			jp.setLayout(null);
+			jp.setBounds(DEBUGGER_CELL_WIDTH * i, 100, 300, 205);
+			jp.setBorder(BorderFactory.createLineBorder(Color.gray, 3));
+			stmt_table_panel.add(jp);
+			JTable table = new JTable(tm);
+			
+//			//test add additional column
+//			List colData = new ArrayList(table.getRowCount());		
+//			tm.addColumn("Col3", colData.toArray());
+					
+			tables.add(table);
+			JScrollPane scrollPane = new JScrollPane(table);
+			// scrollPane.setBorder(BorderFactory.createLineBorder(Color.gray,3));
+			scrollPane.setBounds(5, 20, 290, 185);
+
+			table.setFillsViewportHeight(true);
+			table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+			JLabel tableName = new JLabel(currentTableName, JLabel.CENTER);
+			tableName.setBounds(0, 0, 300, 20);
+			jp.add(tableName);
+			jp.add(scrollPane);
+
+			// setup Provenance map
+//			try
+//			{
+//				rs.first();
+//				int countRowNum = 0;
+//				while (true)
+//				{
+//					if (i >= currentRow.getIntervals().size() + 1 || i == 0)
+//						break; // i start from 0, but U" " start from 1, we only
+//								// need to add map for tables except the first
+//					System.out.println("test outpu4");
+//					int flag = rs.getInt("U" + (i));
+//					System.out.println("output" + flag + "?" + i);
+//					System.out.println("test output");
+//
+//					if (flag == 1)
+//					{
+//						DebuggerTableModel model = (DebuggerTableModel) table.getModel();
+//						model.setPrevTupleIndex("t" + (countRowNum + 1) + "[" + (i) + "]",
+//								"t" + (countRowNum + 1) + "[" + (i - 1) + "]");
+//						// if (tables.size() >= 2) {
+//						// DebuggerTableModel lastModel = (DebuggerTableModel)
+//						// tables.get(tables.size() - 2).getModel();
+//						// lastModel.setNextTupleIndex(targetIndex, tupleIndex);
+//						// }
+//
+//					}
+//					if (!rs.next())
+//						break;
+//					countRowNum++;
+//				}
+//				rs.first();
+//
+//			} catch (SQLException e)
+//			{
+//				System.out.println(e);
+//			}
+			
+//			System.out.println("tableIndex: " + i);
+//			System.out.println("prev" + tm.getPrevRelation());
+//			System.out.println("next" + tm.getNextRelation());
+//			prevT = tm.getPrevRelation();
+//			nextT = tm.getNextRelation();
 		}
 		
-		if (this.getHeight() > initialHeight) {
-			int newHeightForMSP = HEIGHTFORGRAPHPANEL + this.getHeight() - initialHeight;
-			main_scrollPane.setBounds(DEBUGGER_LEFT_PADDING, 5, main_scrollPane.getWidth(), newHeightForMSP);
-			int newHeightForGP = HEIGHTFORGRAPHPANEL + this.getHeight() - initialHeight;
-			graphPanel.setBounds(DEBUGGER_LEFT_PADDING, 200  + this.getHeight() - initialHeight, graphPanel.getWidth(), HEIGHTFORGRAPHPANEL);
-	        panel_table.setBounds(35, 100, panel_table.getWidth(), 100 + this.getHeight() - initialHeight);
-	        panel_graph.setBounds(35, 200 + this.getHeight() - initialHeight, panel_graph.getWidth(), 200);
+		this.add(main_scrollPane);
+
+//		graphPanel = new JPanel();
+//		graphPanel.setLayout(null);
+//		graphPanel.setBounds(DEBUGGER_LEFT_PADDING, 200, WIDTHFORGRAPHPANEL, 100);
+//		graphPanel.setBorder(BorderFactory.createLineBorder(Color.gray, 3));
+
+		//used to show the graph view after click each row in the table
+		panel_view = new JPanel();
+		panel_view.setBounds(DEBUGGER_LEFT_PADDING, 250, WIDTHFORGRAPHPANEL, 220);
+		panel_view.setBorder(BorderFactory.createLineBorder(Color.gray, 3));
+		this.add(panel_view);
+		
+//      comment out old graph					
+//		GUIUtility.createThumbnail("/Users/xun/Documents/python_workspace/SqlGui/src/dotFlow.png",
+//				"/Users/xun/Documents/java_workspace/gprom-gui/test2.png", 300, 400);
+//		File file = new File(new File(this.getClass().getResource("/").getPath()).getParent() + "/test2.png"); // use
+//																												// relative
+//																												// path
+//		BufferedImage image;
+//		try
+//		{
+//			image = ImageIO.read(file);
+//			imageLabel = new JLabel(new ImageIcon(image));
+//			imageLabel.setBounds(graphPanel.getWidth() / 2 - 300 / 2, 0, 450, 250);
+//
+//			// JLabel label2 = new JLabel(new ImageIcon(image));
+//			// JLabel label3 = new JLabel(new ImageIcon(image));
+//
+////			graphPanel.add(imageLabel);
+//			// jp8.add(label2);
+//			// jp9.add(label3);
+//
+//			// label1.setBounds(0, 10, 5, 10);
+//
+//		} catch (IOException e1)
+//		{
+//			e1.printStackTrace();
+//		}
+		//this.add(graphPanel);
+
+		// f.add(jp7);
+		// f.add(jp8);
+		// f.add(jp9);
+
+		// first column label name
+		panel_SQL = new JPanel();
+		panel_table = new JPanel();
+		panel_graph = new JPanel();
+		
+		panel_table.setLayout(null);
+		panel_graph.setLayout(null);
+		
+		panel_SQL.setBounds(35, 5, 100, 95);
+		panel_SQL.setBorder(BorderFactory.createLineBorder(Color.gray, 3));
+		panel_table.setBounds(35, 100, 100, 150);
+		panel_table.setBorder(BorderFactory.createLineBorder(Color.gray, 3));
+		panel_graph.setBounds(35, 250, 100, 220);
+		panel_graph.setBorder(BorderFactory.createLineBorder(Color.gray, 3));
+		
+		this.add(panel_SQL);
+		this.add(panel_table);
+		this.add(panel_graph);
+		
+		JLabel jl1 = new JLabel("SQL");
+		JLabel jl2 = new JLabel("TABLE");
+		JLabel jl3 = new JLabel("GRAPH");
+		
+		jl2.setBounds(35, 5, 100, 10);
+		jl3.setBounds(35, 5, 100, 10);
+		
+		panel_SQL.add(jl1);
+		panel_table.add(jl2);
+		panel_graph.add(jl3);
+		
+		//for graph
+//		getG1 = new JButton("Get Graph1");
+//		getG2 = new JButton("Get Graph2");
+//		getG3 = new JButton("Get Graph3");
+		
+//		getG1.setBounds(150, 50, 100, 25);
+//		getG2.setBounds(300, 50, 100, 25);
+//		getG3.setBounds(450, 50, 100, 25);
+
+//		graphPanel.add(getG1);
+//		graphPanel.add(getG2);
+//		graphPanel.add(getG3);
+		
+		
+		
+		// Right buttons
+		refresh_button = new JButton("Refresh");
+		opt_internal_button = new JButton("<html>Optimizer<br>Internals</html>");
+		add_stmt_button = new JButton("<html>&nbsp;&nbsp; Add<br>Statement</html>");
+		del_stmt_button = new JButton("<html>&nbsp; Delete<br>Statement</html>");
+		show_hide_button = new JButton("<html>Show/Hide<br>Unaffected<br> &nbsp;&nbsp;&nbsp;Rows</html>");
+
+		// jb3.setHorizontalAlignment(JButton.RIGHT);
+
+		refresh_button.setBounds(XFORBUTTONS, 30, 105, 55);
+		opt_internal_button.setBounds(XFORBUTTONS, 85, 105, 55);
+		add_stmt_button.setBounds(XFORBUTTONS, 140, 105, 55);
+		del_stmt_button.setBounds(XFORBUTTONS, 195, 105, 55);
+		show_hide_button.setBounds(XFORBUTTONS, 250, 105, 55);
+		buttons.add(refresh_button);
+		buttons.add(opt_internal_button);
+		buttons.add(add_stmt_button);
+		buttons.add(del_stmt_button);
+		buttons.add(show_hide_button);
+		// jb1.setBorder(BorderFactory.createLineBorder(Color.gray,3));
+		// jb2.setBorder(BorderFactory.createLineBorder(Color.gray,3));
+		this.add(refresh_button);
+		this.add(opt_internal_button);
+		this.add(add_stmt_button);
+		this.add(del_stmt_button);
+		this.add(show_hide_button);
+		this.setVisible(true);
+	}
+
+	private void setupListeners()
+	{
+//		getG1.addActionListener(this);
+//		getG2.addActionListener(this);
+//		getG3.addActionListener(this);
+		
+		refresh_button.addActionListener(this);
+		opt_internal_button.addActionListener(this);
+		add_stmt_button.addActionListener(this);
+		del_stmt_button.addActionListener(this);
+		show_hide_button.addActionListener(this);
+		this.addComponentListener(this);
+		for (int i = 0; i < tables.size(); i++)
+		{
+			tables.get(i).addMouseListener(this);
+			
+//			ListSelectionModel selModel = tables.get(i).getSelectionModel();
+//			//selModel; 
+////            int row = tables.get(i).getSelectedRow();
+////            
+////            System.out.println("row id is "+row);
+//			//tables.get(i).getSelectionModel().
+
 		}
-//		this.revalidate();
+	}
+//	@Override
+//	public void valueChanged(ListSelectionEvent e) {
+//		// TODO Auto-generated method stub
+////		for (int i = 0; i < tables.size(); i++)
+////		{
+////			ListSelectionModel selModel = tables.get(i).getSelectionModel();
+////			if(! selModel.isSelectionEmpty())
+////			{
+////				int row = selModel.getAnchorSelectionIndex();
+////				System.out.println("row id is "+row);
+////			}
+////		}
+//		for (int i = 0; i < tables.size(); i++)
+//		{
+//			tables.get(i).clearSelection();
+//		}
+//		JTable table = (JTable) e.getSource();
+//		for (int i = 0; i < tables.size(); i++)
+//		{
+//			JTable currentTable = tables.get(i);
+//			ListSelectionModel selModel = currentTable.getSelectionModel();
+//			if (! selModel.isSelectionEmpty())
+//			{
+//				//int index = currentTable.rowAtPoint(e.getPoint());
+//								
+//				if(i != 0)
+//					showGraph(i);
+//				
+////				if(i != 0) {
+////					showGraph(i, index);
+////				}
+//				
+////				currentTable.setRowSelectionInterval(index, index);
+////
+////				// get the index for next table that need to be highlighted
+////
+////				index++;
+////				System.out.println("t" + index + "[" + i + "]");
+////				// index--;
+////
+////				highlightTables(i, "t" + (index) + "[" + i + "]");
+//
+//				//
+//				// for (int j = 0; j < i + 1; j++) {
+//				// tables.get(j).setRowSelectionInterval(index, index);
+//				// }
+//			}
+//		}
+//	}
+
+	@Override
+	public void actionPerformed(ActionEvent e)
+	{
+		
+		if (e.getSource() == opt_internal_button)
+		{
+			OptimizationInternalsFrame f = new OptimizationInternalsFrame("GProM Optimization Internals");
+//			f.setSize(950, 600);
+//			new design
+			f.setSize(950, 300);
+		} 
+//		else if(e.getSource() == getG1) {
+//			showGraph(1);		
+//		} else if (e.getSource() == getG2) {
+//			showGraph(2);
+//		} else if(e.getSource() == getG3) {
+//			showGraph(3);
+//		}
+	}
+
+//	private void update()
+//	{
+//		System.out.println("x: " + this.getWidth() + "y: " + this.getHeight());
+//		if (this.getWidth() > initialWidth)
+//		{
+//			int newXforButtons = XFORBUTTONS + this.getWidth() - initialWidth;
+//			System.out.println("offset: " + newXforButtons);
+//			for (int i = 0; i < buttons.size(); i++)
+//			{
+//				JButton button = buttons.get(i);
+//				// this.remove(button);
+//				button.setBounds(newXforButtons, 30 + i * (55), 105, 55);
+//				// this.revalidate();
+//				// this.add(button);
+//			}
+//			int newWidthForMSP = WIDTHFORMAINSCROLLPANE + this.getWidth() - initialWidth;
+//			main_scrollPane.setBounds(DEBUGGER_LEFT_PADDING, 5, newWidthForMSP, main_scrollPane.getHeight());
+//			int newWidthForGP = WIDTHFORGRAPHPANEL + this.getWidth() - initialWidth;
+//			//graphPanel.setBounds(DEBUGGER_LEFT_PADDING, 200, newWidthForGP, graphPanel.getHeight());
+//			//imageLabel.setBounds(graphPanel.getWidth() / 2 - 300 / 2, imageLabel.getY(), 300, 200);
+//			panel_table.setBounds(35, 100, 100 + this.getWidth() - initialWidth, panel_table.getHeight());
+//			panel_graph.setBounds(35, 200, 100 + this.getWidth() - initialWidth, panel_graph.getHeight());
+//		}
+//
+//		if (this.getHeight() > initialHeight)
+//		{
+//			int newHeightForMSP = HEIGHTFORGRAPHPANEL + this.getHeight() - initialHeight;
+//			main_scrollPane.setBounds(DEBUGGER_LEFT_PADDING, 5, main_scrollPane.getWidth(), newHeightForMSP);
+//			int newHeightForGP = HEIGHTFORGRAPHPANEL + this.getHeight() - initialHeight;
+//			//graphPanel.setBounds(DEBUGGER_LEFT_PADDING, 200 + this.getHeight() - initialHeight, graphPanel.getWidth(),
+//			//		HEIGHTFORGRAPHPANEL);
+//			panel_table.setBounds(35, 100, panel_table.getWidth(), 100 + this.getHeight() - initialHeight);
+//			panel_graph.setBounds(35, 200 + this.getHeight() - initialHeight, panel_graph.getWidth(), 200);
+//		}
+//		// this.revalidate();
+//	}
+
+	@Override
+	public void componentResized(ComponentEvent e)
+	{
+		//update();
 	}
 
 	@Override
-	public void componentResized(ComponentEvent e) {
-		update();
+	public void componentMoved(ComponentEvent e)
+	{
 	}
-	@Override
-	public void componentMoved(ComponentEvent e) {}
-	@Override
-	public void componentShown(ComponentEvent e) {}
-	@Override
-	public void componentHidden(ComponentEvent e) {}
-
-
-
 
 	@Override
-	public void mouseClicked(MouseEvent e) {
-		for(int i = 0; i < tables.size(); i++) {
+	public void componentShown(ComponentEvent e)
+	{
+	}
+
+	@Override
+	public void componentHidden(ComponentEvent e)
+	{
+	}
+
+//	@Override
+//	public void mouseClicked(MouseEvent e)
+//	{
+//		for (int i = 0; i < tables.size(); i++)
+//		{
+//			tables.get(i).clearSelection();
+//		}
+//		JTable table = (JTable) e.getSource();
+//		for (int i = 0; i < tables.size(); i++)
+//		{
+//			JTable currentTable = tables.get(i);
+//			int row = currentTable.getSelectedRow();
+//			System.out.println("row : "+row);
+//			TableModel selModel = currentTable.getModel();
+//			if (currentTable == table)
+//			{
+//				
+//				String id = selModel.getValueAt(row, 0).toString();
+//				System.out.println("id : "+id);
+//				String id1 = selModel.getValueAt(row, 1).toString();
+//				System.out.println("id1 : "+id1);
+////				String id2 = selModel.getValueAt(row, 2).toString();
+////				System.out.println("id2 : "+id2);
+//				
+//				int index = currentTable.rowAtPoint(e.getPoint());
+//								
+//				if(i != 0)
+//					showGraph(i);
+//				
+////				if(i != 0) {
+////					showGraph(i, index);
+////				}
+//				
+//				currentTable.setRowSelectionInterval(index, index);
+//
+//				// get the index for next table that need to be highlighted
+//
+//				index++;
+//				System.out.println("t" + index + "[" + i + "]");
+//				// index--;
+//
+//				highlightTables(i, "t" + (index) + "[" + i + "]");
+//
+//				//
+//				// for (int j = 0; j < i + 1; j++) {
+//				// tables.get(j).setRowSelectionInterval(index, index);
+//				// }
+//			}
+//		}
+//
+//	}
+	
+	@Override
+	public void mouseClicked(MouseEvent e)
+	{
+		for (int i = 0; i < tables.size(); i++)
+		{
 			tables.get(i).clearSelection();
 		}
 		JTable table = (JTable) e.getSource();
-		for(int i = 0; i < tables.size(); i++) {
+		for (int i = 0; i < tables.size(); i++)
+		{
 			JTable currentTable = tables.get(i);
-			if (currentTable == table) {
+			if (currentTable == table)
+			{
 				int index = currentTable.rowAtPoint(e.getPoint());
-				currentTable.setRowSelectionInterval(index, index);
+				int row = currentTable.rowAtPoint(e.getPoint()) + 1;	
+				if(i != 0)
+					showGraph(i, row);
+
+//				if(i != 0)
+//					showGraph(i);
 				
-				// get the index for next table that need to be highlighted
-				
-				index++;		
-				System.out.println("t" + index+ "[" + i + "]");
-//				index--;
-				
-				highlightTables( i, "t" + (index) + "[" + i + "]");
-				
-//				
-//				for (int j = 0; j < i + 1; j++) {
-//					tables.get(j).setRowSelectionInterval(index, index);
+//				if(i != 0) {
+//					showGraph(i, index);
 //				}
+				
+				currentTable.setRowSelectionInterval(index, index);
+
+				// get the index for next table that need to be highlighted
+
+//				index++;
+//				System.out.println("t" + index + "[" + i + "]");
+				// index--;
+
+
+//				highlightTables(i, "t" + (index) + "[" + i + "]");
+
+				//
+				// for (int j = 0; j < i + 1; j++) {
+				// tables.get(j).setRowSelectionInterval(index, index);
+				//}
 			}
 		}
-		
-		
+
 	}
 
-
-	private void highlightTables(int currentTableIndex, String tupleIndex) {
+	private void highlightTables(int currentTableIndex, String tupleIndex)
+	{
 		JTable currentTable = tables.get(currentTableIndex);
-		//get the index for row we want to highlight
+		// get the index for row we want to highlight
 		Pattern pattern = Pattern.compile("t(\\d*)\\[(\\d*)\\]");
 		Matcher matcher = pattern.matcher(tupleIndex);
 		String rowIndex = "";
-	    String tableIndex = "";
-		if (matcher.matches()) {
-		    rowIndex = matcher.group(1);
-		    tableIndex = matcher.group(2);
-		    System.out.println(rowIndex + ", " + tableIndex);
+		String tableIndex = "";
+		if (matcher.matches())
+		{
+			rowIndex = matcher.group(1);
+			tableIndex = matcher.group(2);
+			System.out.println(rowIndex + ", " + tableIndex);
 		}
-		//highlight table
+		// highlight table
 		currentTable.setRowSelectionInterval(Integer.parseInt(rowIndex) - 1, Integer.parseInt(rowIndex) - 1);
 		System.out.println("currentTupeIndex" + tupleIndex + "  tableIndex" + currentTableIndex);
-		if (currentTableIndex <= -1) {
+		if (currentTableIndex <= -1)
+		{
 			return;
 		}
-		List<String> provenanceList = ((DebuggerTableModel)tables.get(currentTableIndex).getModel()).getPrevRelation().get(tupleIndex);
-		if (provenanceList == null) {
+		List<String> provenanceList = ((DebuggerTableModel) tables.get(currentTableIndex).getModel()).getPrevRelation()
+				.get(tupleIndex);
+		if (provenanceList == null)
+		{
 			return;
 		}
-		System.out.println(((DebuggerTableModel)tables.get(currentTableIndex).getModel()).getPrevRelation());
+		System.out.println(((DebuggerTableModel) tables.get(currentTableIndex).getModel()).getPrevRelation());
 		System.out.println(tupleIndex);
 		System.out.println(provenanceList);
 
-
-		for (int i = 0; i < provenanceList.size(); i++) {
+		for (int i = 0; i < provenanceList.size(); i++)
+		{
 			String nextTupleIndex = provenanceList.get(i);
 			highlightTables(--currentTableIndex, nextTupleIndex);
 		}
 	}
-
-
-
+	
+	
 
 	@Override
-	public void mousePressed(MouseEvent e) { }
+	public void mousePressed(MouseEvent e)
+	{
+	}
+
 	@Override
-	public void mouseReleased(MouseEvent e) { }
+	public void mouseReleased(MouseEvent e)
+	{
+	}
+
 	@Override
-	public void mouseEntered(MouseEvent e) { }
+	public void mouseEntered(MouseEvent e)
+	{
+	}
+
 	@Override
-	public void mouseExited(MouseEvent e) { }
+	public void mouseExited(MouseEvent e)
+	{
+	}
+	
+	
+	
+	//t row [level] e.g. t1[2] tuple 1 and the second update
+	public void showGraph(int level, int row) {
+		//Make the label text on the label
+		System.setProperty("org.graphstream.ui.renderer", "org.graphstream.ui.j2dviewer.J2DGraphRenderer");
+		//Set node style
+		String styleSheet =
+	            "node {" +
+	            "size: 35;" +
+	            "fill-color: grey;" +
+	            "shape: box;" +
+	            "}";
+		//Graph
+		Graph graph = new DefaultGraph("ProvenanceGraph");
+		//graph.addAttribute("ui.stylesheet", "node { size: 35; shape: box; fill-color: grey;}");  // size-mode: fit
+		graph.addAttribute("ui.stylesheet", styleSheet);
+
+
+		            
+		
+//		Node a = graph.addNode("t2[0]");
+//		Node b = graph.addNode("t2[1]");
+//		Node c = graph.addNode("t2[2]");
+//		
+//		
+//		a.setAttribute("xy",0,0);
+//		b.setAttribute("xy",1,0);
+//		c.setAttribute("xy",2,0);
+//		
+//		a.addAttribute("label", "t2[0]");
+//		b.addAttribute("label", "t2[1]");
+//		c.addAttribute("label", "t2[2]");
+//		
+//		
+//		
+//		graph.addEdge("u1", b, a,true);
+//		graph.addEdge("u2", c, b,true);
+//		
+//		graph.display(false);		//false is to disable automatic placement of the nodes
+		
+		
+//		graph.addAttribute("ui.sreeenshot", "/home/david/export.jpg");
+		
+		
+		
+		
+		
+		//node to pre and next;
+//		Map<String, List<String>> next = new HashMap<String, List<String>>();
+//		Map<String, List<String>> prev = new HashMap<String, List<String>>();
+//		
+//		int level = 3;
+//		List<String> list = new ArrayList<String>();
+//		list.add("t[1]1");
+//		next.put("t[1]0", list);
+//		list.clear();
+//		
+//		list.add("t[1]2");
+//		next.put("t[1]1", list);
+//		list.clear();
+//		
+//		list.add("t[1]3");
+//	    next.put("t[1]2", list);
+//		list.clear();
+////		
+//		list.add("t[1]0)");
+//		prev.put("t[1]1", list);
+//		list.clear();
+////		
+//		list.add("t[1]1");
+//		prev.put("t[1]2", list);
+//		list.clear();
+////		
+//		list.add("t[1]2");
+//		prev.put("t[1]3", list);
+//		list.clear();
+//		
+//		System.out.println(next.size());
+//		System.out.println(next.get("t[1]0"));
+		
+		
+		
+		
+		//12.1
+//		HashMap<String, String> next = new HashMap<String, String>();
+//		next.put("t1[0]", "t1[1]");
+//		next.put("t1[1]", "t1[2]");
+//		next.put("t1[2]", "t1[3]");
+//		HashMap<String, String> prev = new HashMap<String, String>();
+//		prev.put("t[1]1", "t[1]0");
+//		prev.put("t[1]2", "t[1]1");
+//		prev.put("t[1]3", "t[1]2");
+		//12.1
+		
+		
+//		Map<String, List<String>> nextT = new HashMap<String, List<String>>();
+//		Map<String, List<String>> prevT = new HashMap<String, List<String>>();
+//		new DebuggerTableModel().forGraphSQL(prevT, nextT);
+//		prevT =new DebuggerTableModel().getPrevRelation();
+		
+		
+		
+		
+		
+//		Set<String> nodes = new HashSet<String>();
+//		int attribute = 0;
+//		int edgeNum = 0;
+//		for(int i = 0; i < level; i++) {
+////			System.out.println(i);
+//			String start = "t[1]" + String.valueOf(i);
+////			System.out.println(start);
+//
+//			if(!nodes.contains(start)) {
+//				nodes.add(start);
+//				graph.addNode(start);
+//				graph.setAttribute("xy",attribute, 0);
+//				attribute++;
+//				graph.addAttribute("label", start);
+//				List<String> n = next.get(start);
+//				for(int j = 0; j < n.size(); j++) {
+//					String subnode = n.get(j);
+//					nodes.add(subnode);
+//					
+//					
+//					
+//				}
+//				for(int j = 0; j < next.get(start).size();j++) {
+//					String subnode = next.get(start).get(j);
+//					System.out.println(subnode);
+////					nodes.add(next.get(start).get(j)));
+//					nodes.add(subnode);
+//					graph.setAttribute("xy", attribute, 0);
+//					attribute++;
+//					graph.addAttribute("label", subnode);
+//					graph.addEdge("u" + String.valueOf(edgeNum), subnode, start, true);
+//					edgeNum++;
+//				}
+//			}
+//			else {
+//				for(int j = 0; j < next.get(start).size();j++) {
+//					String subnode = next.get(start).get(j);
+////					nodes.add(next.get(start).get(j)));
+//					nodes.add(subnode);
+//					graph.setAttribute("xy", attribute, 0);
+//					attribute++;
+//					graph.addAttribute("label", subnode);
+//					graph.addEdge("u" + String.valueOf(edgeNum), start, subnode, true);
+//					edgeNum++;
+//				}
+//			}
+//			
+//		}
+		
+		
+//		int level = 3;
+//		int attribute = 0;
+//		String start = "t[1]0";
+//		Node stNode = graph.addNode(start);
+//		stNode.setAttribute("xy", attribute);
+//		attribute++;
+//		stNode.addAttribute("label", start);
+//		int edgeNum = 0;
+//		for(int i = 0; i < level; i++) {
+//			String currName = next.get(start);
+//			Node currNode = graph.addNode(currName);
+//			currNode.setAttribute("xy", attribute, 0);
+//			attribute++;
+//			currNode.addAttribute("label", currName);
+//			graph.addEdge("u" + String.valueOf(edgeNum), stNode, currNode);
+//			edgeNum++;
+//			stNode = currNode;
+//			
+//		}
+//		graph.display(false);
+//		String startName = "t[1]0";
+//		
+//		Node startNode = graph.addNode(startName);
+//		int attribute = 0;
+//		startNode.setAttribute("xy", attribute, 0);
+//		attribute++;
+//		startNode.addAttribute("label", startName);
+//		
+//		int edgeNum = 0;
+//		for(int i = 0; i < level; i++) {
+//			String currName = next.get(startName);
+//			Node currNode = graph.addNode(currName);
+//			
+//			currNode.setAttribute("xy", attribute, 0);
+//			attribute++;
+//			currNode.addAttribute("label", currName);
+//			graph.addEdge("u" + String.valueOf(edgeNum), startNode, currNode, true);
+//			edgeNum++;
+//			startNode = currNode;
+//		}
+//		
+//		graph.display();
+//		int level = 1;
+//		System.out.println("prevT size:" + nextT.size());
+
+		ArrayList<Node> nodes = new ArrayList<Node>();
+		int attribute = 0;
+		for(int i = 0; i <= level; i++) {
+			String nodeName = "t" + String.valueOf(row) + "[" + String.valueOf(i) + "]";
+			Node tempNode = graph.addNode(nodeName);
+			//set node position x and y axis
+			tempNode.setAttribute("xy", attribute, 0); 						
+			attribute++;
+			
+			tempNode.addAttribute("label", nodeName);
+			nodes.add(tempNode);
+		}
+//		System.out.println(nodes.size());
+		
+		for(int i = 0; i < level; i++) {
+			graph.addEdge("u" + String.valueOf(i), nodes.get(i), nodes.get(i + 1), true);
+		}
+		
+		
+//	    JFrame frame = new JFrame();
+//	    frame.setLayout(new GridBagLayout());
+//	    JPanel panel = new JPanel();
+//	    panel.setBorder(BorderFactory.createLineBorder(Color.black));
+//	    panel.setPreferredSize(new Dimension(600, 600));
+//	    frame.add(panel);
+//	    frame.setSize(1000, 1000);
+//	    frame.setVisible(true);
+
+	    Viewer viewer = new Viewer(graph, Viewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
+	    // ...
+	    View view = viewer.addDefaultView(false);   // false indicates "no JFrame".
+	    ((Component) view).setPreferredSize(new Dimension(400, 200));
+		// ...
+		//panel.add((Component) view);
+//	    JLabel jlabel = new JLabel("This is a label");
+//		//panel_test.add((Component) view);
+//	    JButton getG4 = new JButton("Get Graph3");
+//		getG4.setBounds(450, 50, 100, 25);
+		
+	    panel_view.removeAll();
+	    panel_view.add((Component) view);
+	    panel_view.repaint();
+	    panel_view.revalidate();
+		
+		
+		//Viewer viewer = graph.display(false);
+		//graphPanel.add(viewer);
+		//just hide the window not close it after click the "x"
+		//viewer.setCloseFramePolicy(Viewer.CloseFramePolicy.HIDE_ONLY);
+		//View view = viewer.getDefaultView();
+		//graph.display();
+		//false means the graph is not dynamic
+		
+		//graphPanel.add((Component) view);
+		//graph.display(false);
+		
+//		for(int i = 0; i < level; i++) {
+//			String nodeName1 = "t1[" + String.valueOf(i) + "]";
+//			Node n1 = graph.addNode(nodeName1);
+//			n1.addAttribute("ui.label", n1.getId());
+//			String nodeName2 = "t1[" + String.valueOf(i+1) + "]";
+//			Node n2 = graph.addNode(nodeName2);
+//			n2.addAttribute("ui.label", n2.getId());
+//			graph.addEdge("u" + String.valueOf(i), n1, n2, true);
+//			//graph.addEdge("n1n2", "n1", "n2");
+//		}
+//		graph.display(false);
+		
+//		JFrame frame = new JFrame();
+//		frame.setLayout(new GridBagLayout());
+//		JPanel panel = new JPanel();
+//		panel.setBorder(BorderFactory.createLineBorder(Color.black));
+//		panel.setPreferredSize(new Dimension(600, 600));
+//		JLabel jlabel = new JLabel("This is a label");
+//		frame.add(panel);
+//		frame.setSize(1000, 1000);
+//		frame.setVisible(true);		
+//		Viewer viewer = new Viewer(graph, Viewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
+//		View view = viewer.addDefaultView(false);   // false indicates "no JFrame".
+//		((Component) view).setPreferredSize(new Dimension(400, 200));
+//		panel.add((Component) view);
+		
+		
+		
+//		String start = "t" +String.valueOf(index) + "[" + String.valueOf(i) + "]";
+//		Node startNode = makeNodeMap(graph, start, atrribute++);
+//		Node forStart = startNode;
+//		while(!prevT.containsKey(start){
+//			String curr = prevT.get(start).get(0);
+//			Node currNode = makeNode(graph, cur, attribute++);
+//			makeNodeMap(start, curr);
+//			start = curr;
+//		}
+//		
+//		
+//		
+//		
+//		
+//		
+//		
+//		
+//		
+//		
+//		
+		
+		
+		
+		
+		
+		
+		
+//		for(int i = 0; i < level; i++) {
+//			String start = "t[1]" + String.valueOf(i);
+//			nodes.add(start);
+//			for(int j = 0; j < next.get(start).size(); j++) {
+//				nodes.add(next.get(start).get(j));
+//			}
+//			
+//		}
+//		
+//		int attribute = 0;
+//		ArrayList<Node> listNode = new ArrayList<Node>();
+//		for(String s : nodes) {
+//			
+//			Node curNode = graph.addNode(s);
+//			curNode.setAttribute("xy", attribute, 0);
+//			curNode.addAttribute("label", s);
+//			attribute++;
+//		}
+//		int edgeNum = 0;
+//		for(int i = 0; i < level; i++) {
+//			String start = "t[1]" + String.valueOf(i);
+//			
+//			for(int j = 0; j < next.get(start).size(); j++) {
+//				String subNode = next.get(start).get(j);
+//				
+//				graph.addEdge("u" + String.valueOf(edgeNum), subNode, start,true);
+//				start = subNode;
+//				edgeNum++;
+//			}
+//		}
+		
+//		graph.display(true);
+	}
+	
+//	public Node makeNode(Graph graph, String name, int attribute){
+//		
+//		Node tempNode = graph.addNode(name);
+//		tempNode.setAttribute("xy", attribute, 0);
+//		tempNode.addAttribute("label", name);
+//		return tempNode;
+//		
+//	}
+//	public void makeNodeMap(Node start, Node end) {
+//		mapNode.put(start, end);
+//	}
+//	public void makeGraph(Map<Node, Node> map, Graph graph, Node start){
+//		int edge = 1;
+//		while(mapNode.containsKey(start)) {
+//			graph.addEdge("u" + String.valueOf(edge), start, mapNode.get(start), true);
+//			edge++;
+//			start = mapNode.get(start);
+//		}
+//	}
 
 }
