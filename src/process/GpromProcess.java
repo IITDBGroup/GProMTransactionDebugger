@@ -50,12 +50,12 @@ public class GpromProcess implements DBUtility{
 //				"-port", PORT, "-user",  USERNAME,  "-passwd", PASSWORD, "-log", "-loglevel",  "0",  "-sql",
 //				"select * from employee;", "-activate", "treefiy_prov_rewrite_input");
 
-        //for VM		
+        //for UNIFIED_AUDIT_TRAIL		
 //		ProcessBuilder pb = new ProcessBuilder("./src/command_line/gprom",  "-host",  HOST,  "-db",  SID, 
 //				"-port", PORT, "-user",  USERNAME,  "-passwd", PASSWORD, "-log", "-loglevel",  "0",  "-sql",
 //				"PROVENANCE WITH ONLY UPDATED SHOW INTERMEDIATE OF TRANSACTION '"  + XID + "';", "-backend", "oracle","-Pexecutor", "sql");
 
-		//for dockor
+		//for SYS.FGA_LOG$
 		ProcessBuilder pb = new ProcessBuilder("./src/command_line/gprom",  "-host",  HOST,  "-db",  SID, 
 				"-port", PORT, "-user",  USERNAME,  "-passwd", PASSWORD, "-log", "-loglevel",  "0",  "-sql",
 				"PROVENANCE WITH ONLY UPDATED SHOW INTERMEDIATE OF TRANSACTION '"  + XID + "';", "-backend", "oracle","-Pexecutor", "sql",

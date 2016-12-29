@@ -1,6 +1,6 @@
 package dbConnection;
 
-//used for VM
+//used for UNIFIED_AUDIT_TRAIL
 //public interface DBUtility {
 //	public static final String HOST = "127.0.0.1";
 //	public static final String SID = "orcl";
@@ -10,7 +10,7 @@ package dbConnection;
 //}
 
 
-//used for dockor
+//used for SYS.FGA_LOG$
 public interface DBUtility {
 	public static final String HOST = "127.0.0.1";
 	public static final String SID = "orcl";
