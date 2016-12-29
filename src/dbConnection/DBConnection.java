@@ -25,8 +25,9 @@ public class DBConnection implements DBUtility {
 //    	ROWNUM <=1000 AND
 		try {
 			statement = connection.createStatement();
-			query ="SELECT * FROM UNIFIED_AUDIT_TRAIL  WHERE  EVENT_TIMESTAMP > to_date('02/18/2016', 'MM/DD/YYYY') ORDER BY EVENT_TIMESTAMP ASC";//UNIFIED_AUDIT_TRAIL  SYS.fga_log$
-        	resultSet = statement.executeQuery(query);
+			//query ="SELECT * FROM UNIFIED_AUDIT_TRAIL  WHERE  EVENT_TIMESTAMP > to_date('02/18/2016', 'MM/DD/YYYY') ORDER BY EVENT_TIMESTAMP ASC";//UNIFIED_AUDIT_TRAIL  SYS.fga_log$
+			query ="SELECT * FROM SYS.FGA_LOG$";  //WHERE  EVENT_TIMESTAMP > to_date('02/18/2016', 'MM/DD/YYYY') ORDER BY EVENT_TIMESTAMP ASC";//UNIFIED_AUDIT_TRAIL  SYS.fga_log$
+			resultSet = statement.executeQuery(query);
 		}catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -41,7 +42,7 @@ public class DBConnection implements DBUtility {
     	ResultSet resultSet = null;
 		try {
 			statement = connection.createStatement();
-			query ="SELECT DISTINCT VERSIONS_XID, VERSIONS_STARTTIME FROM employee VERSIONS BETWEEN SCN MINVALUE AND MAXVALUE ORDER BY VERSIONS_XID";//UNIFIED_AUDIT_TRAIL  SYS.fga_log$
+			query ="SELECT DISTINCT VERSIONS_XID, VERSIONS_STARTTIME FROM R VERSIONS BETWEEN SCN MINVALUE AND MAXVALUE ORDER BY VERSIONS_XID";//UNIFIED_AUDIT_TRAIL  SYS.fga_log$
         	resultSet = statement.executeQuery(query);
 		}catch (SQLException e) {
 			// TODO Auto-generated catch block

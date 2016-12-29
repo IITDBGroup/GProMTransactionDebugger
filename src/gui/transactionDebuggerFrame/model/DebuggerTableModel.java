@@ -96,7 +96,7 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
 //		try {
 //			System.out.println("column count:" + rsmd.getColumnCount());
 //			return rsmd.getColumnCount() + 1; //+ 1 because we need to add the index of tuple
-			return indexList.size() + 1; // because we only need to access the part of result set
+			return indexList.size() + 2; // because we only need to access the part of result set
 //		} catch (SQLException e) {
 //			e.printStackTrace();
 //		}
@@ -108,8 +108,13 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
         	if (col == 0) {
         		return "Tuple Index";
         	}
-			return rsmd.getColumnName(indexList.get(--col)); // -- make index start from 0
-		} catch (SQLException e) {
+        	else if (col == 1)
+        		return "TransID";
+			//return rsmd.getColumnName(indexList.get(--col)); // -- make index start from 0
+        	col = col - 2; 
+        	System.out.println("col = "+(col));
+        	return rsmd.getColumnName(indexList.get(col));
+        } catch (SQLException e) {
 			e.printStackTrace();
 		}
         return "";
@@ -124,13 +129,19 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
 		if (columnIndex == 0) {
 			return (Object)("t" + (rowIndex) + "[" + stmtIndex + "]");	
 		}
+		
+		if (columnIndex == 1) {
+			String tid = "0D001C0019000000";
+			return (Object)(tid);	
+		}
+		
 //		if (rowIndex > 1) {
 //			return (Object)"Dummy text";
 //		}
 		Object result = null;
 //		System.out.println("get Value called" + rowIndex + "??" +columnIndex);
-		
-		columnIndex = indexList.get(--columnIndex);// -- make index start from 0
+		columnIndex = columnIndex - 2;
+		columnIndex = indexList.get(columnIndex);// -- make index start from 0
 		try {
 			rs.absolute(rowIndex);
 			result = rs.getObject(columnIndex);
@@ -159,6 +170,11 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
 
 	public Map<String, List<String>> getNextRelation() {
 		return nextRelation;
+	}
+
+	public void addColumn(String string, Object[] array) {
+		// TODO Auto-generated method stub
+		this.addColumn(string, array);
 	}
 	
 //	public void getGraph(int level) {
