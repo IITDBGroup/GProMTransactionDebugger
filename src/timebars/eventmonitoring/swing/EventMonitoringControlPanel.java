@@ -54,7 +54,12 @@ import de.jaret.util.ui.timebars.swing.renderer.DefaultTimeScaleRenderer;
  * @version $Id: EventMonitoringControlPanel.java 974 2009-12-22 22:15:29Z kliem $
  */
 public class EventMonitoringControlPanel extends JPanel {
-    TimeBarViewer _viewer;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -5521087582006706413L;
+	
+	TimeBarViewer _viewer;
     JSlider _timeScaleSlider;
     JSlider _rowHeigthSlider;
     JComboBox _sorterCombo;

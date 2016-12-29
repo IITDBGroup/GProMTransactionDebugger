@@ -19,20 +19,14 @@
  */
 package timebars.eventmonitoring.model;
 
-import java.io.UnsupportedEncodingException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 
-import javax.swing.text.html.HTMLDocument.Iterator;
-
 import org.apache.log4j.Logger;
-import org.gprom.tdebug.db_connection.*;
+import org.gprom.tdebug.db_connection.DBManager;
 import org.gprom.util.LoggerUtil;
 
 import de.jaret.util.date.JaretDate;
@@ -183,7 +177,7 @@ public class ModelCreator {
 				}
 
 				String strRead=sb.toString();
-//				System.out.println(strRead);
+//				log.info(strRead);
 
 				
 				//添加需要的属性
@@ -223,7 +217,7 @@ public class ModelCreator {
 			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LoggerUtil.logException(e,log);
 		}
 		
 		TransactionNode nodeCommit;
@@ -244,7 +238,7 @@ try {
 //				}
 //				
 //				String strReadCommit=sb1.toString();
-//				System.out.println(strRead);
+//				log.info(strRead);
 				
 				//添加需要的属性
 				//第一个属性找到sql对应的属性名  dbusername换sql对应属性
@@ -253,7 +247,7 @@ try {
 			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LoggerUtil.logException(e,log);
 		}
 		/**flash_back_nodes*/
 		HashMap<String, TransactionNode> map1 = new HashMap<String, TransactionNode>();
@@ -263,7 +257,7 @@ try {
 		
 
 		for (String key : map1.keySet()){
-			System.out.println("flash_back_transaction_ID:bbb" + key);
+			log.info("flash_back_transaction_ID:bbb" + key);
 		}
 		
 		
@@ -294,7 +288,7 @@ try {
 //			  
 //		    Integer value = map.get(key);  
 //		  
-//		    System.out.println("Key = " + key + ", Value = " + value);  
+//		    log.info("Key = " + key + ", Value = " + value);  
 //		  
 //		} 
 		
@@ -305,13 +299,13 @@ try {
 						+ key);
 				EventTimeBarRow row = new EventTimeBarRow(header);
 				
-				System.out.println("audit_log_transaction_ID:aaa" + key);
+				log.info("audit_log_transaction_ID:aaa" + key);
 				row.setXID(key);
 				if(map1.containsKey(key)){
-					System.out.println("True");
+					log.info("True");
 				}
 				else{
-					System.out.println("False");
+					log.info("False");
 				}
 
 				
@@ -322,8 +316,8 @@ try {
 				
 				if (map.get(key).Size() == 1){
 					
-					System.out.println("transaction start time" + map.get(key).GetNode(map.get(key).Size() - 1).getTimeStamp().toString());
-					System.out.println("commit" + map1.get(key).getTimeStamp().toString());
+					log.info("transaction start time" + map.get(key).GetNode(map.get(key).Size() - 1).getTimeStamp().toString());
+					log.info("commit" + map1.get(key).getTimeStamp().toString());
 					
 					
 					start.setDateTime(map.get(key).GetNode(map.get(key).Size() - 1).getTimeStamp().getDate(),
@@ -347,10 +341,10 @@ try {
 				else{
 					
 					for (int g = 0; g < map.get(key).Size() - 1; g++){
-						System.out.println(map.get(key).GetNode(g).getTimeStamp().toString());
-						System.out.println(map.get(key).GetNode(g + 1).getTimeStamp().toString());
-						System.out.println("commit" + map1.get(key).getTimeStamp().toString());
-						System.out.println("transaction node" + key);
+						log.info(map.get(key).GetNode(g).getTimeStamp().toString());
+						log.info(map.get(key).GetNode(g + 1).getTimeStamp().toString());
+						log.info("commit" + map1.get(key).getTimeStamp().toString());
+						log.info("transaction node" + key);
 						
 						start.setDateTime(map.get(key).GetNode(g).getTimeStamp().getDate(),
 								(map.get(key).GetNode(g).getTimeStamp().getMonth() + 1), map.get(key).GetNode(g).getTimeStamp().getYear() + 1900,
@@ -392,10 +386,10 @@ try {
 //			DefaultRowHeader header = new DefaultRowHeader("T_ID "
 //					+ entry.getKey());
 //			EventTimeBarRow row = new EventTimeBarRow(header);
-//			System.out.println("aaa");
+//			log.info("aaa");
 //			for (int g = 0; g < entry.getValue().Size() - 1; g++){
-//				System.out.println(entry.getValue().GetNode(g).getTimeStamp().toString());
-//				System.out.println(entry.getValue().GetNode(g + 1).getTimeStamp().toString());
+//				log.info(entry.getValue().GetNode(g).getTimeStamp().toString());
+//				log.info(entry.getValue().GetNode(g + 1).getTimeStamp().toString());
 //				
 //				start.setDateTime(entry.getValue().GetNode(g).getTimeStamp().getDate(),
 //						(entry.getValue().GetNode(g).getTimeStamp().getMonth() + 1), entry.getValue().GetNode(g).getTimeStamp().getYear() + 1900,
@@ -431,7 +425,7 @@ try {
 //		  
 //		for (Map.Entry<Integer, Integer> entry : map.entrySet()) {  
 //		  
-//		    System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());  
+//		    log.info("Key = " + entry.getKey() + ", Value = " + entry.getValue());  
 //		  
 //		} 
 //		map.put("123", new ListNode());
@@ -442,8 +436,8 @@ try {
 //		ln.AddNode(new TransactionNode( ));
 //		TransactionNode n1 = ln.GetNode(0);
 //		n1.PrintNode();
-//		System.out.println(ln.Remove(n1));
-//		System.out.println(ln.IsEmpty());
+//		log.info(ln.Remove(n1));
+//		log.info(ln.IsEmpty());
 		
 		
 		
@@ -465,8 +459,8 @@ try {
 //					//设置date
 //					
 ////					nodes.get(j).getTimeStamp()
-////					System.out.println("dd:"+nodes.get(j).getTimeStamp());
-////					System.out.println("ee:"+nodes.get(j).getTimeStamp().getDate());
+////					log.info("dd:"+nodes.get(j).getTimeStamp());
+////					log.info("ee:"+nodes.get(j).getTimeStamp().getDate());
 //					
 //					start.setDateTime(nodes.get(j).getTimeStamp().getDate(),
 //							(nodes.get(j).getTimeStamp().getMonth() + 1), nodes
