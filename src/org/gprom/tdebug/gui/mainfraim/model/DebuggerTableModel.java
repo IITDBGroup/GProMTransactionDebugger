@@ -12,6 +12,8 @@ import javax.swing.table.AbstractTableModel;
 
 import org.apache.log4j.Logger;
 
+import timebars.eventmonitoring.model.EventTimeBarRow;
+
 public class DebuggerTableModel extends AbstractTableModel {
 
 	/**
@@ -26,8 +28,9 @@ public class DebuggerTableModel extends AbstractTableModel {
 	private List<Integer> indexList = null;
 	private Map<String, List<String>> prevRelation = new HashMap<String, List<String>>();
 	private Map<String, List<String>> nextRelation = new HashMap<String, List<String>>();
+	private EventTimeBarRow currentRow;
 	
-	public DebuggerTableModel(ResultSet rs, List<Integer> indexList, int stmtIndex) {
+	public DebuggerTableModel(ResultSet rs, List<Integer> indexList, int stmtIndex, EventTimeBarRow currentRow) {
 		super();
 		this.rs = rs;
 		try {
@@ -38,7 +41,7 @@ public class DebuggerTableModel extends AbstractTableModel {
 		this.indexList = indexList;
 		
 		this.stmtIndex = stmtIndex;
-
+		this.currentRow = currentRow;
 	}
 
 	public void setPrevTupleIndex(String targetIndex, String tupleIndex) {
@@ -127,7 +130,7 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
 		}
 		
 		if (columnIndex == 1) {
-			String tid = "0D001C0019000000";
+			String tid = currentRow.getXID();
 			return (Object)(tid);	
 		}
 		

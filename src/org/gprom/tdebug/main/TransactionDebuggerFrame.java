@@ -85,10 +85,12 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	
 	
 	JScrollPane main_scrollPane = null;
+//	JScrollPane main_scrollPane1 = null;
 //	JPanel graphPanel = null;
 	JPanel panel_view = null;
 	JLabel imageLabel = null;
 	JPanel stmt_table_panel = null;
+//	JPanel stmt_table_panel1 = null;
 	
 	//used to store label (SQL, table, graph) in the first column
 	JPanel panel_table = null;
@@ -133,7 +135,12 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		stmt_table_panel
 				.setPreferredSize(new Dimension(DEBUGGER_CELL_WIDTH * (currentRow.getIntervals().size() + 1), 300));
 		main_scrollPane = new JScrollPane(stmt_table_panel);
-		main_scrollPane.setBounds(DEBUGGER_LEFT_PADDING, 5, WIDTHFORMAINSCROLLPANE, HEIGHTFORMAINSCROLLPANE);
+		main_scrollPane.setBounds(DEBUGGER_LEFT_PADDING, 5, WIDTHFORMAINSCROLLPANE, HEIGHTFORMAINSCROLLPANE + 70);
+		
+//		stmt_table_panel1 = new JPanel();
+//		main_scrollPane1 = new JScrollPane(stmt_table_panel1);
+//		main_scrollPane1.setBounds(DEBUGGER_LEFT_PADDING, 105, WIDTHFORMAINSCROLLPANE, HEIGHTFORMAINSCROLLPANE);
+//		
 		JPanel jp1 = new JPanel();
 		JTextArea ja1 = new JTextArea(5, 20);
 		// ja1.setFont(Bold);
@@ -187,7 +194,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			rsmd = rs.getMetaData();
 		} catch (SQLException e)
 		{
-			LoggerUtil.logException(e,log);;
+			LoggerUtil.logException(e,log);
 		}
 
 		log.info("current row size : "+currentRow.getIntervals().size() );
@@ -202,7 +209,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				log.info("test columncont + 1 = "+rsmd.getColumnCount());
 				for (int j = 1; j < rsmd.getColumnCount() + 1; j++)
 				{
-					if (i == 0 && Pattern.matches("PROV_(?!U).*", rsmd.getColumnName(j)))
+					if (i == 0 && Pattern.matches("PROV_(?!U|query).*", rsmd.getColumnName(j)))
 					{
 						log.info("i=0, j = "+j);
 						indexList.add(j);
@@ -218,19 +225,30 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				if (currentTableName == null)
 				{
 					Pattern p = Pattern.compile("PROV_(?!U)(\\w*)_.*|PROV_U" + i + "__(\\w*)_.*");
-					Matcher m = p.matcher(rsmd.getColumnName(indexList.get(0)));
-					if (!m.find())
+					//log.info("indexList size: "+indexList.size());
+					if(indexList.size() != 0)
 					{
-						log.info("regular expression succeed!");
+						Matcher m = p.matcher(rsmd.getColumnName(indexList.get(0)));
+						if (!m.find())
+						{
+							log.info("regular expression succeed!");
+						}
+						else if (i == 0)
+						{
+							currentTableName = m.group(1);
+							log.info("group1: " + m.group(0));
+							log.info("group1: " + m.group(1));
+							log.info("group1: " + m.group(2));
+						} else
+						{
+							currentTableName = m.group(2);
+							log.info("group2: "+ m.group(0));
+							log.info("group2: " + m.group(1));
+							log.info("group2: " + m.group(2));
+						}
 					}
-					if (i == 0)
-					{
-						currentTableName = m.group(1);
-					} else
-					{
-						currentTableName = m.group(2);
-					}
-
+					else
+						currentTableName = "";
 				}
 
 			} 
@@ -239,7 +257,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				LoggerUtil.logException(e,log);;
 			}
 			// log.info("index: " + indexList + currentTableName);
-			DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i);
+			DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i, currentRow);
 			JPanel jp = new JPanel();
 			jp.setLayout(null);
 			jp.setBounds(DEBUGGER_CELL_WIDTH * i, 100, 300, 205);
@@ -309,6 +327,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		}
 		
 		this.add(main_scrollPane);
+		//this.add(main_scrollPane1);
 
 //		graphPanel = new JPanel();
 //		graphPanel.setLayout(null);
@@ -317,7 +336,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 		//used to show the graph view after click each row in the table
 		panel_view = new JPanel();
-		panel_view.setBounds(DEBUGGER_LEFT_PADDING, 250, WIDTHFORGRAPHPANEL, 220);
+		panel_view.setBounds(DEBUGGER_LEFT_PADDING, 320, WIDTHFORGRAPHPANEL, 220);
 		panel_view.setBorder(BorderFactory.createLineBorder(Color.gray, 3));
 		this.add(panel_view);
 		
@@ -363,9 +382,9 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		
 		panel_SQL.setBounds(35, 5, 100, 95);
 		panel_SQL.setBorder(BorderFactory.createLineBorder(Color.gray, 3));
-		panel_table.setBounds(35, 100, 100, 150);
+		panel_table.setBounds(35, 100, 100, 220);
 		panel_table.setBorder(BorderFactory.createLineBorder(Color.gray, 3));
-		panel_graph.setBounds(35, 250, 100, 220);
+		panel_graph.setBounds(35, 320, 100, 220);
 		panel_graph.setBorder(BorderFactory.createLineBorder(Color.gray, 3));
 		
 		this.add(panel_SQL);
