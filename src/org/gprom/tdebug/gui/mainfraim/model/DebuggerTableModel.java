@@ -176,6 +176,7 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
 		this.addColumn(string, array);
 	}
 	
+	
 //	public void getGraph(int level) {
 //		log.info(x);
 //	}

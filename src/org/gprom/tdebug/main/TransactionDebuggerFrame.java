@@ -27,6 +27,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 
 import org.apache.log4j.Logger;
 import org.gprom.tdebug.cli_process.GpromProcess;
@@ -102,7 +104,10 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	private int initialHeight = 0;
 	private List<JButton> buttons = new ArrayList<JButton>();
 	private List<JTable> tables = new ArrayList<JTable>();
+	private List<DebuggerTableModel> tableModels = new ArrayList<DebuggerTableModel>();
+	private List<JTextArea> sqlTextAreas = new ArrayList<JTextArea>();
 
+	
 	private EventTimeBarRow currentRow;
 	
 
@@ -154,9 +159,10 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			log.info(originalStmt);
 			JPanel jp = new JPanel();
 			JTextArea ja = new JTextArea(5, 20);
-			ja.setEditable(false);
+			ja.setEditable(true);
 			ja.setText(originalStmt);
 			ja.setLineWrap(true);
+			sqlTextAreas.add(ja);
 			jp.add(ja);
 			stmt_table_panel.add(jp);
 			jp.setBorder(BorderFactory.createLineBorder(Color.gray, 3));
@@ -187,6 +193,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		// second line
 		// add GProm query result
 		String sql = GpromProcess.getTransactionIntermediateSQL(currentRow.getXID());
+	    //String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
 		ResultSet rs = DBManager.getInstance().executeQuery(sql);
 		ResultSetMetaData rsmd = null;
 		try
@@ -254,17 +261,18 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			} 
 			catch (SQLException e)
 			{
-				LoggerUtil.logException(e,log);;
+				LoggerUtil.logException(e,log);
 			}
 			// log.info("index: " + indexList + currentTableName);
 			DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i, currentRow);
+			tableModels.add(tm);
 			JPanel jp = new JPanel();
 			jp.setLayout(null);
 			jp.setBounds(DEBUGGER_CELL_WIDTH * i, 100, 300, 205);
 			jp.setBorder(BorderFactory.createLineBorder(Color.gray, 3));
 			stmt_table_panel.add(jp);
 			JTable table = new JTable(tm);
-			
+
 //			//test add additional column
 //			List colData = new ArrayList(table.getRowCount());		
 //			tm.addColumn("Col3", colData.toArray());
@@ -532,51 +540,69 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 //			new design
 			f.setSize(950, 300);
 		} 
-//		else if(e.getSource() == getG1) {
-//			showGraph(1);		
-//		} else if (e.getSource() == getG2) {
-//			showGraph(2);
-//		} else if(e.getSource() == getG3) {
-//			showGraph(3);
-//		}
+		
+		if (e.getSource() == refresh_button)
+		{
+			int count = tableModels.size();
+			log.info("count: "+count);
+			
+			int countSqls = sqlTextAreas.size();
+			log.info("countTextAreas: "+countSqls);
+			String newSql = "";
+			for(int i=0; i<countSqls; i++)
+				newSql = newSql + sqlTextAreas.get(i).getText() + ";";
+			log.info("new sqls: "+newSql);
+			
+		    //String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
+			String sql = GpromProcess.getReenactSQL(newSql);
+			ResultSet rs = DBManager.getInstance().executeQuery(sql);
+			ResultSetMetaData rsmd = null;
+			
+			try
+			{
+				rsmd = rs.getMetaData();
+			} catch (SQLException e1)
+			{
+				LoggerUtil.logException(e1,log);
+			}
+			
+			for (int i = 0; i < count; i++) 
+			{
+				JTable jtb = tables.get(i);
+
+				List<Integer> indexList = new ArrayList<Integer>();
+				try
+				{
+					// index
+					log.info("test columncont + 1 = "+rsmd.getColumnCount());
+					for (int j = 1; j < rsmd.getColumnCount() + 1; j++)
+					{
+						if (i == 0 && Pattern.matches("PROV_(?!U|query).*", rsmd.getColumnName(j)))
+						{
+							log.info("i=0, j = "+j);
+							indexList.add(j);
+						} 
+						else if (Pattern.matches("PROV_U" + i + ".*", rsmd.getColumnName(j)))
+						{
+							log.info("i !=0, j = "+j);
+							indexList.add(j);
+						}
+					}
+
+				} 
+				catch (SQLException e1)
+				{
+					LoggerUtil.logException(e1,log);
+				}
+				// log.info("index: " + indexList + currentTableName);
+				DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i, currentRow);
+				jtb.setModel(tm);
+				
+			}
+		}
 	}
 
-//	private void update()
-//	{
-//		log.info("x: " + this.getWidth() + "y: " + this.getHeight());
-//		if (this.getWidth() > initialWidth)
-//		{
-//			int newXforButtons = XFORBUTTONS + this.getWidth() - initialWidth;
-//			log.info("offset: " + newXforButtons);
-//			for (int i = 0; i < buttons.size(); i++)
-//			{
-//				JButton button = buttons.get(i);
-//				// this.remove(button);
-//				button.setBounds(newXforButtons, 30 + i * (55), 105, 55);
-//				// this.revalidate();
-//				// this.add(button);
-//			}
-//			int newWidthForMSP = WIDTHFORMAINSCROLLPANE + this.getWidth() - initialWidth;
-//			main_scrollPane.setBounds(DEBUGGER_LEFT_PADDING, 5, newWidthForMSP, main_scrollPane.getHeight());
-//			int newWidthForGP = WIDTHFORGRAPHPANEL + this.getWidth() - initialWidth;
-//			//graphPanel.setBounds(DEBUGGER_LEFT_PADDING, 200, newWidthForGP, graphPanel.getHeight());
-//			//imageLabel.setBounds(graphPanel.getWidth() / 2 - 300 / 2, imageLabel.getY(), 300, 200);
-//			panel_table.setBounds(35, 100, 100 + this.getWidth() - initialWidth, panel_table.getHeight());
-//			panel_graph.setBounds(35, 200, 100 + this.getWidth() - initialWidth, panel_graph.getHeight());
-//		}
-//
-//		if (this.getHeight() > initialHeight)
-//		{
-//			int newHeightForMSP = HEIGHTFORGRAPHPANEL + this.getHeight() - initialHeight;
-//			main_scrollPane.setBounds(DEBUGGER_LEFT_PADDING, 5, main_scrollPane.getWidth(), newHeightForMSP);
-//			int newHeightForGP = HEIGHTFORGRAPHPANEL + this.getHeight() - initialHeight;
-//			//graphPanel.setBounds(DEBUGGER_LEFT_PADDING, 200 + this.getHeight() - initialHeight, graphPanel.getWidth(),
-//			//		HEIGHTFORGRAPHPANEL);
-//			panel_table.setBounds(35, 100, panel_table.getWidth(), 100 + this.getHeight() - initialHeight);
-//			panel_graph.setBounds(35, 200 + this.getHeight() - initialHeight, panel_graph.getWidth(), 200);
-//		}
-//		// this.revalidate();
-//	}
+			
 
 	@Override
 	public void componentResized(ComponentEvent e)
