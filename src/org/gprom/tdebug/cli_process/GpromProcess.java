@@ -147,6 +147,43 @@ public class GpromProcess {
 		return sql;
 	}
 	
+	public static String getReenactAllSQL(String statements) {
+		
+		ProcessBuilder pb = new ProcessBuilder("./gprom",  
+				"-host",  DBConfig.inst.getConnectionProperty(ConfigProperty.HOST), 
+				"-db",  DBConfig.inst.getConnectionProperty(ConfigProperty.SID), 
+				"-port", DBConfig.inst.getConnectionProperty(ConfigProperty.PORT), 
+				"-user",  DBConfig.inst.getConnectionProperty(ConfigProperty.USERNAME),  
+				"-passwd", DBConfig.inst.getConnectionProperty(ConfigProperty.PASSWORD), 
+				"-log", "-loglevel",  "0",  
+				"-sql", "REENACT WITH PROVENANCE SHOW INTERMEDIATE ("  + statements + ");", 
+				"-backend", "oracle","-Pexecutor", "sql");
+
+		pb.directory(new File(DBConfig.inst.getConnectionProperty(ConfigProperty.GPROM_PATH)));// Gprom absolute path
+		log.info("pb string : "+pb.command().toString());
+		
+		Process process = null;
+		try {
+			process = pb.start(); 
+
+			int errorInt = process.waitFor();
+			if (errorInt != 0) {
+				log.info("Some error with Gprom Process: " + errorInt);
+			}
+		} catch (IOException e) {
+			LoggerUtil.logException(e,log);
+		} catch (InterruptedException e) {
+			LoggerUtil.logException(e,log);
+		}
+		log.info("after try");
+		String sql = streamtoString(process.getInputStream()).trim();
+		sql = sql.substring(0, sql.length() - 1); //get rid of semicolon
+//		log.info("sql length : "+sql.length());
+		log.info("sql" + sql);
+		
+		return sql;
+	}
+	
 	
 	
 	private static String streamtoString(InputStream inputStream) {
