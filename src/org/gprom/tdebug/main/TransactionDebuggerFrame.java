@@ -70,6 +70,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 	static Logger log = Logger.getLogger(TransactionDebuggerFrame.class);
 	
+	private JButton reset_button = null;
 	private JButton refresh_button = null;
 	private JButton opt_internal_button = null;
 	private JButton add_stmt_button = null;
@@ -109,6 +110,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 	
 	private EventTimeBarRow currentRow;
+	
+	private ResultSet rsReset;
 	
 
 	public TransactionDebuggerFrame(EventTimeBarRow row)
@@ -195,6 +198,9 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		String sql = GpromProcess.getTransactionIntermediateSQL(currentRow.getXID());
 	    //String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
 		ResultSet rs = DBManager.getInstance().executeQuery(sql);
+		
+		//set reset rs
+		rsReset = rs;
 		
 		//get how many tuples in the initial table
 		//num of update if update based on diff column
@@ -465,6 +471,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		
 		
 		// Right buttons
+		reset_button = new JButton("Reset");
 		refresh_button = new JButton("Refresh");
 		opt_internal_button = new JButton("<html>Optimizer<br>Internals</html>");
 		add_stmt_button = new JButton("<html>&nbsp;&nbsp; Add<br>Statement</html>");
@@ -473,11 +480,13 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 		// jb3.setHorizontalAlignment(JButton.RIGHT);
 
-		refresh_button.setBounds(XFORBUTTONS, 30, 105, 55);
-		opt_internal_button.setBounds(XFORBUTTONS, 85, 105, 55);
-		add_stmt_button.setBounds(XFORBUTTONS, 140, 105, 55);
-		del_stmt_button.setBounds(XFORBUTTONS, 195, 105, 55);
-		show_hide_button.setBounds(XFORBUTTONS, 250, 105, 55);
+		reset_button.setBounds(XFORBUTTONS, 10, 105, 55);
+		refresh_button.setBounds(XFORBUTTONS, 65, 105, 55);
+		opt_internal_button.setBounds(XFORBUTTONS, 120, 105, 55);
+		add_stmt_button.setBounds(XFORBUTTONS, 175, 105, 55);
+		del_stmt_button.setBounds(XFORBUTTONS, 230, 105, 55);
+		show_hide_button.setBounds(XFORBUTTONS, 285, 105, 55);
+		buttons.add(reset_button);
 		buttons.add(refresh_button);
 		buttons.add(opt_internal_button);
 		buttons.add(add_stmt_button);
@@ -485,6 +494,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		buttons.add(show_hide_button);
 		// jb1.setBorder(BorderFactory.createLineBorder(Color.gray,3));
 		// jb2.setBorder(BorderFactory.createLineBorder(Color.gray,3));
+		this.add(reset_button);
 		this.add(refresh_button);
 		this.add(opt_internal_button);
 		this.add(add_stmt_button);
@@ -499,6 +509,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 //		getG2.addActionListener(this);
 //		getG3.addActionListener(this);
 		
+		reset_button.addActionListener(this);
 		refresh_button.addActionListener(this);
 		opt_internal_button.addActionListener(this);
 		add_stmt_button.addActionListener(this);
@@ -580,23 +591,57 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			f.setSize(950, 300);
 		} 
 		
-		if (e.getSource() == refresh_button)
+		if (e.getSource() == reset_button)
 		{
-			int count = tableModels.size();
-			log.info("count: "+count);
-			
 			int countSqls = sqlTextAreas.size();
-			log.info("countTextAreas: "+countSqls);
-			String newSql = "";
-			for(int i=0; i<countSqls; i++)
-				newSql = newSql + sqlTextAreas.get(i).getText() + ";";
-			log.info("new sqls: "+newSql);
+			log.info("count sql: "+countSqls);
 			
+			for (int i = 0; i < countSqls; i++)
+			{
+				EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i);
+				String originalStmt = currentInterval.getSql();
+				JTextArea ja = sqlTextAreas.get(i);
+				ja.setText(originalStmt);
+			}
+			
+			int count = tableModels.size();
+			log.info("count tables: "+count);
+			
+			//get how many tuples in the initial table
+			//num of update if update based on diff column
+			String sql = GpromProcess.getTransactionIntermediateSQL(currentRow.getXID());
 		    //String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
-			String sql = GpromProcess.getReenactSQL(newSql);
 			ResultSet rs = DBManager.getInstance().executeQuery(sql);
-			ResultSetMetaData rsmd = null;
 			
+			int numUp = 0;
+			int pos = -1;
+			try {
+				while(rs.next())
+				{
+					for(int i=1; i< rs.getMetaData().getColumnCount()+1; i++)
+					{
+						if(Pattern.matches("PROV_(?!U|query).*", rs.getMetaData().getColumnName(i)))
+						{
+							pos = i;
+							break;	
+						}
+					}
+					if(pos != -1)
+					{
+						String v = rs.getString(pos);
+						log.info("v: "+ v);
+						if(v != null)
+							numUp++;	
+					}				
+				}
+				log.info("numUp: "+numUp);
+				rs.first();
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
+			ResultSetMetaData rsmd = null;
 			try
 			{
 				rsmd = rs.getMetaData();
@@ -627,6 +672,108 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 							indexList.add(j);
 						}
 					}
+				} 
+				catch (SQLException e1)
+				{
+					LoggerUtil.logException(e1,log);
+				}
+				// log.info("index: " + indexList + currentTableName);
+				
+				
+				if(i > 0)
+				{
+					EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i-1);
+					String sqlType = currentInterval.getType();
+					if(sqlType.equals("INSERT"))
+						numUp++;
+				}
+				
+				DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i, currentRow, numUp);
+				jtb.setModel(tm);
+				
+			}
+			
+			
+		}
+		
+		
+		if (e.getSource() == refresh_button)
+		{
+			int count = tableModels.size();
+			log.info("count: "+count);
+			
+			int countSqls = sqlTextAreas.size();
+			log.info("countTextAreas: "+countSqls);
+			String newSql = "";
+			for(int i=0; i<countSqls; i++)
+				newSql = newSql + sqlTextAreas.get(i).getText() + ";";
+			log.info("new sqls: "+newSql);
+			
+		    //String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
+			String sql = GpromProcess.getReenactSQL(newSql);
+			ResultSet rs = DBManager.getInstance().executeQuery(sql);
+			ResultSetMetaData rsmd = null;
+			
+			//get how many tuples in the initial table
+			//num of update if update based on diff column
+			int numUp = 0;
+			int pos = -1;
+			try {
+				while(rs.next())
+				{
+					for(int i=1; i< rs.getMetaData().getColumnCount()+1; i++)
+					{
+						if(Pattern.matches("PROV_(?!U|query).*", rs.getMetaData().getColumnName(i)))
+						{
+							pos = i;
+							break;	
+						}
+					}
+					if(pos != -1)
+					{
+						String v = rs.getString(pos);
+						log.info("v: "+ v);
+						if(v != null)
+							numUp++;	
+					}				
+				}
+				log.info("numUp: "+numUp);
+				rs.first();
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
+			try
+			{
+				rsmd = rs.getMetaData();
+			} catch (SQLException e1)
+			{
+				LoggerUtil.logException(e1,log);
+			}
+			
+			for (int i = 0; i < count; i++) 
+			{
+				JTable jtb = tables.get(i);
+				
+				List<Integer> indexList = new ArrayList<Integer>();
+				try
+				{
+					// index
+					log.info("columncont + 1 = "+rsmd.getColumnCount());
+					for (int j = 1; j < rsmd.getColumnCount() + 1; j++)
+					{
+						if (i == 0 && Pattern.matches("PROV_(?!U|query).*", rsmd.getColumnName(j)))
+						{
+							log.info("i=0, j = "+j);
+							indexList.add(j);
+						} 
+						else if (Pattern.matches("PROV_U" + i + ".*", rsmd.getColumnName(j)))
+						{
+							log.info("i !=0, j = "+j);
+							indexList.add(j);
+						}
+					}
 
 				} 
 				catch (SQLException e1)
@@ -634,7 +781,16 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					LoggerUtil.logException(e1,log);
 				}
 				// log.info("index: " + indexList + currentTableName);
-				DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i, currentRow, 0);
+				
+				if(i > 0)
+				{
+					EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i-1);
+					String sqlType = currentInterval.getType();
+					if(sqlType.equals("INSERT"))
+						numUp++;
+				}
+				
+				DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i, currentRow, numUp);
 				jtb.setModel(tm);
 				
 			}
