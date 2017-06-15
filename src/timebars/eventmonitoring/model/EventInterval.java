@@ -32,6 +32,7 @@ public class EventInterval extends IntervalImpl {
     private String _title;
     private String sql;
     private String sessionId;
+    private String statementType;
     
     private String osName;
     
@@ -50,6 +51,14 @@ public class EventInterval extends IntervalImpl {
 
 	public void setOsName(String osName) {
 		this.osName = osName;
+	}
+	
+	public String getType() {
+		return statementType;
+	}
+
+	public void setType(String statementType) {
+		this.statementType = statementType;
 	}
 
 	public EventInterval(JaretDate from, JaretDate to) {

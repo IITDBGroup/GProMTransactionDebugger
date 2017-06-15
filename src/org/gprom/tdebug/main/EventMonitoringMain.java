@@ -416,7 +416,6 @@ public class EventMonitoringMain {
 				log.info(_tbv.getPopUpInformation().getLeft());
 				log.info(_tbv.getPopUpInformation().getRight()
 						.toDisplayString());
-				//log.info("222222222");
 
 				if (_tbv.getPopUpInformation().getRight().getHours() > 9) {
 					bodyaction.setEnabled(false);

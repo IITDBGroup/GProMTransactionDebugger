@@ -119,7 +119,7 @@ public class GpromProcess {
 				"-user",  DBConfig.inst.getConnectionProperty(ConfigProperty.USERNAME),  
 				"-passwd", DBConfig.inst.getConnectionProperty(ConfigProperty.PASSWORD), 
 				"-log", "-loglevel",  "0",  
-				"-sql", "REENACT WITH PROVENANCE ("  + statements + ");", 
+				"-sql", "REENACT WITH PROVENANCE ONLY UPDATED SHOW INTERMEDIATE("  + statements + ");", 
 				"-backend", "oracle","-Pexecutor", "sql");
 
 		pb.directory(new File(DBConfig.inst.getConnectionProperty(ConfigProperty.GPROM_PATH)));// Gprom absolute path

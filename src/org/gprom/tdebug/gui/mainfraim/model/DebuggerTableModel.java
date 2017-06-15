@@ -12,6 +12,7 @@ import javax.swing.table.AbstractTableModel;
 
 import org.apache.log4j.Logger;
 
+import timebars.eventmonitoring.model.EventInterval;
 import timebars.eventmonitoring.model.EventTimeBarRow;
 
 public class DebuggerTableModel extends AbstractTableModel {
@@ -29,8 +30,9 @@ public class DebuggerTableModel extends AbstractTableModel {
 	private Map<String, List<String>> prevRelation = new HashMap<String, List<String>>();
 	private Map<String, List<String>> nextRelation = new HashMap<String, List<String>>();
 	private EventTimeBarRow currentRow;
+	private int numRows;
 	
-	public DebuggerTableModel(ResultSet rs, List<Integer> indexList, int stmtIndex, EventTimeBarRow currentRow) {
+	public DebuggerTableModel(ResultSet rs, List<Integer> indexList, int stmtIndex, EventTimeBarRow currentRow, int numRows) {
 		super();
 		this.rs = rs;
 		try {
@@ -42,6 +44,7 @@ public class DebuggerTableModel extends AbstractTableModel {
 		
 		this.stmtIndex = stmtIndex;
 		this.currentRow = currentRow;
+		this.numRows = numRows;
 	}
 
 	public void setPrevTupleIndex(String targetIndex, String tupleIndex) {
@@ -104,11 +107,20 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
 	
     public String getColumnName(int col) {
         try {
-        	if (col == 0) {
-        		return "Tuple Index";
+        	if(numRows == 0)
+        	{
+        		if (col == 0) 
+        			return "";
+        		else if (col == 1)
+        			return "";
         	}
-        	else if (col == 1)
-        		return "TransID";
+        	else
+        	{
+        		if (col == 0) 
+        			return "Tuple Index";        		
+        		else if (col == 1)
+        			return "TransID";
+        	}
 			//return rsmd.getColumnName(indexList.get(--col)); // -- make index start from 0
         	col = col - 2; 
         	log.info("col = "+(col));
@@ -124,14 +136,55 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
 		rowIndex = rowIndex + 1;
-		
-		if (columnIndex == 0) {
-			return (Object)("t" + (rowIndex) + "[" + stmtIndex + "]");	
+
+//		EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(rowIndex-1);
+//		String sqlType = currentInterval.getType();
+//		
+//		log.info("sqlType = " + sqlType + " rowIndex = " + rowIndex + " stmtIndex = " + stmtIndex);
+
+//		if(sqlType.equals("INSERT") && rowIndex > stmtIndex)
+//		{
+//			if (columnIndex == 0) {
+//				return (Object)("");	
+//			}
+//
+//			if (columnIndex == 1) {
+//				String tid = "";
+//				return (Object)(tid);	
+//			}
+//		}
+//		else
+//		{
+//			if (columnIndex == 0) {
+//				return (Object)("t" + (rowIndex) + "[" + stmtIndex + "]");	
+//			}
+//
+//			if (columnIndex == 1) {
+//				String tid = currentRow.getXID();
+//				return (Object)(tid);	
+//			}
+//		}
+		if(rowIndex > numRows)
+		{
+			if (columnIndex == 0) {
+				return (Object)("");	
+			}
+
+			if (columnIndex == 1) {
+				String tid = "";
+				return (Object)(tid);	
+			}
 		}
-		
-		if (columnIndex == 1) {
-			String tid = currentRow.getXID();
-			return (Object)(tid);	
+		else
+		{
+			if (columnIndex == 0) {
+				return (Object)("t" + (rowIndex) + "[" + stmtIndex + "]");	
+			}
+
+			if (columnIndex == 1) {
+				String tid = currentRow.getXID();
+				return (Object)(tid);	
+			}
 		}
 		
 //		if (rowIndex > 1) {
@@ -144,6 +197,7 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
 		try {
 			rs.absolute(rowIndex);
 			result = rs.getObject(columnIndex);
+			
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

@@ -149,7 +149,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		JPanel jp1 = new JPanel();
 		JTextArea ja1 = new JTextArea(5, 20);
 		// ja1.setFont(Bold);
-
+		
 		String originalTable_str = "\n\n Original Table";
 		// display transaction
 		for (int i = 0; i < currentRow.getIntervals().size(); i++)
@@ -195,6 +195,37 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		String sql = GpromProcess.getTransactionIntermediateSQL(currentRow.getXID());
 	    //String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
 		ResultSet rs = DBManager.getInstance().executeQuery(sql);
+		
+		//get how many tuples in the initial table
+		//num of update if update based on diff column
+		int numUp = 0;
+		int pos = -1;
+		try {
+			while(rs.next())
+			{
+				for(int i=1; i< rs.getMetaData().getColumnCount()+1; i++)
+				{
+					if(Pattern.matches("PROV_(?!U|query).*", rs.getMetaData().getColumnName(i)))
+					{
+						pos = i;
+						break;	
+					}
+				}
+				if(pos != -1)
+				{
+					String v = rs.getString(pos);
+					log.info("v: "+ v);
+					if(v != null)
+						numUp++;	
+				}				
+			}
+			log.info("numUp: "+numUp);
+			rs.first();
+		} catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
 		ResultSetMetaData rsmd = null;
 		try
 		{
@@ -203,7 +234,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		{
 			LoggerUtil.logException(e,log);
 		}
-
+		
 		log.info("current row size : "+currentRow.getIntervals().size() );
 		for (int i = 0; i < currentRow.getIntervals().size() + 1; i++)
 		{
@@ -264,7 +295,15 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				LoggerUtil.logException(e,log);
 			}
 			// log.info("index: " + indexList + currentTableName);
-			DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i, currentRow);
+			if(i > 0)
+			{
+				EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i-1);
+				String sqlType = currentInterval.getType();
+				if(sqlType.equals("INSERT"))
+					numUp++;
+			}
+						
+			DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i, currentRow, numUp);
 			tableModels.add(tm);
 			JPanel jp = new JPanel();
 			jp.setLayout(null);
@@ -574,7 +613,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				try
 				{
 					// index
-					log.info("test columncont + 1 = "+rsmd.getColumnCount());
+					log.info("columncont + 1 = "+rsmd.getColumnCount());
 					for (int j = 1; j < rsmd.getColumnCount() + 1; j++)
 					{
 						if (i == 0 && Pattern.matches("PROV_(?!U|query).*", rsmd.getColumnName(j)))
@@ -595,7 +634,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					LoggerUtil.logException(e1,log);
 				}
 				// log.info("index: " + indexList + currentTableName);
-				DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i, currentRow);
+				DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i, currentRow, 0);
 				jtb.setModel(tm);
 				
 			}

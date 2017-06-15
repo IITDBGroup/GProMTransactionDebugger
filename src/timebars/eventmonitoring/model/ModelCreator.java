@@ -335,6 +335,7 @@ try {
 					interval.setTitle(map.get(key).GetNode(map.get(key).Size() - 1).getActionName());
 				    interval.setOsName(map.get(key).GetNode(map.get(key).Size() - 1).getOsUser());
 					interval.setSessionId(map.get(key).GetNode(map.get(key).Size() - 1).getSessionId());
+					interval.setType(map.get(key).GetNode(map.get(key).Size() - 1).getActionName());
 					row.addInterval(interval);
 				}
 //	04000C00F9090000			
@@ -362,6 +363,7 @@ try {
 						interval.setTitle(map.get(key).GetNode(g).getActionName());
 						interval.setOsName(map.get(key).GetNode(g).getOsUser());
 						interval.setSessionId(map.get(key).GetNode(g).getSessionId());
+						interval.setType(map.get(key).GetNode(g).getActionName());
 						row.addInterval(interval);
 					}
 					start.setDateTime(map1.get(key).getTimeStamp().getDate(),
@@ -374,6 +376,7 @@ try {
 					interval.setTitle(map.get(key).GetNode(map.get(key).Size() - 1).getActionName());
 					interval.setOsName(map.get(key).GetNode(map.get(key).Size() - 1).getOsUser());
 					interval.setSessionId(map.get(key).GetNode(map.get(key).Size() - 1).getSessionId());
+					interval.setType(map.get(key).GetNode(map.get(key).Size() - 1).getActionName());
 					row.addInterval(interval);
 				}
 				model.addRow(row);
