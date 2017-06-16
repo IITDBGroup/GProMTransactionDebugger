@@ -108,6 +108,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	private List<JTable> tables = new ArrayList<JTable>();
 	private List<DebuggerTableModel> tableModels = new ArrayList<DebuggerTableModel>();
 	private List<JTextArea> sqlTextAreas = new ArrayList<JTextArea>();
+	private List<Integer> numUps = new ArrayList<Integer>();
+	
 
 	
 	private EventTimeBarRow currentRow;
@@ -155,6 +157,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		// ja1.setFont(Bold);
 		
 		String originalTable_str = "\n\n Original Table";
+		
 		// display transaction
 		for (int i = 0; i < currentRow.getIntervals().size(); i++)
 		{
@@ -203,6 +206,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		//set reset rs
 		rsReset = rs;
 		
+		numUps.clear();
 		//get how many tuples in the initial table
 		//num of update if update based on diff column
 		int numUp = 0;
@@ -309,7 +313,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				if(sqlType.equals("INSERT"))
 					numUp++;
 			}
-						
+			numUps.add(numUp);			
 			DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i, currentRow, numUp);
 			tableModels.add(tm);
 			JPanel jp = new JPanel();
@@ -619,6 +623,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		    //String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
 			ResultSet rs = DBManager.getInstance().executeQuery(sql);
 			
+			numUps.clear();
 			int numUp = 0;
 			int pos = -1;
 			try {
@@ -694,6 +699,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 						numUp++;
 				}
 				
+				numUps.add(numUp);
 				DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i, currentRow, numUp);
 				jtb.setModel(tm);
 				
@@ -720,6 +726,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			ResultSet rs = DBManager.getInstance().executeQuery(sql);
 			ResultSetMetaData rsmd = null;
 			
+			numUps.clear();
 			//get how many tuples in the initial table
 			//num of update if update based on diff column
 			int numUp = 0;
@@ -796,6 +803,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 						numUp++;
 				}
 				
+				numUps.add(numUp);
 				DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i, currentRow, numUp);
 				jtb.setModel(tm);
 				
@@ -821,6 +829,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			ResultSet rs = DBManager.getInstance().executeQuery(sql);
 			ResultSetMetaData rsmd = null;
 			
+			numUps.clear();
 			//get how many tuples in the initial table
 			//num of update if update based on diff column
 			int numUp = 0;
@@ -897,6 +906,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 						numUp++;
 				}
 				
+				numUps.add(numUp);
 				DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i, currentRow, numUp);
 				jtb.setModel(tm);
 				
@@ -994,7 +1004,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			{
 				int index = currentTable.rowAtPoint(e.getPoint());
 				int row = currentTable.rowAtPoint(e.getPoint()) + 1;	
-				if(i != 0)
+				//if(i != 0)
 					showGraph(i, row);
 
 //				if(i != 0)
@@ -1286,22 +1296,35 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 		ArrayList<Node> nodes = new ArrayList<Node>();
 		int attribute = 0;
-		for(int i = 0; i <= level; i++) {
-			String nodeName = "t" + String.valueOf(row) + "[" + String.valueOf(i) + "]";
-			Node tempNode = graph.addNode(nodeName);
-			//set node position x and y axis
-			tempNode.setAttribute("xy", attribute, 0); 						
-			attribute++;
-			
-			tempNode.addAttribute("label", nodeName);
-			nodes.add(tempNode);
+		
+		log.info("level : "+level + " numUpSize : "+ numUps.size());
+		for(int t=0; t< numUps.size(); t++)
+			log.info("numUps = "+ numUps.get(t));
+
+		for(int i = 0; i <= level; i++) 
+		{
+			if(row <= numUps.get(i))
+			{
+				String nodeName = "t" + String.valueOf(row) + "[" + String.valueOf(i) + "]";
+				Node tempNode = graph.addNode(nodeName);
+				//set node position x and y axis
+				tempNode.setAttribute("xy", attribute, 0); 						
+				attribute++;
+
+				tempNode.addAttribute("label", nodeName);
+				nodes.add(tempNode);
+			}
 		}
+		
 //		log.info(nodes.size());
 		
-		for(int i = 0; i < level; i++) {
-			graph.addEdge("u" + String.valueOf(i), nodes.get(i), nodes.get(i + 1), true);
+		if(nodes.size() > 1)
+		{
+			for(int i = 0; i < nodes.size()-1; i++) 
+			{
+				graph.addEdge("u" + String.valueOf(i), nodes.get(i), nodes.get(i + 1), true);
+			}
 		}
-		
 		
 //	    JFrame frame = new JFrame();
 //	    frame.setLayout(new GridBagLayout());
