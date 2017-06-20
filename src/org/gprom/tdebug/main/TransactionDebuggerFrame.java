@@ -477,7 +477,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		
 		// Right buttons show_all_button
 		reset_button = new JButton("Reset");
-		refresh_button = new JButton("Refresh");
+		refresh_button = new JButton("<html>&nbsp;&nbsp;Show<br>Affected</html>");
 		show_all_button = new JButton("ShowAll");
 		opt_internal_button = new JButton("<html>Optimizer<br>Internals</html>");
 		add_stmt_button = new JButton("<html>&nbsp;&nbsp; Add<br>Statement</html>");
@@ -492,7 +492,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		opt_internal_button.setBounds(XFORBUTTONS, 175, 105, 55);
 		add_stmt_button.setBounds(XFORBUTTONS, 230, 105, 55);
 		del_stmt_button.setBounds(XFORBUTTONS, 285, 105, 55);
-		show_hide_button.setBounds(XFORBUTTONS, 330, 105, 55);
+		show_hide_button.setBounds(XFORBUTTONS, 340, 105, 55);
 		buttons.add(reset_button);
 		buttons.add(refresh_button);
 		buttons.add(show_all_button);
