@@ -110,7 +110,7 @@ public class GpromProcess {
 		return sql;
 	}
 
-	public static String getReenactSQL(String statements) {
+	public static String getReenactSQL(String scn, String statements) {
 		
 		ProcessBuilder pb = new ProcessBuilder("./gprom",  
 				"-host",  DBConfig.inst.getConnectionProperty(ConfigProperty.HOST), 
@@ -119,7 +119,7 @@ public class GpromProcess {
 				"-user",  DBConfig.inst.getConnectionProperty(ConfigProperty.USERNAME),  
 				"-passwd", DBConfig.inst.getConnectionProperty(ConfigProperty.PASSWORD), 
 				"-log", "-loglevel",  "0",  
-				"-sql", "REENACT WITH PROVENANCE ONLY UPDATED SHOW INTERMEDIATE("  + statements + ");", 
+				"-sql", "REENACT WITH ISOLATION LEVEL READCOMMITTED COMMIT SCN " + scn + " PROVENANCE ONLY UPDATED SHOW INTERMEDIATE("  + statements + ");", 
 				"-backend", "oracle","-Pexecutor", "sql");
 
 		pb.directory(new File(DBConfig.inst.getConnectionProperty(ConfigProperty.GPROM_PATH)));// Gprom absolute path
@@ -222,7 +222,7 @@ public static String getSerializableReenactSQL(String scn, String statements) {
 		return sql;
 	}
 	
-	public static String getReenactAllSQL(String statements) {
+	public static String getReenactAllSQL(String scn, String statements) {
 		
 		ProcessBuilder pb = new ProcessBuilder("./gprom",  
 				"-host",  DBConfig.inst.getConnectionProperty(ConfigProperty.HOST), 
@@ -231,7 +231,7 @@ public static String getSerializableReenactSQL(String scn, String statements) {
 				"-user",  DBConfig.inst.getConnectionProperty(ConfigProperty.USERNAME),  
 				"-passwd", DBConfig.inst.getConnectionProperty(ConfigProperty.PASSWORD), 
 				"-log", "-loglevel",  "0",  
-				"-sql", "REENACT WITH PROVENANCE SHOW INTERMEDIATE ("  + statements + ");", 
+				"-sql", "REENACT WITH ISOLATION LEVEL READCOMMITTED COMMIT SCN " + scn +" PROVENANCE SHOW INTERMEDIATE ("  + statements + ");", 
 				"-backend", "oracle","-Pexecutor", "sql");
 
 		pb.directory(new File(DBConfig.inst.getConnectionProperty(ConfigProperty.GPROM_PATH)));// Gprom absolute path
