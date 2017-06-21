@@ -31,6 +31,8 @@ import de.jaret.util.ui.timebars.model.TimeBarRowHeader;
 public class EventTimeBarRow extends DefaultTimeBarRowModel {
     protected boolean _expanded = false;
     private String XID  = "";
+    private String startSCN = "";
+    private String isoLevel = "";
     		
     public String getXID() {
 		return XID;
@@ -40,6 +42,22 @@ public class EventTimeBarRow extends DefaultTimeBarRowModel {
 		XID = xID;
 	}
 
+    public String getStartSCN() {
+		return this.startSCN;
+	}
+
+	public void setStartSCN(String startSCN) {
+		this.startSCN = startSCN;
+	}
+	
+	public String getIsoLevel() {
+		return this.isoLevel;
+	}
+
+	public void setIsoLevel(String isoLevel) {
+		this.isoLevel = isoLevel;
+	}
+	
 	public boolean isExpanded() {
         return _expanded;
     }

@@ -33,6 +33,8 @@ public class EventInterval extends IntervalImpl {
     private String sql;
     private String sessionId;
     private String statementType;
+    private String SCN;
+
     
     private String osName;
     
@@ -51,6 +53,14 @@ public class EventInterval extends IntervalImpl {
 
 	public void setOsName(String osName) {
 		this.osName = osName;
+	}
+	
+	public String getSCN() {
+		return this.SCN;
+	}
+
+	public void setSCN(String SCN) {
+		this.SCN = SCN;
 	}
 	
 	public String getType() {

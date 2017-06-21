@@ -44,7 +44,7 @@ public class DBConnection {
     	ResultSet resultSet = null;
 		try {
 			statement = connection.createStatement();
-			query ="SELECT DISTINCT VERSIONS_XID, VERSIONS_STARTTIME FROM R VERSIONS BETWEEN SCN MINVALUE AND MAXVALUE ORDER BY VERSIONS_XID";//UNIFIED_AUDIT_TRAIL  SYS.fga_log$
+			query ="SELECT DISTINCT VERSIONS_STARTSCN, VERSIONS_XID, VERSIONS_STARTTIME FROM R VERSIONS BETWEEN SCN MINVALUE AND MAXVALUE ORDER BY VERSIONS_XID";//UNIFIED_AUDIT_TRAIL  SYS.fga_log$
         	resultSet = statement.executeQuery(query);
 		}catch (SQLException e) {
 			// TODO Auto-generated catch block

@@ -721,8 +721,20 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				newSql = newSql + sqlTextAreas.get(i).getText() + ";";
 			log.info("new sqls: "+newSql);
 			
+			
+			
 		    //String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
-			String sql = GpromProcess.getReenactSQL(newSql);
+			String sql = "";
+			if(currentRow.getIsoLevel().equals("1"))
+				sql = GpromProcess.getReenactSQL(newSql);
+			else //serializable
+			{
+				//if serializable, each scn same, get first one
+				EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(0);
+				sql = GpromProcess.getSerializableReenactSQL(currentInterval.getSCN(), newSql);
+			}
+			
+			//String sql = GpromProcess.getReenactSQL(newSql);
 			ResultSet rs = DBManager.getInstance().executeQuery(sql);
 			ResultSetMetaData rsmd = null;
 			
@@ -825,7 +837,17 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			log.info("new sqls: "+newSql);
 			
 		    //String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
-			String sql = GpromProcess.getReenactAllSQL(newSql);
+			String sql = "";
+			if(currentRow.getIsoLevel().equals("1"))
+				sql = GpromProcess.getReenactSQL(newSql);
+			else //serializable
+			{
+				//if serializable, each scn same, get first one
+				EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(0);
+				sql = GpromProcess.getSerializableReenactAllSQL(currentInterval.getSCN(), newSql);
+			}
+							
+			//String sql = GpromProcess.getReenactAllSQL(newSql);
 			ResultSet rs = DBManager.getInstance().executeQuery(sql);
 			ResultSetMetaData rsmd = null;
 			

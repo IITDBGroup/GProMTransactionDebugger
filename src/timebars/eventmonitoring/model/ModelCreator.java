@@ -123,9 +123,11 @@ public class ModelCreator {
 		//使用sql获取数据库信息
 		ResultSet resultSet = null;
 		ResultSet resultSetCommit = null;
+		ResultSet resultSetIsoLevel = null;
 		try {
 			resultSet = DBManager.getInstance().getData();
 			resultSetCommit = DBManager.getInstance().getDataCommit();
+			resultSetIsoLevel = DBManager.getInstance().getIsolationLevel();
 		}
 		catch (Exception e1) {
 			LoggerUtil.logException(e1, log);
@@ -135,23 +137,7 @@ public class ModelCreator {
 		DefaultTimeBarModel model = new DefaultTimeBarModel();
 		
 
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
+			
 		
 		TransactionNode node;
 
@@ -166,17 +152,17 @@ public class ModelCreator {
 //						.findColumn("TRANSACTION_ID"));
 				
 				//used for SYS.FGA_LOG$
-				byte byBuffer[] =  resultSet.getBytes(resultSet
-						.findColumn("XID"));
-
-				StringBuilder sb=new StringBuilder("");
-				
-				for (byte element: byBuffer )
-				{
-					sb.append(String.valueOf(element));
-				}
-
-				String strRead=sb.toString();
+//				byte byBuffer[] =  resultSet.getBytes(resultSet
+//						.findColumn("XID"));
+//
+//				StringBuilder sb=new StringBuilder("");
+//				
+//				for (byte element: byBuffer )
+//				{
+//					sb.append(String.valueOf(element));
+//				}
+//
+//				String strRead=sb.toString();
 //				log.info(strRead);
 
 				
@@ -206,7 +192,7 @@ public class ModelCreator {
 				
 				node = new TransactionNode(
 						resultSet.getString(resultSet.findColumn("LSQLTEXT")), 
-						strRead,
+						resultSet.getString("SCN"),
 						resultSet.getTimestamp("NTIMESTAMP#"),
 						resultSet.getString("OSUID"),
 						resultSet.getString("SESSIONID"), 
@@ -242,7 +228,10 @@ try {
 				
 				//添加需要的属性
 				//第一个属性找到sql对应的属性名  dbusername换sql对应属性
-				nodeCommit = new TransactionNode(resultSetCommit.getTimestamp("VERSIONS_STARTTIME"),resultSetCommit.getString("VERSIONS_XID"));
+				nodeCommit = new TransactionNode(
+						resultSetCommit.getTimestamp("VERSIONS_STARTTIME"),
+						resultSetCommit.getString("VERSIONS_XID"),
+						resultSetCommit.getString("VERSIONS_STARTSCN"));
 				nodesCommit.add(nodeCommit);
 			}
 		} catch (SQLException e) {
@@ -257,6 +246,33 @@ try {
 		
 
 		for (String key : map1.keySet()){
+			log.info("flash_back_transaction_ID:bbb" + key);
+		}
+		
+		
+		
+		TransactionNode nodeIsoLevel;
+		ArrayList<TransactionNode> nodesIsoLevel = new ArrayList<TransactionNode>();
+try {
+
+			while (resultSetIsoLevel.next()) {				
+
+				nodeIsoLevel = new TransactionNode(
+						resultSetIsoLevel.getString("xid"),
+						resultSetIsoLevel.getString("readCommmit"));
+				nodesIsoLevel.add(nodeIsoLevel);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			LoggerUtil.logException(e,log);
+		}
+		/**flash_back_nodes*/
+		HashMap<String, String> map2 = new HashMap<String, String>();
+		for(int k = 0; k < nodesIsoLevel.size(); k++){   //Insert Transaction nodes into the hashMap.
+			map2.put(nodesIsoLevel.get(k).getTransactionId(), nodesIsoLevel.get(k).getIsoLevel());
+		}
+		
+		for (String key : map2.keySet()){
 			log.info("flash_back_transaction_ID:bbb" + key);
 		}
 		
@@ -301,6 +317,8 @@ try {
 				
 				log.info("audit_log_transaction_ID:aaa" + key);
 				row.setXID(key);
+				row.setStartSCN(map1.get(key).getStartSCN());
+				
 				if(map1.containsKey(key)){
 					log.info("True");
 				}
@@ -308,6 +326,10 @@ try {
 					log.info("False");
 				}
 
+				if(map2.containsKey(key)){
+					row.setIsoLevel(map2.get(key));
+					log.info(key + " : " + map2.get(key));
+				}
 				
 				int c1 = 0;
 				int c2 = 1;
@@ -336,6 +358,7 @@ try {
 				    interval.setOsName(map.get(key).GetNode(map.get(key).Size() - 1).getOsUser());
 					interval.setSessionId(map.get(key).GetNode(map.get(key).Size() - 1).getSessionId());
 					interval.setType(map.get(key).GetNode(map.get(key).Size() - 1).getActionName());
+					interval.setSCN(map.get(key).GetNode(map.get(key).Size() - 1).getSCN());
 					row.addInterval(interval);
 				}
 //	04000C00F9090000			
@@ -364,6 +387,7 @@ try {
 						interval.setOsName(map.get(key).GetNode(g).getOsUser());
 						interval.setSessionId(map.get(key).GetNode(g).getSessionId());
 						interval.setType(map.get(key).GetNode(g).getActionName());
+						interval.setSCN(map.get(key).GetNode(g).getSCN());
 						row.addInterval(interval);
 					}
 					start.setDateTime(map1.get(key).getTimeStamp().getDate(),
@@ -377,6 +401,7 @@ try {
 					interval.setOsName(map.get(key).GetNode(map.get(key).Size() - 1).getOsUser());
 					interval.setSessionId(map.get(key).GetNode(map.get(key).Size() - 1).getSessionId());
 					interval.setType(map.get(key).GetNode(map.get(key).Size() - 1).getActionName());
+					interval.setSCN(map.get(key).GetNode(map.get(key).Size() - 1).getSCN());
 					row.addInterval(interval);
 				}
 				model.addRow(row);
