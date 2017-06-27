@@ -76,7 +76,6 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	private JButton opt_internal_button = null;
 	private JButton add_stmt_button = null;
 	private JButton del_stmt_button = null;
-	private JButton show_hide_button = null;
 	
 //	private JButton getG1 = null;
 //	private JButton getG2 = null;
@@ -482,7 +481,6 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		opt_internal_button = new JButton("<html>Optimizer<br>Internals</html>");
 		add_stmt_button = new JButton("<html>&nbsp;&nbsp; Add<br>Statement</html>");
 		del_stmt_button = new JButton("<html>&nbsp; Delete<br>Statement</html>");
-		show_hide_button = new JButton("<html>Show/Hide<br>Unaffected<br> &nbsp;&nbsp;&nbsp;Rows</html>");
 
 		// jb3.setHorizontalAlignment(JButton.RIGHT);
 
@@ -492,14 +490,12 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		opt_internal_button.setBounds(XFORBUTTONS, 175, 105, 55);
 		add_stmt_button.setBounds(XFORBUTTONS, 230, 105, 55);
 		del_stmt_button.setBounds(XFORBUTTONS, 285, 105, 55);
-		show_hide_button.setBounds(XFORBUTTONS, 340, 105, 55);
 		buttons.add(reset_button);
 		buttons.add(refresh_button);
 		buttons.add(show_all_button);
 		buttons.add(opt_internal_button);
 		buttons.add(add_stmt_button);
 		buttons.add(del_stmt_button);
-		buttons.add(show_hide_button);
 		// jb1.setBorder(BorderFactory.createLineBorder(Color.gray,3));
 		// jb2.setBorder(BorderFactory.createLineBorder(Color.gray,3));
 		this.add(reset_button);
@@ -508,7 +504,6 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		this.add(opt_internal_button);
 		this.add(add_stmt_button);
 		this.add(del_stmt_button);
-		this.add(show_hide_button);
 		this.setVisible(true);
 	}
 
@@ -524,7 +519,6 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		opt_internal_button.addActionListener(this);
 		add_stmt_button.addActionListener(this);
 		del_stmt_button.addActionListener(this);
-		show_hide_button.addActionListener(this);
 		this.addComponentListener(this);
 		for (int i = 0; i < tables.size(); i++)
 		{
