@@ -27,6 +27,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
+import javax.swing.ListSelectionModel;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelListener;
@@ -544,6 +545,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 		}
 	}
+	
 //	@Override
 //	public void valueChanged(ListSelectionEvent e) {
 //		// TODO Auto-generated method stub
@@ -614,22 +616,234 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		
 		if (e.getSource() == change_data_button)
 		{
+			String appendSql = "";
+			for (int i = 0; i < tables.size(); i++)
+			{
+				ListSelectionModel selModel = tables.get(i).getSelectionModel();
+				if(! selModel.isSelectionEmpty())
+				{
+					//int row = selModel.getAnchorSelectionIndex();
+					//log.info("row id is "+row);
+					log.info("table id is "+ i);
+					JTable ct = tables.get(i);
+					//int rcount = ct.getRowCount();
+					int ccount = ct.getColumnCount();
+					int col1 = ct.getSelectedColumn();
+					int row1 = ct.getSelectedRow();
+					log.info("table id is "+ i+" with "+ ct.getRowCount() + " rows and "
+							+ ct.getColumnCount() + " columns.");
+					log.info("current row is "+row1 +" current column is "+col1);
+					
+					appendSql = "UPDATE ";
+					String tableName = "";
+					String sClause = "SET ";
+					String cClause = "WHERE ";
+					for(int j = 2; j < ccount; j++)
+					{
+						String cName = ct.getModel().getColumnName(j);
+   					    //Pattern p = Pattern.compile("PROV_(?!U)(\\w*)_.*|PROV_U" + i + "__(\\w*)_.*");
+   					    Pattern p = Pattern.compile("PROV_U.*__(\\w*)_(\\w*)");
+   					    Matcher m = p.matcher(cName);
+						if (!m.find())
+						{
+							log.info("regular expression succeed!");
+						}
+						else
+						{
+							log.info("group 1: " + m.group(1) + " group 2: "+m.group(2));
+							tableName = m.group(1);
+							cName = m.group(2);
+						}
+						//Object s1 = ct.getCellEditor(row1, j).getCellEditorValue();
+						if(j != col1){			
+							Object s1 = ct.getModel().getValueAt(row1, j);
+							log.info("num "+ j + " is " +s1.toString());
+							sClause = sClause + cName + "=" + s1.toString();
+							if(j+1 < ccount)
+								sClause = sClause + " , ";
+						}
+						else
+						{
+							ct.getCellEditor(row1, col1).stopCellEditing();
+							Object s1 = ct.getCellEditor(row1, col1).getCellEditorValue();
+							sClause = sClause + cName + "=" + s1.toString();
+							if(j+1 < ccount)
+								sClause = sClause + " , ";
+						}
+					}
+					log.info("sql set = "+ sClause);
+					
+					for(int k=0; k<i; k++)
+					{
+						JTable pt = tables.get(k);
+						int pRowCount = pt.getRowCount();
+						if(row1 <= pRowCount)
+						{
+							for(int m=2; m<ccount; m++)
+							{
+								String sName = pt.getModel().getColumnName(m);
+		   					    Pattern ps = Pattern.compile("PROV_.*_(\\w*)");
+		   					    Matcher ms = ps.matcher(sName);
+								if (!ms.find())
+								{
+									log.info("regular expression succeed!");
+								}
+								else
+								{
+									log.info("group 1: " + ms.group(1));
+									//tableName = ms.group(1);
+									sName = ms.group(1);
+								}
+				
+								Object c1 = pt.getModel().getValueAt(row1, m);
+								log.info("num "+ m + " is " +c1.toString());
+								cClause = cClause + sName + "=" + c1.toString();
+								if(m+1 < ccount)
+									cClause = cClause + " AND ";	
+							}
+						}
+					}
+					log.info("sql where = "+ cClause);
+					
+					appendSql = appendSql + tableName + " " + sClause + " " + cClause + ";";
+					log.info("sql = "+ appendSql);
+
+				}
+			}
 			
-			int col1 = tables.get(2).getSelectedColumn();
-			int row1 = tables.get(2).getSelectedRow();
-			DebuggerTableModel tm = (DebuggerTableModel) tables.get(2).getModel();
-			tables.get(2).getCellEditor(row1, col1).stopCellEditing();
+			int count = tableModels.size();
+			log.info("count: "+count);
 			
-			CellEditorListener l = null;
+			int countSqls = sqlTextAreas.size();
+			log.info("countTextAreas: "+countSqls);
+			String newSql = "";
+			for(int i=0; i<countSqls; i++)
+				newSql = newSql + sqlTextAreas.get(i).getText() + ";";
+			log.info("new sqls: "+newSql);
 			
-			tables.get(2).getCellEditor(row1, col1).addCellEditorListener(l);
-			//tables.get(2).getCellEditor(row1, col1).getCellEditorValue();
-			//Object ob = tables.get(2).getModel().getValueAt(row1, col1);
-			tm.setValueAt(tables.get(2).getCellEditor(row1, col1).getCellEditorValue(), row1, col1);
-			tables.get(2).setModel(tm);
-			Object s1 = tables.get(2).getCellEditor(row1, col1).getCellEditorValue();
-			boolean b1 = tables.get(2).isCellEditable(row1, col1);
-			System.out.println(col1 + " " + row1 + " " + tables.get(2).getValueAt(row1, col1)+ " " + s1.toString() + " Edit: "+b1 );
+			String newSql_rc = "";
+			for(int i=0; i<countSqls; i++)
+			{
+				EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i);
+                String scn_rc = currentInterval.getSCN();
+				//newSql_rc = newSql_rc + sqlTextAreas.get(i).getText() + "; AS OF SCN " + scn_rc + " ";
+				newSql_rc = newSql_rc + "OPTIONS (AS OF SCN " + scn_rc + ") "  + sqlTextAreas.get(i).getText() + "; ";
+			}
+			newSql_rc = "OPTIONS (NO PROVENANCE AS OF SCN " + currentRow.getStartSCN() + ") " + appendSql + " " + newSql_rc;
+			log.info("new sqls: "+newSql_rc);
+			
+		    //String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
+			String sql = "";
+			if(currentRow.getIsoLevel().equals("1"))
+				sql = GpromProcess.getReenactSQL(currentRow.getStartSCN(),newSql_rc);
+			else //serializable
+			{
+				//if serializable, each scn same, get first one
+				EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(0);
+				sql = GpromProcess.getSerializableReenactSQL(currentInterval.getSCN(), newSql);
+			}
+			
+			//String sql = GpromProcess.getReenactSQL(newSql);
+			ResultSet rs = DBManager.getInstance().executeQuery(sql);
+			ResultSetMetaData rsmd = null;
+			
+			numUps.clear();
+			//get how many tuples in the initial table
+			//num of update if update based on diff column
+			int numUp = 0;
+			int pos = -1;
+			try {
+				while(rs.next())
+				{
+					for(int i=1; i< rs.getMetaData().getColumnCount()+1; i++)
+					{
+						if(Pattern.matches("PROV_(?!U|query).*", rs.getMetaData().getColumnName(i)))
+						{
+							pos = i;
+							break;	
+						}
+					}
+					if(pos != -1)
+					{
+						String v = rs.getString(pos);
+						log.info("v: "+ v);
+						if(v != null)
+							numUp++;	
+					}				
+				}
+				log.info("numUp: "+numUp);
+				rs.first();
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
+			try
+			{
+				rsmd = rs.getMetaData();
+			} catch (SQLException e1)
+			{
+				LoggerUtil.logException(e1,log);
+			}
+			
+			for (int i = 0; i < count; i++) 
+			{
+				JTable jtb = tables.get(i);
+				
+				List<Integer> indexList = new ArrayList<Integer>();
+				try
+				{
+					// index
+					log.info("columncont + 1 = "+rsmd.getColumnCount());
+					for (int j = 1; j < rsmd.getColumnCount() + 1; j++)
+					{
+						if (i == 0 && Pattern.matches("PROV_(?!U|query).*", rsmd.getColumnName(j)))
+						{
+							log.info("i=0, j = "+j);
+							indexList.add(j);
+						} 
+						else if (Pattern.matches("PROV_U" + i + ".*", rsmd.getColumnName(j)))
+						{
+							log.info("i !=0, j = "+j);
+							indexList.add(j);
+						}
+					}
+
+				} 
+				catch (SQLException e1)
+				{
+					LoggerUtil.logException(e1,log);
+				}
+				// log.info("index: " + indexList + currentTableName);
+				
+				if(i > 0)
+				{
+					EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i-1);
+					String sqlType = currentInterval.getType();
+					if(sqlType.equals("INSERT"))
+						numUp++;
+				}
+				
+				numUps.add(numUp);
+				DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i, currentRow, numUp);
+				jtb.setModel(tm);			
+			}
+			
+//			int col1 = tables.get(2).getSelectedColumn();
+//			int row1 = tables.get(2).getSelectedRow();
+//			DebuggerTableModel tm = (DebuggerTableModel) tables.get(2).getModel();
+//			tables.get(2).getCellEditor(row1, col1).stopCellEditing();
+//			
+//			CellEditorListener l = null;
+//			
+//			tables.get(2).getCellEditor(row1, col1).addCellEditorListener(l);
+//			//tables.get(2).getCellEditor(row1, col1).getCellEditorValue();
+//			//Object ob = tables.get(2).getModel().getValueAt(row1, col1);
+//			tm.setValueAt(tables.get(2).getCellEditor(row1, col1).getCellEditorValue(), row1, col1);
+//			tables.get(2).setModel(tm);
+//			Object s1 = tables.get(2).getCellEditor(row1, col1).getCellEditorValue();
+//			boolean b1 = tables.get(2).isCellEditable(row1, col1);
+//			System.out.println(col1 + " " + row1 + " " + tables.get(2).getValueAt(row1, col1)+ " " + s1.toString() + " Edit: "+b1 );
 		}
 		
 		
