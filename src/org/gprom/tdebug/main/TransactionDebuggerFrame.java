@@ -27,6 +27,9 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
@@ -76,6 +79,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	private JButton opt_internal_button = null;
 	private JButton add_stmt_button = null;
 	private JButton del_stmt_button = null;
+	private JButton change_data_button = null;
 	
 //	private JButton getG1 = null;
 //	private JButton getG2 = null;
@@ -321,7 +325,9 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			jp.setBorder(BorderFactory.createLineBorder(Color.gray, 3));
 			stmt_table_panel.add(jp);
 			JTable table = new JTable(tm);
-
+            //tm.isCellEditable(1, 1);
+			
+            //tm.addTableModelListener();
 //			//test add additional column
 //			List colData = new ArrayList(table.getRowCount());		
 //			tm.addColumn("Col3", colData.toArray());
@@ -481,6 +487,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		opt_internal_button = new JButton("<html>Optimizer<br>Internals</html>");
 		add_stmt_button = new JButton("<html>&nbsp;&nbsp; Add<br>Statement</html>");
 		del_stmt_button = new JButton("<html>&nbsp; Delete<br>Statement</html>");
+		change_data_button = new JButton("<html>&nbsp; Change<br>&nbsp;&nbsp;Data</html>");
 
 		// jb3.setHorizontalAlignment(JButton.RIGHT);
 
@@ -490,12 +497,14 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		opt_internal_button.setBounds(XFORBUTTONS, 175, 105, 55);
 		add_stmt_button.setBounds(XFORBUTTONS, 230, 105, 55);
 		del_stmt_button.setBounds(XFORBUTTONS, 285, 105, 55);
+		change_data_button.setBounds(XFORBUTTONS, 340, 105, 55);
 		buttons.add(reset_button);
 		buttons.add(refresh_button);
 		buttons.add(show_all_button);
 		buttons.add(opt_internal_button);
 		buttons.add(add_stmt_button);
 		buttons.add(del_stmt_button);
+		buttons.add(change_data_button);
 		// jb1.setBorder(BorderFactory.createLineBorder(Color.gray,3));
 		// jb2.setBorder(BorderFactory.createLineBorder(Color.gray,3));
 		this.add(reset_button);
@@ -504,6 +513,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		this.add(opt_internal_button);
 		this.add(add_stmt_button);
 		this.add(del_stmt_button);
+		this.add(change_data_button);
 		this.setVisible(true);
 	}
 
@@ -519,6 +529,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		opt_internal_button.addActionListener(this);
 		add_stmt_button.addActionListener(this);
 		del_stmt_button.addActionListener(this);
+		change_data_button.addActionListener(this);
 		this.addComponentListener(this);
 		for (int i = 0; i < tables.size(); i++)
 		{
@@ -556,36 +567,71 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 //			ListSelectionModel selModel = currentTable.getSelectionModel();
 //			if (! selModel.isSelectionEmpty())
 //			{
-//				//int index = currentTable.rowAtPoint(e.getPoint());
+//				int index = currentTable.rowAtPoint(e.getPoint());
 //								
-//				if(i != 0)
-//					showGraph(i);
+////				if(i != 0)
+////					showGraph(i);
 //				
 ////				if(i != 0) {
 ////					showGraph(i, index);
 ////				}
 //				
-////				currentTable.setRowSelectionInterval(index, index);
-////
-////				// get the index for next table that need to be highlighted
-////
-////				index++;
-////				log.info("t" + index + "[" + i + "]");
-////				// index--;
-////
-////				highlightTables(i, "t" + (index) + "[" + i + "]");
+//				currentTable.setRowSelectionInterval(index, index);
 //
-//				//
-//				// for (int j = 0; j < i + 1; j++) {
-//				// tables.get(j).setRowSelectionInterval(index, index);
-//				// }
+//				// get the index for next table that need to be highlighted
+//
+//				index++;
+//				log.info("t" + index + "[" + i + "]");
+//				// index--;
+//
+//				highlightTables(i, "t" + (index) + "[" + i + "]");
+//
+//				
+//				 for (int j = 0; j < i + 1; j++) {
+//				 tables.get(j).setRowSelectionInterval(index, index);
+//				 }
 //			}
 //		}
 //	}
-
+//    tables.get(2).addMouseListener(new MouseAdapter(){    //鼠标事件
+//        public void mouseClicked(MouseEvent e){
+//            int selectedRow = table.getSelectedRow(); //获得选中行索引
+//            Object oa = tableModel.getValueAt(selectedRow, 0);
+//            Object ob = tableModel.getValueAt(selectedRow, 1);
+//            aTextField.setText(oa.toString());  //给文本框赋值
+//            bTextField.setText(ob.toString());
+//        }
+//    });
+	
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
+//		int col = tables.get(2).getSelectedColumn();
+//		int row = tables.get(2).getSelectedRow();
+//		tables.get(2).getCellEditor(row, col).stopCellEditing();
+//		System.out.println(col + " " + row + " " + tables.get(2).getValueAt(row, col));
+//		
+		
+		if (e.getSource() == change_data_button)
+		{
+			
+			int col1 = tables.get(2).getSelectedColumn();
+			int row1 = tables.get(2).getSelectedRow();
+			DebuggerTableModel tm = (DebuggerTableModel) tables.get(2).getModel();
+			tables.get(2).getCellEditor(row1, col1).stopCellEditing();
+			
+			CellEditorListener l = null;
+			
+			tables.get(2).getCellEditor(row1, col1).addCellEditorListener(l);
+			//tables.get(2).getCellEditor(row1, col1).getCellEditorValue();
+			//Object ob = tables.get(2).getModel().getValueAt(row1, col1);
+			tm.setValueAt(tables.get(2).getCellEditor(row1, col1).getCellEditorValue(), row1, col1);
+			tables.get(2).setModel(tm);
+			Object s1 = tables.get(2).getCellEditor(row1, col1).getCellEditorValue();
+			boolean b1 = tables.get(2).isCellEditable(row1, col1);
+			System.out.println(col1 + " " + row1 + " " + tables.get(2).getValueAt(row1, col1)+ " " + s1.toString() + " Edit: "+b1 );
+		}
+		
 		
 		if (e.getSource() == opt_internal_button)
 		{
@@ -720,7 +766,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			{
 				EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i);
                 String scn_rc = currentInterval.getSCN();
-				newSql_rc = newSql_rc + sqlTextAreas.get(i).getText() + "; AS OF SCN " + scn_rc + " ";
+				//newSql_rc = newSql_rc + sqlTextAreas.get(i).getText() + "; AS OF SCN " + scn_rc + " ";
+				newSql_rc = newSql_rc + "OPTIONS (AS OF SCN " + scn_rc + ") "  + sqlTextAreas.get(i).getText() + "; ";
 			}
 			log.info("new sqls: "+newSql_rc);
 			
@@ -843,7 +890,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			{
 				EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i);
                 String scn_rc = currentInterval.getSCN();
-				newSql_rc = newSql_rc + sqlTextAreas.get(i).getText() + "; AS OF SCN " + scn_rc + " ";
+				//newSql_rc = newSql_rc + sqlTextAreas.get(i).getText() + "; AS OF SCN " + scn_rc + " ";
+				newSql_rc = newSql_rc + "OPTIONS (AS OF SCN " + scn_rc + ") "  + sqlTextAreas.get(i).getText() + "; ";
 			}
 			log.info("new sqls: "+newSql_rc);
 			
