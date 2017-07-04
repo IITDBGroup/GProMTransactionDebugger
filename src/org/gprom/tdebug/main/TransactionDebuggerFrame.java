@@ -634,6 +634,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 							+ ct.getColumnCount() + " columns.");
 					log.info("current row is "+row1 +" current column is "+col1);
 					
+					//e.g., used to add "OPTIONS (NO PROVENANCE AS OF SCN 1425819) 
+					//UPDATE R SET A=300,B=4 WHERE A=10 AND B=4;" in front of sql
 					appendSql = "UPDATE ";
 					String tableName = "";
 					String sClause = "SET ";
@@ -641,7 +643,6 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					for(int j = 2; j < ccount; j++)
 					{
 						String cName = ct.getModel().getColumnName(j);
-   					    //Pattern p = Pattern.compile("PROV_(?!U)(\\w*)_.*|PROV_U" + i + "__(\\w*)_.*");
    					    Pattern p = Pattern.compile("PROV_U.*__(\\w*)_(\\w*)");
    					    Matcher m = p.matcher(cName);
 						if (!m.find())
@@ -669,6 +670,38 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 							sClause = sClause + cName + "=" + s1.toString();
 							if(j+1 < ccount)
 								sClause = sClause + " , ";
+							
+							//used to update the statment
+							//e.g., if changed B from 4 to 40
+							//first find "B =" and 4
+							//Second construct "B = 4" and "B = 40"
+							//Third replace "B = 4" to "B = 40"
+							String kw2 = cName + " = ";
+							log.info("key word: "+ kw2);
+	   					    Pattern p2 = Pattern.compile(".*"+kw2+"(\\w*).*");
+	   						JTextArea ja2 = sqlTextAreas.get(i-1);
+	   						String smt2 = ja2.getText();
+	   						log.info("matched statment: "+ smt2);
+	   						String newKw2 = kw2;
+	   						newKw2 = newKw2 + s1.toString();
+	   						log.info("matched new key word: "+ newKw2);
+
+	   					    Matcher m2 = p2.matcher(smt2);
+							if (!m2.find())
+							{
+								log.info("regular expression succeed!");
+							}
+							else
+							{
+								log.info("matched statment group 0: "+ m2.group(0));
+								log.info("matched statment group 1: "+ m2.group(1));
+								
+								kw2 = kw2 + m2.group(1);
+								log.info("matched need to replace: "+ kw2);
+								smt2 = smt2.replaceAll(kw2, newKw2);
+								log.info("matched new statment: "+ smt2);
+								ja2.setText(smt2);
+							}
 						}
 					}
 					log.info("sql set = "+ sClause);
