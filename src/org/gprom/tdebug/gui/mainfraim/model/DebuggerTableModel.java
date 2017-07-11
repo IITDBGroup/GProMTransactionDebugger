@@ -31,6 +31,9 @@ public class DebuggerTableModel extends AbstractTableModel {
 	private Map<String, List<String>> nextRelation = new HashMap<String, List<String>>();
 	private EventTimeBarRow currentRow;
 	private int numRows;
+	private int cRow; //used for change data
+	private int cCol;
+	private Object cValue;
 	
 	public DebuggerTableModel(ResultSet rs, List<Integer> indexList, int stmtIndex, EventTimeBarRow currentRow, int numRows) {
 		super();
@@ -45,6 +48,25 @@ public class DebuggerTableModel extends AbstractTableModel {
 		this.stmtIndex = stmtIndex;
 		this.currentRow = currentRow;
 		this.numRows = numRows;
+	}
+	
+	public DebuggerTableModel(ResultSet rs, List<Integer> indexList, int stmtIndex, EventTimeBarRow currentRow, int numRows,
+			int cRow, int cCol, Object cValue) {
+		super();
+		this.rs = rs;
+		try {
+			rsmd = rs.getMetaData();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		this.indexList = indexList;
+		
+		this.stmtIndex = stmtIndex;
+		this.currentRow = currentRow;
+		this.numRows = numRows;
+		this.cRow = cRow;
+		this.cCol = cCol;
+		this.cValue = cValue;
 	}
 
 	public void setPrevTupleIndex(String targetIndex, String tupleIndex) {
@@ -135,6 +157,12 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
+		
+		Object result = null;
+		
+//		else
+//		{
+		
 		rowIndex = rowIndex + 1;
 
 //		EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(rowIndex-1);
@@ -190,7 +218,7 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
 //		if (rowIndex > 1) {
 //			return (Object)"Dummy text";
 //		}
-		Object result = null;
+//		Object result = null;
 //		log.info("get Value called" + rowIndex + "??" +columnIndex);
 		columnIndex = columnIndex - 2;
 		columnIndex = indexList.get(columnIndex);// -- make index start from 0
@@ -201,7 +229,16 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		
+		log.info("cRow: "+cRow+" cCol: "+cCol);
+		log.info("rowIndex: "+ rowIndex+" columnIndex: "+ columnIndex);
+		if(rowIndex - 1 == cRow && columnIndex - 1 == cCol)
+		{
+			log.info("cRow: "+cRow+" cCol: "+cCol);
+			result = cValue;
+		}
 
+		//}
 		
 		return result;
 	}

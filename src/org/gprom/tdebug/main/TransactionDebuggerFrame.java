@@ -3,6 +3,7 @@ package org.gprom.tdebug.main;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
@@ -112,6 +113,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	private List<JTable> tables = new ArrayList<JTable>();
 	private List<DebuggerTableModel> tableModels = new ArrayList<DebuggerTableModel>();
 	private List<JTextArea> sqlTextAreas = new ArrayList<JTextArea>();
+	private List<JLabel> sqlLabels = new ArrayList<JLabel>();
 	private List<Integer> numUps = new ArrayList<Integer>();
 	
 
@@ -169,11 +171,21 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			String originalStmt = currentInterval.getSql();
 			log.info(originalStmt);
 			JPanel jp = new JPanel();
+			
+			JLabel jb = new JLabel();
+			int updateIndex = i + 1;
+			jb.setText("U"+ updateIndex);
+			Font lfont = new Font("Courier", Font.BOLD, 18);
+			jb.setFont(lfont);
+			sqlLabels.add(jb);
+			//jb.setForeground(Color.RED);
+			
 			JTextArea ja = new JTextArea(5, 20);
 			ja.setEditable(true);
 			ja.setText(originalStmt);
 			ja.setLineWrap(true);
 			sqlTextAreas.add(ja);
+			jp.add(jb);
 			jp.add(ja);
 			stmt_table_panel.add(jp);
 			jp.setBorder(BorderFactory.createLineBorder(Color.gray, 3));
@@ -617,6 +629,10 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		if (e.getSource() == change_data_button)
 		{
 			String appendSql = "";
+			int col1 = -1;
+			int row1 = -1;
+			Object s1 = null;
+			
 			for (int i = 0; i < tables.size(); i++)
 			{
 				ListSelectionModel selModel = tables.get(i).getSelectionModel();
@@ -628,8 +644,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					JTable ct = tables.get(i);
 					//int rcount = ct.getRowCount();
 					int ccount = ct.getColumnCount();
-					int col1 = ct.getSelectedColumn();
-					int row1 = ct.getSelectedRow();
+					col1 = ct.getSelectedColumn();
+					row1 = ct.getSelectedRow();
 					log.info("table id is "+ i+" with "+ ct.getRowCount() + " rows and "
 							+ ct.getColumnCount() + " columns.");
 					log.info("current row is "+row1 +" current column is "+col1);
@@ -643,7 +659,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					for(int j = 2; j < ccount; j++)
 					{
 						String cName = ct.getModel().getColumnName(j);
-   					    Pattern p = Pattern.compile("PROV_U.*__(\\w*)_(\\w*)");
+   					    //Pattern p = Pattern.compile("PROV_U.*__(\\w*)_(\\w*)");
+   					    Pattern p = Pattern.compile("PROV_(\\w*)_(\\w*)"); 
    					    Matcher m = p.matcher(cName);
 						if (!m.find())
 						{
@@ -657,56 +674,56 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 						}
 						//Object s1 = ct.getCellEditor(row1, j).getCellEditorValue();
 						if(j != col1){			
-							Object s1 = ct.getModel().getValueAt(row1, j);
-							log.info("num "+ j + " is " +s1.toString());
-							sClause = sClause + cName + "=" + s1.toString();
+							Object s = ct.getModel().getValueAt(row1, j);
+							log.info("num "+ j + " is " +s.toString());
+							sClause = sClause + cName + "=" + s.toString();
 							if(j+1 < ccount)
 								sClause = sClause + " , ";
 						}
 						else
 						{
 							ct.getCellEditor(row1, col1).stopCellEditing();
-							Object s1 = ct.getCellEditor(row1, col1).getCellEditorValue();
+							s1 = ct.getCellEditor(row1, col1).getCellEditorValue();
 							sClause = sClause + cName + "=" + s1.toString();
 							if(j+1 < ccount)
 								sClause = sClause + " , ";
 							
-							//used to update the statment
-							//e.g., if changed B from 4 to 40
-							//first find "B =" and 4
-							//Second construct "B = 4" and "B = 40"
-							//Third replace "B = 4" to "B = 40"
-							String kw2 = cName + " = ";
-							log.info("key word: "+ kw2);
-	   					    Pattern p2 = Pattern.compile(".*"+kw2+"(\\w*).*");
-	   						JTextArea ja2 = sqlTextAreas.get(i-1);
-	   						String smt2 = ja2.getText();
-	   						log.info("matched statment: "+ smt2);
-	   						String newKw2 = kw2;
-	   						newKw2 = newKw2 + s1.toString();
-	   						log.info("matched new key word: "+ newKw2);
-
-	   					    Matcher m2 = p2.matcher(smt2);
-							if (!m2.find())
-							{
-								log.info("regular expression succeed!");
-							}
-							else
-							{
-								log.info("matched statment group 0: "+ m2.group(0));
-								log.info("matched statment group 1: "+ m2.group(1));
-								
-								kw2 = kw2 + m2.group(1);
-								log.info("matched need to replace: "+ kw2);
-								smt2 = smt2.replaceAll(kw2, newKw2);
-								log.info("matched new statment: "+ smt2);
-								ja2.setText(smt2);
-							}
+//							//used to update the statment
+//							//e.g., if changed B from 4 to 40
+//							//first find "B =" and 4
+//							//Second construct "B = 4" and "B = 40"
+//							//Third replace "B = 4" to "B = 40"
+//							String kw2 = cName + " = ";
+//							log.info("key word: "+ kw2);
+//	   					    Pattern p2 = Pattern.compile(".*"+kw2+"(\\w*).*");
+//	   						JTextArea ja2 = sqlTextAreas.get(i-1);
+//	   						String smt2 = ja2.getText();
+//	   						log.info("matched statment: "+ smt2);
+//	   						String newKw2 = kw2;
+//	   						newKw2 = newKw2 + s1.toString();
+//	   						log.info("matched new key word: "+ newKw2);
+//
+//	   					    Matcher m2 = p2.matcher(smt2);
+//							if (!m2.find())
+//							{
+//								log.info("regular expression succeed!");
+//							}
+//							else
+//							{
+//								log.info("matched statment group 0: "+ m2.group(0));
+//								log.info("matched statment group 1: "+ m2.group(1));
+//								
+//								kw2 = kw2 + m2.group(1);
+//								log.info("matched need to replace: "+ kw2);
+//								smt2 = smt2.replaceAll(kw2, newKw2);
+//								log.info("matched new statment: "+ smt2);
+//								ja2.setText(smt2);
+//							}
 						}
 					}
 					log.info("sql set = "+ sClause);
 					
-					for(int k=0; k<i; k++)
+					for(int k=0; k<=i; k++)
 					{
 						JTable pt = tables.get(k);
 						int pRowCount = pt.getRowCount();
@@ -858,7 +875,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				}
 				
 				numUps.add(numUp);
-				DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i, currentRow, numUp);
+				DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i, currentRow, numUp, row1, col1, s1);
 				jtb.setModel(tm);			
 			}
 			
@@ -1324,6 +1341,12 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		{
 			tables.get(i).clearSelection();
 		}
+		
+		for (int i = 0; i < sqlLabels.size(); i++)
+		{
+			sqlLabels.get(i).setForeground(Color.BLACK);
+		}
+		
 		JTable table = (JTable) e.getSource();
 		for (int i = 0; i < tables.size(); i++)
 		{
@@ -1432,9 +1455,11 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		String styleSheet =
 	            "node {" +
 	            "size: 35;" +
-	            "fill-color: grey;" +
+	            "fill-mode: dyn-plain;" +
+	            "fill-color: grey, red;" +
 	            "shape: box;" +
 	            "}";
+		
 		//Graph
 		Graph graph = new DefaultGraph("ProvenanceGraph");
 		//graph.addAttribute("ui.stylesheet", "node { size: 35; shape: box; fill-color: grey;}");  // size-mode: fit
@@ -1633,6 +1658,23 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		{
 			if(row <= numUps.get(i))
 			{
+				
+				if(i != 0)
+				{
+					int updateIndex = i;
+					String uName = "U" + updateIndex;
+					Node uNode = graph.addNode(uName);
+					//set node position x and y axis
+					uNode.setAttribute("xy", attribute, 0); 						
+					attribute++;
+
+					uNode.addAttribute("label", uName);
+					uNode.setAttribute("ui.color", 0.5);
+					nodes.add(uNode);
+					
+					sqlLabels.get(i-1).setForeground(Color.RED);
+				}
+				
 				String nodeName = "t" + String.valueOf(row) + "[" + String.valueOf(i) + "]";
 				Node tempNode = graph.addNode(nodeName);
 				//set node position x and y axis
@@ -1641,6 +1683,20 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 				tempNode.addAttribute("label", nodeName);
 				nodes.add(tempNode);
+				
+//				if(i != level)
+//				{
+//					int updateIndex = i + 1;
+//					String uName = "U" + updateIndex;
+//					Node uNode = graph.addNode(uName);
+//					//set node position x and y axis
+//					uNode.setAttribute("xy", attribute, 0); 						
+//					attribute++;
+//
+//					uNode.addAttribute("label", uName);
+//					nodes.add(uNode);
+//				}
+					
 			}
 		}
 		
