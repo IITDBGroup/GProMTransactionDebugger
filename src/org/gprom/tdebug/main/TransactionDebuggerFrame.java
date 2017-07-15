@@ -1350,7 +1350,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		JTable table = (JTable) e.getSource();
 		for (int i = 0; i < tables.size(); i++)
 		{
-			JTable currentTable = tables.get(i);
+			JTable currentTable = tables.get(i); 
 			if (currentTable == table)
 			{
 				int index = currentTable.rowAtPoint(e.getPoint());
@@ -1658,8 +1658,26 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		{
 			if(row <= numUps.get(i))
 			{
+				boolean addU = false;
+				if(i > 0)
+				{
+					JTable tableC = tables.get(i); 
+					JTable tableP = tables.get(i-1); 
+					int colLen = tableC.getColumnCount();
+					log.info("num column tableC: " + colLen);
+					log.info("num column tableP: " + tableP.getColumnCount());
+					for(int c=2; c<colLen; c++)
+					{
+						log.info("row: " + row);
+						log.info("valueC: " + tableC.getValueAt(row-1, c));
+						log.info("valueP: " + tableP.getValueAt(row-1, c));
+						if(!tableC.getValueAt(row-1, c).equals(tableP.getValueAt(row-1, c)))
+							addU = true;
+					}
+					
+				}
 				
-				if(i != 0)
+				if(i != 0 && addU)
 				{
 					int updateIndex = i;
 					String uName = "U" + updateIndex;
