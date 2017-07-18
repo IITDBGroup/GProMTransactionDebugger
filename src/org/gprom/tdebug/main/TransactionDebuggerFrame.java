@@ -82,7 +82,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	static Logger log = Logger.getLogger(TransactionDebuggerFrame.class);
 	
 	private JButton reset_button = null;
-	private JButton refresh_button = null;
+	private JButton show_affected_button = null;
 	private JButton show_all_button = null;
 	private JButton opt_internal_button = null;
 	private JButton add_stmt_button = null;
@@ -133,6 +133,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	
 	private String seriSql = "";
 	private String commSql = "";
+	private boolean clickWhatIf = false;
 
 	public TransactionDebuggerFrame(EventTimeBarRow row)
 	{
@@ -587,7 +588,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		
 		// Right buttons show_all_button
 		reset_button = new JButton("Reset");
-		refresh_button = new JButton("<html>&nbsp;&nbsp;Show<br>Affected</html>");
+		show_affected_button = new JButton("<html>&nbsp;&nbsp;Show<br>Affected</html>");
 		show_all_button = new JButton("ShowAll");
 		opt_internal_button = new JButton("<html>Optimizer<br>Internals</html>");
 		add_stmt_button = new JButton("<html>&nbsp;&nbsp; Add<br>Statement</html>");
@@ -597,14 +598,14 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		// jb3.setHorizontalAlignment(JButton.RIGHT);
 
 		reset_button.setBounds(XFORBUTTONS, 10, 105, 55);
-		refresh_button.setBounds(XFORBUTTONS, 65, 105, 55);
+		show_affected_button.setBounds(XFORBUTTONS, 65, 105, 55);
 		show_all_button.setBounds(XFORBUTTONS, 120, 105, 55);
 		opt_internal_button.setBounds(XFORBUTTONS, 175, 105, 55);
 		add_stmt_button.setBounds(XFORBUTTONS, 230, 105, 55);
 		del_stmt_button.setBounds(XFORBUTTONS, 285, 105, 55);
 		whatif_button.setBounds(XFORBUTTONS, 340, 105, 55);
 		buttons.add(reset_button);
-		buttons.add(refresh_button);
+		buttons.add(show_affected_button);
 		buttons.add(show_all_button);
 		buttons.add(opt_internal_button);
 		buttons.add(add_stmt_button);
@@ -613,7 +614,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		// jb1.setBorder(BorderFactory.createLineBorder(Color.gray,3));
 		// jb2.setBorder(BorderFactory.createLineBorder(Color.gray,3));
 		this.add(reset_button);
-		this.add(refresh_button);
+		this.add(show_affected_button);
 		this.add(show_all_button);
 		this.add(opt_internal_button);
 		this.add(add_stmt_button);
@@ -624,12 +625,12 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 	private void setupListeners()
 	{
-//		getG1.addActionListener(this);
-//		getG2.addActionListener(this);
-//		getG3.addActionListener(this);
-		
+		//		getG1.addActionListener(this);
+		//		getG2.addActionListener(this);
+		//		getG3.addActionListener(this);
+
 		reset_button.addActionListener(this);
-		refresh_button.addActionListener(this);
+		show_affected_button.addActionListener(this);
 		show_all_button.addActionListener(this);
 		opt_internal_button.addActionListener(this);
 		add_stmt_button.addActionListener(this);
@@ -640,149 +641,123 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		{
 			tables.get(i).addMouseListener(this);
 			tables.get(i).getModel().addTableModelListener(this);
-			
-//			ListSelectionModel selModel = tables.get(i).getSelectionModel();
-//			//selModel; 
-////            int row = tables.get(i).getSelectedRow();
-////            
-////            log.info("row id is "+row);
-//			//tables.get(i).getSelectionModel().
+
+			//			ListSelectionModel selModel = tables.get(i).getSelectionModel();
+			//			//selModel; 
+			////            int row = tables.get(i).getSelectedRow();
+			////            
+			////            log.info("row id is "+row);
+			//			//tables.get(i).getSelectionModel().
 
 		}
-		
+
 	}
-	
-//	@Override
-//	public void valueChanged(ListSelectionEvent e) {
-//		// TODO Auto-generated method stub
-////		for (int i = 0; i < tables.size(); i++)
-////		{
-////			ListSelectionModel selModel = tables.get(i).getSelectionModel();
-////			if(! selModel.isSelectionEmpty())
-////			{
-////				int row = selModel.getAnchorSelectionIndex();
-////				log.info("row id is "+row);
-////			}
-////		}
-//		for (int i = 0; i < tables.size(); i++)
-//		{
-//			tables.get(i).clearSelection();
-//		}
-//		JTable table = (JTable) e.getSource();
-//		for (int i = 0; i < tables.size(); i++)
-//		{
-//			JTable currentTable = tables.get(i);
-//			ListSelectionModel selModel = currentTable.getSelectionModel();
-//			if (! selModel.isSelectionEmpty())
-//			{
-//				int index = currentTable.rowAtPoint(e.getPoint());
-//								
-////				if(i != 0)
-////					showGraph(i);
-//				
-////				if(i != 0) {
-////					showGraph(i, index);
-////				}
-//				
-//				currentTable.setRowSelectionInterval(index, index);
-//
-//				// get the index for next table that need to be highlighted
-//
-//				index++;
-//				log.info("t" + index + "[" + i + "]");
-//				// index--;
-//
-//				highlightTables(i, "t" + (index) + "[" + i + "]");
-//
-//				
-//				 for (int j = 0; j < i + 1; j++) {
-//				 tables.get(j).setRowSelectionInterval(index, index);
-//				 }
-//			}
-//		}
-//	}
-//    tables.get(2).addMouseListener(new MouseAdapter(){    //鼠标事件
-//        public void mouseClicked(MouseEvent e){
-//            int selectedRow = table.getSelectedRow(); //获得选中行索引
-//            Object oa = tableModel.getValueAt(selectedRow, 0);
-//            Object ob = tableModel.getValueAt(selectedRow, 1);
-//            aTextField.setText(oa.toString());  //给文本框赋值
-//            bTextField.setText(ob.toString());
-//        }
-//    });
-	
-//    addKeyListener(new KeyAdapter() {
-//        @Override
-//        public void keyReleased(KeyEvent e) {
-//            event();
-//        }
-//    });
-	
+
+	//	@Override
+	//	public void valueChanged(ListSelectionEvent e) {
+	//		// TODO Auto-generated method stub
+	////		for (int i = 0; i < tables.size(); i++)
+	////		{
+	////			ListSelectionModel selModel = tables.get(i).getSelectionModel();
+	////			if(! selModel.isSelectionEmpty())
+	////			{
+	////				int row = selModel.getAnchorSelectionIndex();
+	////				log.info("row id is "+row);
+	////			}
+	////		}
+	//		for (int i = 0; i < tables.size(); i++)
+	//		{
+	//			tables.get(i).clearSelection();
+	//		}
+	//		JTable table = (JTable) e.getSource();
+	//		for (int i = 0; i < tables.size(); i++)
+	//		{
+	//			JTable currentTable = tables.get(i);
+	//			ListSelectionModel selModel = currentTable.getSelectionModel();
+	//			if (! selModel.isSelectionEmpty())
+	//			{
+	//				int index = currentTable.rowAtPoint(e.getPoint());
+	//								
+	////				if(i != 0)
+	////					showGraph(i);
+	//				
+	////				if(i != 0) {
+	////					showGraph(i, index);
+	////				}
+	//				
+	//				currentTable.setRowSelectionInterval(index, index);
+	//
+	//				// get the index for next table that need to be highlighted
+	//
+	//				index++;
+	//				log.info("t" + index + "[" + i + "]");
+	//				// index--;
+	//
+	//				highlightTables(i, "t" + (index) + "[" + i + "]");
+	//
+	//				
+	//				 for (int j = 0; j < i + 1; j++) {
+	//				 tables.get(j).setRowSelectionInterval(index, index);
+	//				 }
+	//			}
+	//		}
+	//	}
+	//    tables.get(2).addMouseListener(new MouseAdapter(){    //鼠标事件
+	//        public void mouseClicked(MouseEvent e){
+	//            int selectedRow = table.getSelectedRow(); //获得选中行索引
+	//            Object oa = tableModel.getValueAt(selectedRow, 0);
+	//            Object ob = tableModel.getValueAt(selectedRow, 1);
+	//            aTextField.setText(oa.toString());  //给文本框赋值
+	//            bTextField.setText(ob.toString());
+	//        }
+	//    });
+
+	//    addKeyListener(new KeyAdapter() {
+	//        @Override
+	//        public void keyReleased(KeyEvent e) {
+	//            event();
+	//        }
+	//    });
+
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{		
-//		int col = tables.get(2).getSelectedColumn();
-//		int row = tables.get(2).getSelectedRow();
-//		tables.get(2).getCellEditor(row, col).stopCellEditing();
-//		System.out.println(col + " " + row + " " + tables.get(2).getValueAt(row, col));
-//		
-		
-//		TableCellListener tcl = (TableCellListener)e.getSource();
-//        System.out.println("Row   : " + tcl.getRow());
-//        System.out.println("Column: " + tcl.getColumn());
-//        System.out.println("Old   : " + tcl.getOldValue());
-//        System.out.println("New   : " + tcl.getNewValue());
-		
-        if(e.getSource() == del_stmt_button)
-        {
-        
-        	int col1 = -1;
-        	int row1 = -1;
-        	
-			for (int i = 0; i < tables.size(); i++)
-			{
-				ListSelectionModel selModel = tables.get(i).getSelectionModel();
-				if(! selModel.isSelectionEmpty())
-				{
-					//int row = selModel.getAnchorSelectionIndex();
-					//log.info("row id is "+row);
-					log.info("table id is "+ i);
-					JTable ct = tables.get(i);
-					//int rcount = ct.getRowCount();
-					int ccount = ct.getColumnCount();
-					col1 = ct.getSelectedColumn();
-					row1 = ct.getSelectedRow();
-					
-					log.info("table id is "+ i+" with "+ ct.getRowCount() + " rows and "
-							+ ct.getColumnCount() + " columns.");
-					log.info("current row is "+row1 +" current column is "+col1);
-					
+		//		int col = tables.get(2).getSelectedColumn();
+		//		int row = tables.get(2).getSelectedRow();
+		//		tables.get(2).getCellEditor(row, col).stopCellEditing();
+		//		System.out.println(col + " " + row + " " + tables.get(2).getValueAt(row, col));
+		//		
 
-					//ct.getCellEditor(row1, col1).stopCellEditing();
-					Object s1 = ct.getCellEditor(row1, col1).getCellEditorValue();
-					JTextField jt1 = new JTextField("111");
-					//TableCellEditor cellEditor = new TableCellEditor(jt1);
-					ct.getColumnModel().getColumn(col1).setCellEditor(new DefaultCellEditor(jt1));
-					log.info("object s1 : " + s1.toString());
-				}
-			}
-        }
-		
+		//		TableCellListener tcl = (TableCellListener)e.getSource();
+		//        System.out.println("Row   : " + tcl.getRow());
+		//        System.out.println("Column: " + tcl.getColumn());
+		//        System.out.println("Old   : " + tcl.getOldValue());
+		//        System.out.println("New   : " + tcl.getNewValue());
+
+		if(e.getSource() == del_stmt_button)
+		{
+
+
+		}
+
 		if (e.getSource() == whatif_button)
 		{
+
+			clickWhatIf = true;  //user should click what-if button firstly, then user can click show affected or show all button
+
 			String appendSql = "";
 			int col1 = -1;
 			int row1 = -1;
 			Object s1 = null;
-			
+
 			//e.g., used to add "OPTIONS (NO PROVENANCE AS OF SCN 1425819) 
 			//UPDATE R SET A=300,B=4 WHERE A=10 AND B=4;" in front of sql
-//			appendSql = "UPDATE ";
+			//			appendSql = "UPDATE ";
 			String tableName = "";
-//			String setClause = "SET ";
-//			String wheClause = "WHERE ";
+			//			String setClause = "SET ";
+			//			String wheClause = "WHERE ";
 			List<String> colNames = new ArrayList<String>();  //store column names
-			
+
 			JTable firstTable = tables.get(0);
 			int colCount = firstTable.getColumnCount();			 
 			for(int i=2; i<colCount; i++)
@@ -803,7 +778,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					colNames.add(cName);
 				}
 			}
-			
+
 
 			log.info("new map size: "+ newMap.size());
 			for (Entry<Integer, List<Object>> entry : newMap.entrySet()) //how many update in result sql (number of tuples were updated)
@@ -813,188 +788,188 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				List<Object> oldV = oldMap.get(k);
 				log.info("new list size: "+ newV.size());
 				log.info("old list size: "+ oldV.size());
-				
+
 				appendSql = "UPDATE ";
-//				String tableName = "";
+				//				String tableName = "";
 				String setClause = "SET ";
 				String wheClause = "WHERE ";
-				
+
 				for(int i=0; i<newV.size(); i++)
 				{
 					setClause = setClause + colNames.get(i) + " = " + newV.get(i);
 					wheClause = wheClause + colNames.get(i) + " = " + oldV.get(i);
-					
+
 					if(i+1 != newV.size())
 					{
 						setClause = setClause + " , ";
 						wheClause = wheClause + " AND ";
 					}
-					
+
 				}
-				
+
 				appendSql = appendSql + tableName + " " + setClause + " " + wheClause + ";";
 				log.info("sql = "+ appendSql);				
 			}
-			
-			
-			
-//			for (int i = 0; i < tables.size(); i++)
-//			{
-//				ListSelectionModel selModel = tables.get(i).getSelectionModel();
-//				if(! selModel.isSelectionEmpty())
-//				{
-//					//int row = selModel.getAnchorSelectionIndex();
-//					//log.info("row id is "+row);
-//					log.info("table id is "+ i);
-//					JTable ct = tables.get(i);
-//					//int rcount = ct.getRowCount();
-//					int ccount = ct.getColumnCount();
-//					col1 = ct.getSelectedColumn();
-//					row1 = ct.getSelectedRow();
-//					log.info("table id is "+ i+" with "+ ct.getRowCount() + " rows and "
-//							+ ct.getColumnCount() + " columns.");
-//					log.info("current row is "+row1 +" current column is "+col1);
-//					
-//					//e.g., used to add "OPTIONS (NO PROVENANCE AS OF SCN 1425819) 
-//					//UPDATE R SET A=300,B=4 WHERE A=10 AND B=4;" in front of sql
-//					appendSql = "UPDATE ";
-//					String tableName = "";
-//					String sClause = "SET ";
-//					String cClause = "WHERE ";
-//					for(int j = 2; j < ccount; j++)
-//					{
-//						String cName = ct.getModel().getColumnName(j);
-//   					    //Pattern p = Pattern.compile("PROV_U.*__(\\w*)_(\\w*)");
-//   					    Pattern p = Pattern.compile("PROV_(\\w*)_(\\w*)"); 
-//   					    Matcher m = p.matcher(cName);
-//						if (!m.find())
-//						{
-//							log.info("regular expression succeed!");
-//						}
-//						else
-//						{
-//							log.info("group 1: " + m.group(1) + " group 2: "+m.group(2));
-//							tableName = m.group(1);
-//							cName = m.group(2);
-//						}
-//						//Object s1 = ct.getCellEditor(row1, j).getCellEditorValue();
-//						if(j != col1){			
-//							Object s = ct.getModel().getValueAt(row1, j);
-//							log.info("num "+ j + " is " +s.toString());
-//							sClause = sClause + cName + "=" + s.toString();
-//							if(j+1 < ccount)
-//								sClause = sClause + " , ";
-//						}
-//						else
-//						{
-//							ct.getCellEditor(row1, col1).stopCellEditing();
-//							s1 = ct.getCellEditor(row1, col1).getCellEditorValue();
-//							sClause = sClause + cName + "=" + s1.toString();
-//							if(j+1 < ccount)
-//								sClause = sClause + " , ";
-//							
-////							//used to update the statment
-////							//e.g., if changed B from 4 to 40
-////							//first find "B =" and 4
-////							//Second construct "B = 4" and "B = 40"
-////							//Third replace "B = 4" to "B = 40"
-////							String kw2 = cName + " = ";
-////							log.info("key word: "+ kw2);
-////	   					    Pattern p2 = Pattern.compile(".*"+kw2+"(\\w*).*");
-////	   						JTextArea ja2 = sqlTextAreas.get(i-1);
-////	   						String smt2 = ja2.getText();
-////	   						log.info("matched statment: "+ smt2);
-////	   						String newKw2 = kw2;
-////	   						newKw2 = newKw2 + s1.toString();
-////	   						log.info("matched new key word: "+ newKw2);
-////
-////	   					    Matcher m2 = p2.matcher(smt2);
-////							if (!m2.find())
-////							{
-////								log.info("regular expression succeed!");
-////							}
-////							else
-////							{
-////								log.info("matched statment group 0: "+ m2.group(0));
-////								log.info("matched statment group 1: "+ m2.group(1));
-////								
-////								kw2 = kw2 + m2.group(1);
-////								log.info("matched need to replace: "+ kw2);
-////								smt2 = smt2.replaceAll(kw2, newKw2);
-////								log.info("matched new statment: "+ smt2);
-////								ja2.setText(smt2);
-////							}
-//						}
-//					}
-//					log.info("sql set = "+ sClause);
-//					
-//					for(int k=0; k<=i; k++)
-//					{
-//						JTable pt = tables.get(k);
-//						int pRowCount = pt.getRowCount();
-//						if(row1 <= pRowCount)
-//						{
-//							for(int m=2; m<ccount; m++)
-//							{
-//								String sName = pt.getModel().getColumnName(m);
-//		   					    Pattern ps = Pattern.compile("PROV_.*_(\\w*)");
-//		   					    Matcher ms = ps.matcher(sName);
-//								if (!ms.find())
-//								{
-//									log.info("regular expression succeed!");
-//								}
-//								else
-//								{
-//									log.info("group 1: " + ms.group(1));
-//									//tableName = ms.group(1);
-//									sName = ms.group(1);
-//								}
-//				
-//								Object c1 = pt.getModel().getValueAt(row1, m);
-//								log.info("num "+ m + " is " +c1.toString());
-//								cClause = cClause + sName + "=" + c1.toString();
-//								if(m+1 < ccount)
-//									cClause = cClause + " AND ";	
-//							}
-//						}
-//					}
-//					log.info("sql where = "+ cClause);
-//					
-//					appendSql = appendSql + tableName + " " + sClause + " " + cClause + ";";
-//					log.info("sql = "+ appendSql);
-//
-//				}
-//			}
-			
+
+
+
+			//			for (int i = 0; i < tables.size(); i++)
+			//			{
+			//				ListSelectionModel selModel = tables.get(i).getSelectionModel();
+			//				if(! selModel.isSelectionEmpty())
+			//				{
+			//					//int row = selModel.getAnchorSelectionIndex();
+			//					//log.info("row id is "+row);
+			//					log.info("table id is "+ i);
+			//					JTable ct = tables.get(i);
+			//					//int rcount = ct.getRowCount();
+			//					int ccount = ct.getColumnCount();
+			//					col1 = ct.getSelectedColumn();
+			//					row1 = ct.getSelectedRow();
+			//					log.info("table id is "+ i+" with "+ ct.getRowCount() + " rows and "
+			//							+ ct.getColumnCount() + " columns.");
+			//					log.info("current row is "+row1 +" current column is "+col1);
+			//					
+			//					//e.g., used to add "OPTIONS (NO PROVENANCE AS OF SCN 1425819) 
+			//					//UPDATE R SET A=300,B=4 WHERE A=10 AND B=4;" in front of sql
+			//					appendSql = "UPDATE ";
+			//					String tableName = "";
+			//					String sClause = "SET ";
+			//					String cClause = "WHERE ";
+			//					for(int j = 2; j < ccount; j++)
+			//					{
+			//						String cName = ct.getModel().getColumnName(j);
+			//   					    //Pattern p = Pattern.compile("PROV_U.*__(\\w*)_(\\w*)");
+			//   					    Pattern p = Pattern.compile("PROV_(\\w*)_(\\w*)"); 
+			//   					    Matcher m = p.matcher(cName);
+			//						if (!m.find())
+			//						{
+			//							log.info("regular expression succeed!");
+			//						}
+			//						else
+			//						{
+			//							log.info("group 1: " + m.group(1) + " group 2: "+m.group(2));
+			//							tableName = m.group(1);
+			//							cName = m.group(2);
+			//						}
+			//						//Object s1 = ct.getCellEditor(row1, j).getCellEditorValue();
+			//						if(j != col1){			
+			//							Object s = ct.getModel().getValueAt(row1, j);
+			//							log.info("num "+ j + " is " +s.toString());
+			//							sClause = sClause + cName + "=" + s.toString();
+			//							if(j+1 < ccount)
+			//								sClause = sClause + " , ";
+			//						}
+			//						else
+			//						{
+			//							ct.getCellEditor(row1, col1).stopCellEditing();
+			//							s1 = ct.getCellEditor(row1, col1).getCellEditorValue();
+			//							sClause = sClause + cName + "=" + s1.toString();
+			//							if(j+1 < ccount)
+			//								sClause = sClause + " , ";
+			//							
+			////							//used to update the statment
+			////							//e.g., if changed B from 4 to 40
+			////							//first find "B =" and 4
+			////							//Second construct "B = 4" and "B = 40"
+			////							//Third replace "B = 4" to "B = 40"
+			////							String kw2 = cName + " = ";
+			////							log.info("key word: "+ kw2);
+			////	   					    Pattern p2 = Pattern.compile(".*"+kw2+"(\\w*).*");
+			////	   						JTextArea ja2 = sqlTextAreas.get(i-1);
+			////	   						String smt2 = ja2.getText();
+			////	   						log.info("matched statment: "+ smt2);
+			////	   						String newKw2 = kw2;
+			////	   						newKw2 = newKw2 + s1.toString();
+			////	   						log.info("matched new key word: "+ newKw2);
+			////
+			////	   					    Matcher m2 = p2.matcher(smt2);
+			////							if (!m2.find())
+			////							{
+			////								log.info("regular expression succeed!");
+			////							}
+			////							else
+			////							{
+			////								log.info("matched statment group 0: "+ m2.group(0));
+			////								log.info("matched statment group 1: "+ m2.group(1));
+			////								
+			////								kw2 = kw2 + m2.group(1);
+			////								log.info("matched need to replace: "+ kw2);
+			////								smt2 = smt2.replaceAll(kw2, newKw2);
+			////								log.info("matched new statment: "+ smt2);
+			////								ja2.setText(smt2);
+			////							}
+			//						}
+			//					}
+			//					log.info("sql set = "+ sClause);
+			//					
+			//					for(int k=0; k<=i; k++)
+			//					{
+			//						JTable pt = tables.get(k);
+			//						int pRowCount = pt.getRowCount();
+			//						if(row1 <= pRowCount)
+			//						{
+			//							for(int m=2; m<ccount; m++)
+			//							{
+			//								String sName = pt.getModel().getColumnName(m);
+			//		   					    Pattern ps = Pattern.compile("PROV_.*_(\\w*)");
+			//		   					    Matcher ms = ps.matcher(sName);
+			//								if (!ms.find())
+			//								{
+			//									log.info("regular expression succeed!");
+			//								}
+			//								else
+			//								{
+			//									log.info("group 1: " + ms.group(1));
+			//									//tableName = ms.group(1);
+			//									sName = ms.group(1);
+			//								}
+			//				
+			//								Object c1 = pt.getModel().getValueAt(row1, m);
+			//								log.info("num "+ m + " is " +c1.toString());
+			//								cClause = cClause + sName + "=" + c1.toString();
+			//								if(m+1 < ccount)
+			//									cClause = cClause + " AND ";	
+			//							}
+			//						}
+			//					}
+			//					log.info("sql where = "+ cClause);
+			//					
+			//					appendSql = appendSql + tableName + " " + sClause + " " + cClause + ";";
+			//					log.info("sql = "+ appendSql);
+			//
+			//				}
+			//			}
+
 			int count = tableModels.size();
 			log.info("count: "+count);
-			
+
 			int countSqls = sqlTextAreas.size();
 			log.info("countTextAreas: "+countSqls);
 			String newSql = "";
 			for(int i=0; i<countSqls; i++)
 				newSql = newSql + sqlTextAreas.get(i).getText() + ";";
 			log.info("new sqls: "+newSql);
-			
+
 			String newSql_rc = "";
 			for(int i=0; i<countSqls; i++)
 			{
 				EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i);
-                String scn_rc = currentInterval.getSCN();
+				String scn_rc = currentInterval.getSCN();
 				//newSql_rc = newSql_rc + sqlTextAreas.get(i).getText() + "; AS OF SCN " + scn_rc + " ";
 				newSql_rc = newSql_rc + "OPTIONS (AS OF SCN " + scn_rc + ") "  + sqlTextAreas.get(i).getText() + "; ";
 			}
-			
+
 			if(newMap.size() != 0)
 				newSql_rc = "OPTIONS (NO PROVENANCE AS OF SCN " + currentRow.getStartSCN() + ") " + appendSql + " " + newSql_rc;
 
 			log.info("new sqls: "+newSql_rc);
-			
+
 			//store sql
 			commSql = newSql_rc;
 			seriSql = newSql;
-			
-		    //String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
+
+			//String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
 			String sql = "";
 			if(currentRow.getIsoLevel().equals("1"))
 				sql = GpromProcess.getReenactSQL(currentRow.getStartSCN(),newSql_rc);
@@ -1004,11 +979,11 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(0);
 				sql = GpromProcess.getSerializableReenactSQL(currentInterval.getSCN(), newSql);
 			}
-			
+
 			//String sql = GpromProcess.getReenactSQL(newSql);
 			ResultSet rs = DBManager.getInstance().executeQuery(sql);
 			ResultSetMetaData rsmd = null;
-			
+
 			numUps.clear();
 			//get how many tuples in the initial table
 			//num of update if update based on diff column
@@ -1039,7 +1014,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-			
+
 			try
 			{
 				rsmd = rs.getMetaData();
@@ -1047,11 +1022,11 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			{
 				LoggerUtil.logException(e1,log);
 			}
-			
+
 			for (int i = 0; i < count; i++) 
 			{
 				JTable jtb = tables.get(i);
-				
+
 				List<Integer> indexList = new ArrayList<Integer>();
 				try
 				{
@@ -1077,7 +1052,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					LoggerUtil.logException(e1,log);
 				}
 				// log.info("index: " + indexList + currentTableName);
-				
+
 				if(i > 0)
 				{
 					EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i-1);
@@ -1085,7 +1060,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					if(sqlType.equals("INSERT"))
 						numUp++;
 				}
-				
+
 				numUps.add(numUp);
 				List<Map<Integer, Object>> rsList = null;
 				try {
@@ -1097,41 +1072,41 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				DebuggerTableModel tm = new DebuggerTableModel(rsList, rs, indexList, i, currentRow, numUp, row1, col1, s1,tables);
 				jtb.setModel(tm);			
 			}
-			
-//			int col1 = tables.get(2).getSelectedColumn();
-//			int row1 = tables.get(2).getSelectedRow();
-//			DebuggerTableModel tm = (DebuggerTableModel) tables.get(2).getModel();
-//			tables.get(2).getCellEditor(row1, col1).stopCellEditing();
-//			
-//			CellEditorListener l = null;
-//			
-//			tables.get(2).getCellEditor(row1, col1).addCellEditorListener(l);
-//			//tables.get(2).getCellEditor(row1, col1).getCellEditorValue();
-//			//Object ob = tables.get(2).getModel().getValueAt(row1, col1);
-//			tm.setValueAt(tables.get(2).getCellEditor(row1, col1).getCellEditorValue(), row1, col1);
-//			tables.get(2).setModel(tm);
-//			Object s1 = tables.get(2).getCellEditor(row1, col1).getCellEditorValue();
-//			boolean b1 = tables.get(2).isCellEditable(row1, col1);
-//			System.out.println(col1 + " " + row1 + " " + tables.get(2).getValueAt(row1, col1)+ " " + s1.toString() + " Edit: "+b1 );
+
+			//			int col1 = tables.get(2).getSelectedColumn();
+			//			int row1 = tables.get(2).getSelectedRow();
+			//			DebuggerTableModel tm = (DebuggerTableModel) tables.get(2).getModel();
+			//			tables.get(2).getCellEditor(row1, col1).stopCellEditing();
+			//			
+			//			CellEditorListener l = null;
+			//			
+			//			tables.get(2).getCellEditor(row1, col1).addCellEditorListener(l);
+			//			//tables.get(2).getCellEditor(row1, col1).getCellEditorValue();
+			//			//Object ob = tables.get(2).getModel().getValueAt(row1, col1);
+			//			tm.setValueAt(tables.get(2).getCellEditor(row1, col1).getCellEditorValue(), row1, col1);
+			//			tables.get(2).setModel(tm);
+			//			Object s1 = tables.get(2).getCellEditor(row1, col1).getCellEditorValue();
+			//			boolean b1 = tables.get(2).isCellEditable(row1, col1);
+			//			System.out.println(col1 + " " + row1 + " " + tables.get(2).getValueAt(row1, col1)+ " " + s1.toString() + " Edit: "+b1 );
 		}
-		
-		
+
+
 		if (e.getSource() == opt_internal_button)
 		{
 			OptimizationInternalsFrame f = new OptimizationInternalsFrame("GProM Optimization Internals");
-//			f.setSize(950, 600);
-//			new design
+			//			f.setSize(950, 600);
+			//			new design
 			f.setSize(950, 300);
 		} 
-		
+
 		if (e.getSource() == reset_button)
 		{
-//			newMap.clear();
-//			oldMap.clear();
-//			
+			//			newMap.clear();
+			//			oldMap.clear();
+			//			
 			int countSqls = sqlTextAreas.size();
 			log.info("count sql: "+countSqls);
-			
+
 			for (int i = 0; i < countSqls; i++)
 			{
 				EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i);
@@ -1139,16 +1114,16 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				JTextArea ja = sqlTextAreas.get(i);
 				ja.setText(originalStmt);
 			}
-			
+
 			int count = tableModels.size();
 			log.info("count tables: "+count);
-			
+
 			//get how many tuples in the initial table
 			//num of update if update based on diff column
 			String sql = GpromProcess.getTransactionIntermediateSQL(currentRow.getXID());
-		    //String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
+			//String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
 			ResultSet rs = DBManager.getInstance().executeQuery(sql);
-			
+
 			numUps.clear();
 			int numUp = 0;
 			int pos = -1;
@@ -1177,7 +1152,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-			
+
 			ResultSetMetaData rsmd = null;
 			try
 			{
@@ -1186,7 +1161,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			{
 				LoggerUtil.logException(e1,log);
 			}
-			
+
 			for (int i = 0; i < count; i++) 
 			{
 				JTable jtb = tables.get(i);
@@ -1215,8 +1190,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					LoggerUtil.logException(e1,log);
 				}
 				// log.info("index: " + indexList + currentTableName);
-				
-				
+
+
 				if(i > 0)
 				{
 					EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i-1);
@@ -1224,7 +1199,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					if(sqlType.equals("INSERT"))
 						numUp++;
 				}
-				
+
 				numUps.add(numUp);
 				List<Map<Integer, Object>> rsList = null;
 				try {
@@ -1235,278 +1210,285 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				}
 				DebuggerTableModel tm = new DebuggerTableModel(rsList, rs, indexList, i, currentRow, numUp,tables);
 				jtb.setModel(tm);
-				
+
 			}
-			
-			
+
+
 		}
-		
-		
-		if (e.getSource() == refresh_button)
+
+
+		if (e.getSource() == show_affected_button)
 		{
-			int count = tableModels.size();
-//			log.info("count: "+count);
-//			
-//			int countSqls = sqlTextAreas.size();
-//			log.info("countTextAreas: "+countSqls);
-//			String newSql = "";
-//			for(int i=0; i<countSqls; i++)
-//				newSql = newSql + sqlTextAreas.get(i).getText() + ";";
-//			log.info("new sqls: "+newSql);
-//			
-//			String newSql_rc = "";
-//			for(int i=0; i<countSqls; i++)
-//			{
-//				EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i);
-//                String scn_rc = currentInterval.getSCN();
-//				//newSql_rc = newSql_rc + sqlTextAreas.get(i).getText() + "; AS OF SCN " + scn_rc + " ";
-//				newSql_rc = newSql_rc + "OPTIONS (AS OF SCN " + scn_rc + ") "  + sqlTextAreas.get(i).getText() + "; ";
-//			}
-//			log.info("new sqls: "+newSql_rc);
-			
-			String newSql = seriSql;
-			String newSql_rc = commSql;
-			log.info("new sqls: "+newSql_rc);
-			log.info("new sqls: "+newSql);
-			
-		    //String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
-			String sql = "";
-			if(currentRow.getIsoLevel().equals("1"))
-				sql = GpromProcess.getReenactSQL(currentRow.getStartSCN(),newSql_rc);
-			else //serializable
+			if(clickWhatIf)
 			{
-				//if serializable, each scn same, get first one
-				EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(0);
-				sql = GpromProcess.getSerializableReenactSQL(currentInterval.getSCN(), newSql);
-			}
-			
-			//String sql = GpromProcess.getReenactSQL(newSql);
-			ResultSet rs = DBManager.getInstance().executeQuery(sql);
-			ResultSetMetaData rsmd = null;
-			
-			numUps.clear();
-			//get how many tuples in the initial table
-			//num of update if update based on diff column
-			int numUp = 0;
-			int pos = -1;
-			try {
-				while(rs.next())
+				int count = tableModels.size();
+				//			log.info("count: "+count);
+				//			
+				//			int countSqls = sqlTextAreas.size();
+				//			log.info("countTextAreas: "+countSqls);
+				//			String newSql = "";
+				//			for(int i=0; i<countSqls; i++)
+				//				newSql = newSql + sqlTextAreas.get(i).getText() + ";";
+				//			log.info("new sqls: "+newSql);
+				//			
+				//			String newSql_rc = "";
+				//			for(int i=0; i<countSqls; i++)
+				//			{
+				//				EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i);
+				//                String scn_rc = currentInterval.getSCN();
+				//				//newSql_rc = newSql_rc + sqlTextAreas.get(i).getText() + "; AS OF SCN " + scn_rc + " ";
+				//				newSql_rc = newSql_rc + "OPTIONS (AS OF SCN " + scn_rc + ") "  + sqlTextAreas.get(i).getText() + "; ";
+				//			}
+				//			log.info("new sqls: "+newSql_rc);
+
+				String newSql = seriSql;
+				String newSql_rc = commSql;
+				log.info("new sqls: "+newSql_rc);
+				log.info("new sqls: "+newSql);
+
+				//String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
+				String sql = "";
+				if(currentRow.getIsoLevel().equals("1"))
+					sql = GpromProcess.getReenactSQL(currentRow.getStartSCN(),newSql_rc);
+				else //serializable
 				{
-					for(int i=1; i< rs.getMetaData().getColumnCount()+1; i++)
-					{
-						if(Pattern.matches("PROV_(?!U|query).*", rs.getMetaData().getColumnName(i)))
-						{
-							pos = i;
-							break;	
-						}
-					}
-					if(pos != -1)
-					{
-						String v = rs.getString(pos);
-						log.info("v: "+ v);
-						if(v != null)
-							numUp++;	
-					}				
+					//if serializable, each scn same, get first one
+					EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(0);
+					sql = GpromProcess.getSerializableReenactSQL(currentInterval.getSCN(), newSql);
 				}
-				log.info("numUp: "+numUp);
-				rs.first();
-			} catch (SQLException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-			
-			try
-			{
-				rsmd = rs.getMetaData();
-			} catch (SQLException e1)
-			{
-				LoggerUtil.logException(e1,log);
-			}
-			
-			for (int i = 0; i < count; i++) 
-			{
-				JTable jtb = tables.get(i);
-				
-				List<Integer> indexList = new ArrayList<Integer>();
+
+				//String sql = GpromProcess.getReenactSQL(newSql);
+				ResultSet rs = DBManager.getInstance().executeQuery(sql);
+				ResultSetMetaData rsmd = null;
+
+				numUps.clear();
+				//get how many tuples in the initial table
+				//num of update if update based on diff column
+				int numUp = 0;
+				int pos = -1;
+				try {
+					while(rs.next())
+					{
+						for(int i=1; i< rs.getMetaData().getColumnCount()+1; i++)
+						{
+							if(Pattern.matches("PROV_(?!U|query).*", rs.getMetaData().getColumnName(i)))
+							{
+								pos = i;
+								break;	
+							}
+						}
+						if(pos != -1)
+						{
+							String v = rs.getString(pos);
+							log.info("v: "+ v);
+							if(v != null)
+								numUp++;	
+						}				
+					}
+					log.info("numUp: "+numUp);
+					rs.first();
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+
 				try
 				{
-					// index
-					log.info("columncont + 1 = "+rsmd.getColumnCount());
-					for (int j = 1; j < rsmd.getColumnCount() + 1; j++)
-					{
-						if (i == 0 && Pattern.matches("PROV_(?!U|query).*", rsmd.getColumnName(j)))
-						{
-							log.info("i=0, j = "+j);
-							indexList.add(j);
-						} 
-						else if (Pattern.matches("PROV_U" + i + ".*", rsmd.getColumnName(j)))
-						{
-							log.info("i !=0, j = "+j);
-							indexList.add(j);
-						}
-					}
-
-				} 
-				catch (SQLException e1)
+					rsmd = rs.getMetaData();
+				} catch (SQLException e1)
 				{
 					LoggerUtil.logException(e1,log);
 				}
-				// log.info("index: " + indexList + currentTableName);
-				
-				if(i > 0)
+
+				for (int i = 0; i < count; i++) 
 				{
-					EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i-1);
-					String sqlType = currentInterval.getType();
-					if(sqlType.equals("INSERT"))
-						numUp++;
+					JTable jtb = tables.get(i);
+
+					List<Integer> indexList = new ArrayList<Integer>();
+					try
+					{
+						// index
+						log.info("columncont + 1 = "+rsmd.getColumnCount());
+						for (int j = 1; j < rsmd.getColumnCount() + 1; j++)
+						{
+							if (i == 0 && Pattern.matches("PROV_(?!U|query).*", rsmd.getColumnName(j)))
+							{
+								log.info("i=0, j = "+j);
+								indexList.add(j);
+							} 
+							else if (Pattern.matches("PROV_U" + i + ".*", rsmd.getColumnName(j)))
+							{
+								log.info("i !=0, j = "+j);
+								indexList.add(j);
+							}
+						}
+
+					} 
+					catch (SQLException e1)
+					{
+						LoggerUtil.logException(e1,log);
+					}
+					// log.info("index: " + indexList + currentTableName);
+
+					if(i > 0)
+					{
+						EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i-1);
+						String sqlType = currentInterval.getType();
+						if(sqlType.equals("INSERT"))
+							numUp++;
+					}
+
+					numUps.add(numUp);
+					List<Map<Integer, Object>> rsList = null;
+					try {
+						rsList = convertList(rs);
+					} catch (SQLException e2) {
+						// TODO Auto-generated catch block
+						e2.printStackTrace();
+					}
+					DebuggerTableModel tm = new DebuggerTableModel(rsList, rs, indexList, i, currentRow, numUp,tables);
+					jtb.setModel(tm);
+
 				}
-				
-				numUps.add(numUp);
-				List<Map<Integer, Object>> rsList = null;
-				try {
-					rsList = convertList(rs);
-				} catch (SQLException e2) {
-					// TODO Auto-generated catch block
-					e2.printStackTrace();
-				}
-				DebuggerTableModel tm = new DebuggerTableModel(rsList, rs, indexList, i, currentRow, numUp,tables);
-				jtb.setModel(tm);
-				
 			}
 		}
-		
-		
-		
+
+
+
 		if (e.getSource() == show_all_button)
 		{
-			int count = tableModels.size();
-//			log.info("count: "+count);
-//			
-//			int countSqls = sqlTextAreas.size();
-//			log.info("countTextAreas: "+countSqls);
-//			
-//			String newSql = "";
-//			for(int i=0; i<countSqls; i++)
-//				newSql = newSql + sqlTextAreas.get(i).getText() + ";";
-//			log.info("new sqls: "+newSql);
-//			
-//			String newSql_rc = "";
-//			for(int i=0; i<countSqls; i++)
-//			{
-//				EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i);
-//                String scn_rc = currentInterval.getSCN();
-//				//newSql_rc = newSql_rc + sqlTextAreas.get(i).getText() + "; AS OF SCN " + scn_rc + " ";
-//				newSql_rc = newSql_rc + "OPTIONS (AS OF SCN " + scn_rc + ") "  + sqlTextAreas.get(i).getText() + "; ";
-//			}
-			
-			String newSql = seriSql;
-			String newSql_rc = commSql;
-			log.info("new sqls: "+newSql_rc);
-			log.info("new sqls: "+newSql);
-			
-		    //String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
-			String sql = "";
-			if(currentRow.getIsoLevel().equals("1"))
-				sql = GpromProcess.getReenactAllSQL(currentRow.getStartSCN(),newSql_rc);
-			else //serializable
+			if(clickWhatIf)
 			{
-				//if serializable, each scn same, get first one
-				EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(0);
-				sql = GpromProcess.getSerializableReenactAllSQL(currentInterval.getSCN(), newSql);
-			}
-							
-			//String sql = GpromProcess.getReenactAllSQL(newSql);
-			ResultSet rs = DBManager.getInstance().executeQuery(sql);
-			ResultSetMetaData rsmd = null;
-			
-			numUps.clear();
-			//get how many tuples in the initial table
-			//num of update if update based on diff column
-			int numUp = 0;
-			int pos = -1;
-			try {
-				while(rs.next())
+
+				int count = tableModels.size();
+				//			log.info("count: "+count);
+				//			
+				//			int countSqls = sqlTextAreas.size();
+				//			log.info("countTextAreas: "+countSqls);
+				//			
+				//			String newSql = "";
+				//			for(int i=0; i<countSqls; i++)
+				//				newSql = newSql + sqlTextAreas.get(i).getText() + ";";
+				//			log.info("new sqls: "+newSql);
+				//			
+				//			String newSql_rc = "";
+				//			for(int i=0; i<countSqls; i++)
+				//			{
+				//				EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i);
+				//                String scn_rc = currentInterval.getSCN();
+				//				//newSql_rc = newSql_rc + sqlTextAreas.get(i).getText() + "; AS OF SCN " + scn_rc + " ";
+				//				newSql_rc = newSql_rc + "OPTIONS (AS OF SCN " + scn_rc + ") "  + sqlTextAreas.get(i).getText() + "; ";
+				//			}
+
+				String newSql = seriSql;
+				String newSql_rc = commSql;
+				log.info("new sqls: "+newSql_rc);
+				log.info("new sqls: "+newSql);
+
+				//String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
+				String sql = "";
+				if(currentRow.getIsoLevel().equals("1"))
+					sql = GpromProcess.getReenactAllSQL(currentRow.getStartSCN(),newSql_rc);
+				else //serializable
 				{
-					for(int i=1; i< rs.getMetaData().getColumnCount()+1; i++)
-					{
-						if(Pattern.matches("PROV_(?!U|query).*", rs.getMetaData().getColumnName(i)))
-						{
-							pos = i;
-							break;	
-						}
-					}
-					if(pos != -1)
-					{
-						String v = rs.getString(pos);
-						log.info("v: "+ v);
-						if(v != null)
-							numUp++;	
-					}				
+					//if serializable, each scn same, get first one
+					EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(0);
+					sql = GpromProcess.getSerializableReenactAllSQL(currentInterval.getSCN(), newSql);
 				}
-				log.info("numUp: "+numUp);
-				rs.first();
-			} catch (SQLException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-			
-			try
-			{
-				rsmd = rs.getMetaData();
-			} catch (SQLException e1)
-			{
-				LoggerUtil.logException(e1,log);
-			}
-			
-			for (int i = 0; i < count; i++) 
-			{
-				JTable jtb = tables.get(i);
-				
-				List<Integer> indexList = new ArrayList<Integer>();
+
+				//String sql = GpromProcess.getReenactAllSQL(newSql);
+				ResultSet rs = DBManager.getInstance().executeQuery(sql);
+				ResultSetMetaData rsmd = null;
+
+				numUps.clear();
+				//get how many tuples in the initial table
+				//num of update if update based on diff column
+				int numUp = 0;
+				int pos = -1;
+				try {
+					while(rs.next())
+					{
+						for(int i=1; i< rs.getMetaData().getColumnCount()+1; i++)
+						{
+							if(Pattern.matches("PROV_(?!U|query).*", rs.getMetaData().getColumnName(i)))
+							{
+								pos = i;
+								break;	
+							}
+						}
+						if(pos != -1)
+						{
+							String v = rs.getString(pos);
+							log.info("v: "+ v);
+							if(v != null)
+								numUp++;	
+						}				
+					}
+					log.info("numUp: "+numUp);
+					rs.first();
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+
 				try
 				{
-					// index
-					log.info("columncont + 1 = "+rsmd.getColumnCount());
-					for (int j = 1; j < rsmd.getColumnCount() + 1; j++)
-					{
-						if (i == 0 && Pattern.matches("PROV_(?!U|query).*", rsmd.getColumnName(j)))
-						{
-							log.info("i=0, j = "+j);
-							indexList.add(j);
-						} 
-						else if (Pattern.matches("PROV_U" + i + ".*", rsmd.getColumnName(j)))
-						{
-							log.info("i !=0, j = "+j);
-							indexList.add(j);
-						}
-					}
-
-				} 
-				catch (SQLException e1)
+					rsmd = rs.getMetaData();
+				} catch (SQLException e1)
 				{
 					LoggerUtil.logException(e1,log);
 				}
-				// log.info("index: " + indexList + currentTableName);
-				
-				if(i > 0)
+
+				for (int i = 0; i < count; i++) 
 				{
-					EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i-1);
-					String sqlType = currentInterval.getType();
-					if(sqlType.equals("INSERT"))
-						numUp++;
+					JTable jtb = tables.get(i);
+
+					List<Integer> indexList = new ArrayList<Integer>();
+					try
+					{
+						// index
+						log.info("columncont + 1 = "+rsmd.getColumnCount());
+						for (int j = 1; j < rsmd.getColumnCount() + 1; j++)
+						{
+							if (i == 0 && Pattern.matches("PROV_(?!U|query).*", rsmd.getColumnName(j)))
+							{
+								log.info("i=0, j = "+j);
+								indexList.add(j);
+							} 
+							else if (Pattern.matches("PROV_U" + i + ".*", rsmd.getColumnName(j)))
+							{
+								log.info("i !=0, j = "+j);
+								indexList.add(j);
+							}
+						}
+
+					} 
+					catch (SQLException e1)
+					{
+						LoggerUtil.logException(e1,log);
+					}
+					// log.info("index: " + indexList + currentTableName);
+
+					if(i > 0)
+					{
+						EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i-1);
+						String sqlType = currentInterval.getType();
+						if(sqlType.equals("INSERT"))
+							numUp++;
+					}
+
+					numUps.add(numUp);
+					List<Map<Integer, Object>> rsList = null;
+					try {
+						rsList = convertList(rs);
+					} catch (SQLException e2) {
+						// TODO Auto-generated catch block
+						e2.printStackTrace();
+					}
+					DebuggerTableModel tm = new DebuggerTableModel(rsList,rs, indexList, i, currentRow, numUp,tables);
+					jtb.setModel(tm);
+
 				}
-				
-				numUps.add(numUp);
-				List<Map<Integer, Object>> rsList = null;
-				try {
-					rsList = convertList(rs);
-				} catch (SQLException e2) {
-					// TODO Auto-generated catch block
-					e2.printStackTrace();
-				}
-				DebuggerTableModel tm = new DebuggerTableModel(rsList,rs, indexList, i, currentRow, numUp,tables);
-				jtb.setModel(tm);
-				
 			}
 		}
 	}
