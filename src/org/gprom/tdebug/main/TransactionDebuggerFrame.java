@@ -131,8 +131,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	private Map<Integer, List<Object>> oldMap = new HashMap<Integer, List<Object>>();
 	private Map<Integer, List<Object>> newMap = new HashMap<Integer, List<Object>>();
 	
-	private String seriSql = "";
-	private String commSql = "";
+	private String storeSql = "";
 	private boolean clickWhatIf = false;
 
 	public TransactionDebuggerFrame(EventTimeBarRow row)
@@ -946,33 +945,49 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 			int countSqls = sqlTextAreas.size();
 			log.info("countTextAreas: "+countSqls);
+//			String newSql = "";
+//			for(int i=0; i<countSqls; i++)
+//				newSql = newSql + sqlTextAreas.get(i).getText() + ";";
+//			log.info("new sqls: "+newSql);
+
 			String newSql = "";
-			for(int i=0; i<countSqls; i++)
-				newSql = newSql + sqlTextAreas.get(i).getText() + ";";
+			
+			if(currentRow.getIsoLevel().equals("1"))
+			{
+				for(int i=0; i<countSqls; i++)
+				{
+					EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i);
+					String scn_rc = currentInterval.getSCN();
+					//newSql_rc = newSql_rc + sqlTextAreas.get(i).getText() + "; AS OF SCN " + scn_rc + " ";
+					newSql = newSql + "OPTIONS (AS OF SCN " + scn_rc + ") "  + sqlTextAreas.get(i).getText() + "; ";
+				}
+
+				if(newMap.size() != 0)
+					newSql = "OPTIONS (NO PROVENANCE AS OF SCN " + currentRow.getStartSCN() + ") " + appendSql + " " + newSql;
+			}
+			else
+			{
+				for(int i=0; i<countSqls; i++)
+				{
+					EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i);
+					String scn_rc = currentInterval.getSCN();
+					//newSql_rc = newSql_rc + sqlTextAreas.get(i).getText() + "; AS OF SCN " + scn_rc + " ";
+					newSql = newSql + sqlTextAreas.get(i).getText() + "; ";
+				}
+
+				if(newMap.size() != 0)
+					newSql = "OPTIONS (NO PROVENANCE) " + appendSql + " " + newSql;
+			}
 			log.info("new sqls: "+newSql);
 
-			String newSql_rc = "";
-			for(int i=0; i<countSqls; i++)
-			{
-				EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i);
-				String scn_rc = currentInterval.getSCN();
-				//newSql_rc = newSql_rc + sqlTextAreas.get(i).getText() + "; AS OF SCN " + scn_rc + " ";
-				newSql_rc = newSql_rc + "OPTIONS (AS OF SCN " + scn_rc + ") "  + sqlTextAreas.get(i).getText() + "; ";
-			}
-
-			if(newMap.size() != 0)
-				newSql_rc = "OPTIONS (NO PROVENANCE AS OF SCN " + currentRow.getStartSCN() + ") " + appendSql + " " + newSql_rc;
-
-			log.info("new sqls: "+newSql_rc);
-
 			//store sql
-			commSql = newSql_rc;
-			seriSql = newSql;
+			storeSql = newSql;
+			//seriSql = newSql;
 
 			//String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
 			String sql = "";
 			if(currentRow.getIsoLevel().equals("1"))
-				sql = GpromProcess.getReenactSQL(currentRow.getStartSCN(),newSql_rc);
+				sql = GpromProcess.getReenactSQL(currentRow.getStartSCN(),newSql);
 			else //serializable //TODO construct appendsql for this one and add case if newMap size equal to 0
 			{
 				//if serializable, each scn same, get first one
@@ -1241,15 +1256,15 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				//			}
 				//			log.info("new sqls: "+newSql_rc);
 
-				String newSql = seriSql;
-				String newSql_rc = commSql;
-				log.info("new sqls: "+newSql_rc);
+				String newSql = storeSql;
+	
 				log.info("new sqls: "+newSql);
+
 
 				//String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
 				String sql = "";
 				if(currentRow.getIsoLevel().equals("1"))
-					sql = GpromProcess.getReenactSQL(currentRow.getStartSCN(),newSql_rc);
+					sql = GpromProcess.getReenactSQL(currentRow.getStartSCN(),newSql);
 				else //serializable
 				{
 					//if serializable, each scn same, get first one
@@ -1380,15 +1395,13 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				//				newSql_rc = newSql_rc + "OPTIONS (AS OF SCN " + scn_rc + ") "  + sqlTextAreas.get(i).getText() + "; ";
 				//			}
 
-				String newSql = seriSql;
-				String newSql_rc = commSql;
-				log.info("new sqls: "+newSql_rc);
+				String newSql = storeSql;
 				log.info("new sqls: "+newSql);
 
 				//String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
 				String sql = "";
 				if(currentRow.getIsoLevel().equals("1"))
-					sql = GpromProcess.getReenactAllSQL(currentRow.getStartSCN(),newSql_rc);
+					sql = GpromProcess.getReenactAllSQL(currentRow.getStartSCN(),newSql);
 				else //serializable
 				{
 					//if serializable, each scn same, get first one
