@@ -160,6 +160,12 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	    return list;
 	}
 	
+	/*  list - each element is a map key: column number, value: object
+	 *   0 (row 0) -store- <column 1, value> <column 2, value>   
+	 *   1 ..
+	 *   2 ..
+	 */
+	
 	private static List<Map<Integer, Object>> convertList(ResultSet rs) throws SQLException {
 		rs.beforeFirst();
 		List<Map<Integer, Object>> list = new ArrayList<Map<Integer, Object>>();
@@ -1084,7 +1090,49 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					// TODO Auto-generated catch block
 					e2.printStackTrace();
 				}
+							
 				DebuggerTableModel tm = new DebuggerTableModel(rsList, rs, indexList, i, currentRow, numUp, row1, col1, s1,tables);
+				
+				
+				//if in read commit level, need to change the first table's value to same with followings
+				if(currentRow.getIsoLevel().equals("1"))
+				{
+					for(int r=0; r<tm.getRowCount(); r++)
+					{
+						boolean flag = true;
+						for (Entry<Integer, List<Object>> ol : oldMap.entrySet()) 
+						{
+							flag = true;
+							int ko = ol.getKey();
+							List<Object> vo = ol.getValue();
+							for(int ob=0; ob<vo.size(); ob++)
+							{
+								log.info("oldMap: "+vo.get(ob));
+								log.info("tm: "+tm.getValueAt(r, ob+2));
+								log.info("row: " + r + " col: "+ ob);
+
+								if(!vo.get(ob).equals(tm.getValueAt(r, ob+2)))
+								{
+									flag = false;
+									break;
+								}
+							}
+
+							if(flag == true)
+							{						
+								for(int c=2; c<tm.getColumnCount(); c++)
+								{
+									List<Object> vn = newMap.get(ko);
+									tm.setValueAt(vn.get(c-2), r, c);
+								}
+								log.info("find %s (first value) " + vo.get(0) + " at row " + r);
+								break;
+							}									
+
+						}
+					}
+				}
+				
 				jtb.setModel(tm);			
 			}
 
