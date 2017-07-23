@@ -1503,58 +1503,6 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	public void componentHidden(ComponentEvent e)
 	{
 	}
-
-//	@Override
-//	public void mouseClicked(MouseEvent e)
-//	{
-//		for (int i = 0; i < tables.size(); i++)
-//		{
-//			tables.get(i).clearSelection();
-//		}
-//		JTable table = (JTable) e.getSource();
-//		for (int i = 0; i < tables.size(); i++)
-//		{
-//			JTable currentTable = tables.get(i);
-//			int row = currentTable.getSelectedRow();
-//			log.info("row : "+row);
-//			TableModel selModel = currentTable.getModel();
-//			if (currentTable == table)
-//			{
-//				
-//				String id = selModel.getValueAt(row, 0).toString();
-//				log.info("id : "+id);
-//				String id1 = selModel.getValueAt(row, 1).toString();
-//				log.info("id1 : "+id1);
-////				String id2 = selModel.getValueAt(row, 2).toString();
-////				log.info("id2 : "+id2);
-//				
-//				int index = currentTable.rowAtPoint(e.getPoint());
-//								
-//				if(i != 0)
-//					showGraph(i);
-//				
-////				if(i != 0) {
-////					showGraph(i, index);
-////				}
-//				
-//				currentTable.setRowSelectionInterval(index, index);
-//
-//				// get the index for next table that need to be highlighted
-//
-//				index++;
-//				log.info("t" + index + "[" + i + "]");
-//				// index--;
-//
-//				highlightTables(i, "t" + (index) + "[" + i + "]");
-//
-//				//
-//				// for (int j = 0; j < i + 1; j++) {
-//				// tables.get(j).setRowSelectionInterval(index, index);
-//				// }
-//			}
-//		}
-//
-//	}
 	
 	
 //	@Override
@@ -1625,6 +1573,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			tables.get(i).clearSelection();
 		}
 		
+		//highlight transaction statement e.g., U1..
 		for (int i = 0; i < sqlLabels.size(); i++)
 		{
 			sqlLabels.get(i).setForeground(Color.BLACK);
@@ -1634,77 +1583,73 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		for (int i = 0; i < tables.size(); i++)
 		{
 			JTable currentTable = tables.get(i); 
+			
+			//highlight tuples
+			int r = currentTable.rowAtPoint(e.getPoint()) ;
+			log.info("current numUp is: " + numUps.get(i));
+			if(r < numUps.get(i))
+				currentTable.setRowSelectionInterval(r, r);
+			
 			if (currentTable == table)
 			{
-				int index = currentTable.rowAtPoint(e.getPoint());
-				int row = currentTable.rowAtPoint(e.getPoint()) + 1;	
-				//if(i != 0)
-					showGraph(i, row);
-
-//				if(i != 0)
-//					showGraph(i);
+				//int index = currentTable.rowAtPoint(e.getPoint());
+				int row = currentTable.rowAtPoint(e.getPoint()) + 1;
+				showGraph(i, row);
+				break;
 				
-//				if(i != 0) {
-//					showGraph(i, index);
-//				}
-				
-				currentTable.setRowSelectionInterval(index, index);
-
-				// get the index for next table that need to be highlighted
-
+//				old highlight				
+//				currentTable.setRowSelectionInterval(index, index);
+//				//get the index for next table that need to be highlighted
 //				index++;
 //				log.info("t" + index + "[" + i + "]");
-				// index--;
-
-
-//				highlightTables(i, "t" + (index) + "[" + i + "]");
-
-				//
-				// for (int j = 0; j < i + 1; j++) {
-				// tables.get(j).setRowSelectionInterval(index, index);
-				//}
+//				//highlightTables(i, "t" + (index) + "[" + i + "]");
+//				for (int j = 0; j < i + 1; j++) {
+//					tables.get(j).setRowSelectionInterval(index, index);
+//				}
 			}
 		}
 
 	}
 
-	private void highlightTables(int currentTableIndex, String tupleIndex)
-	{
-		JTable currentTable = tables.get(currentTableIndex);
-		// get the index for row we want to highlight
-		Pattern pattern = Pattern.compile("t(\\d*)\\[(\\d*)\\]");
-		Matcher matcher = pattern.matcher(tupleIndex);
-		String rowIndex = "";
-		String tableIndex = "";
-		if (matcher.matches())
-		{
-			rowIndex = matcher.group(1);
-			tableIndex = matcher.group(2);
-			log.info(rowIndex + ", " + tableIndex);
-		}
-		// highlight table
-		currentTable.setRowSelectionInterval(Integer.parseInt(rowIndex) - 1, Integer.parseInt(rowIndex) - 1);
-		log.info("currentTupeIndex" + tupleIndex + "  tableIndex" + currentTableIndex);
-		if (currentTableIndex <= -1)
-		{
-			return;
-		}
-		List<String> provenanceList = ((DebuggerTableModel) tables.get(currentTableIndex).getModel()).getPrevRelation()
-				.get(tupleIndex);
-		if (provenanceList == null)
-		{
-			return;
-		}
-		log.info(((DebuggerTableModel) tables.get(currentTableIndex).getModel()).getPrevRelation());
-		log.info(tupleIndex);
-		log.info(provenanceList);
-
-		for (int i = 0; i < provenanceList.size(); i++)
-		{
-			String nextTupleIndex = provenanceList.get(i);
-			highlightTables(--currentTableIndex, nextTupleIndex);
-		}
-	}
+	
+	//old highlight
+//	private void highlightTables(int currentTableIndex, String tupleIndex)
+//	{
+//		JTable currentTable = tables.get(currentTableIndex);
+//		// get the index for row we want to highlight
+//		Pattern pattern = Pattern.compile("t(\\d*)\\[(\\d*)\\]");
+//		Matcher matcher = pattern.matcher(tupleIndex);
+//		String rowIndex = "";
+//		String tableIndex = "";
+//		if (matcher.matches())
+//		{
+//			rowIndex = matcher.group(1);
+//			tableIndex = matcher.group(2);
+//			log.info(rowIndex + ", " + tableIndex);
+//		}
+//		// highlight table
+//		currentTable.setRowSelectionInterval(Integer.parseInt(rowIndex) - 1, Integer.parseInt(rowIndex) - 1);
+//		log.info("currentTupeIndex" + tupleIndex + "  tableIndex" + currentTableIndex);
+//		if (currentTableIndex <= -1)
+//		{
+//			return;
+//		}
+//		List<String> provenanceList = ((DebuggerTableModel) tables.get(currentTableIndex).getModel()).getPrevRelation()
+//				.get(tupleIndex);
+//		if (provenanceList == null)
+//		{
+//			return;
+//		}
+//		log.info(((DebuggerTableModel) tables.get(currentTableIndex).getModel()).getPrevRelation());
+//		log.info(tupleIndex);
+//		log.info(provenanceList);
+//
+//		for (int i = 0; i < provenanceList.size(); i++)
+//		{
+//			String nextTupleIndex = provenanceList.get(i);
+//			highlightTables(--currentTableIndex, nextTupleIndex);
+//		}
+//	}
 	
 	
 
@@ -1739,7 +1684,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	            "node {" +
 	            "size: 35;" +
 	            "fill-mode: dyn-plain;" +
-	            "fill-color: grey, red;" +
+	            "fill-color: grey, red, green;" +
 	            "shape: box;" +
 	            "}";
 		
@@ -1749,36 +1694,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		graph.addAttribute("ui.stylesheet", styleSheet);
 
 
-		            
-		
-//		Node a = graph.addNode("t2[0]");
-//		Node b = graph.addNode("t2[1]");
-//		Node c = graph.addNode("t2[2]");
-//		
-//		
-//		a.setAttribute("xy",0,0);
-//		b.setAttribute("xy",1,0);
-//		c.setAttribute("xy",2,0);
-//		
-//		a.addAttribute("label", "t2[0]");
-//		b.addAttribute("label", "t2[1]");
-//		c.addAttribute("label", "t2[2]");
-//		
-//		
-//		
-//		graph.addEdge("u1", b, a,true);
-//		graph.addEdge("u2", c, b,true);
-//		
-//		graph.display(false);		//false is to disable automatic placement of the nodes
-		
-		
-//		graph.addAttribute("ui.sreeenshot", "/home/david/export.jpg");
-		
-		
-		
-		
-		
-		//node to pre and next;
+		           		
+		//old node to pre and next;
 //		Map<String, List<String>> next = new HashMap<String, List<String>>();
 //		Map<String, List<String>> prev = new HashMap<String, List<String>>();
 //		
@@ -1984,6 +1901,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				attribute++;
 
 				tempNode.addAttribute("label", nodeName);
+				tempNode.setAttribute("ui.color", 0.94);
 				nodes.add(tempNode);
 				
 //				if(i != level)
@@ -2002,7 +1920,6 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			}
 		}
 		
-//		log.info(nodes.size());
 		
 		if(nodes.size() > 1)
 		{
