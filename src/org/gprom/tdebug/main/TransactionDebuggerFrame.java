@@ -646,99 +646,14 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		{
 			tables.get(i).addMouseListener(this);
 			tables.get(i).getModel().addTableModelListener(this);
-
-			//			ListSelectionModel selModel = tables.get(i).getSelectionModel();
-			//			//selModel; 
-			////            int row = tables.get(i).getSelectedRow();
-			////            
-			////            log.info("row id is "+row);
-			//			//tables.get(i).getSelectionModel().
-
 		}
 
 	}
 
-	//	@Override
-	//	public void valueChanged(ListSelectionEvent e) {
-	//		// TODO Auto-generated method stub
-	////		for (int i = 0; i < tables.size(); i++)
-	////		{
-	////			ListSelectionModel selModel = tables.get(i).getSelectionModel();
-	////			if(! selModel.isSelectionEmpty())
-	////			{
-	////				int row = selModel.getAnchorSelectionIndex();
-	////				log.info("row id is "+row);
-	////			}
-	////		}
-	//		for (int i = 0; i < tables.size(); i++)
-	//		{
-	//			tables.get(i).clearSelection();
-	//		}
-	//		JTable table = (JTable) e.getSource();
-	//		for (int i = 0; i < tables.size(); i++)
-	//		{
-	//			JTable currentTable = tables.get(i);
-	//			ListSelectionModel selModel = currentTable.getSelectionModel();
-	//			if (! selModel.isSelectionEmpty())
-	//			{
-	//				int index = currentTable.rowAtPoint(e.getPoint());
-	//								
-	////				if(i != 0)
-	////					showGraph(i);
-	//				
-	////				if(i != 0) {
-	////					showGraph(i, index);
-	////				}
-	//				
-	//				currentTable.setRowSelectionInterval(index, index);
-	//
-	//				// get the index for next table that need to be highlighted
-	//
-	//				index++;
-	//				log.info("t" + index + "[" + i + "]");
-	//				// index--;
-	//
-	//				highlightTables(i, "t" + (index) + "[" + i + "]");
-	//
-	//				
-	//				 for (int j = 0; j < i + 1; j++) {
-	//				 tables.get(j).setRowSelectionInterval(index, index);
-	//				 }
-	//			}
-	//		}
-	//	}
-	//    tables.get(2).addMouseListener(new MouseAdapter(){    //鼠标事件
-	//        public void mouseClicked(MouseEvent e){
-	//            int selectedRow = table.getSelectedRow(); //获得选中行索引
-	//            Object oa = tableModel.getValueAt(selectedRow, 0);
-	//            Object ob = tableModel.getValueAt(selectedRow, 1);
-	//            aTextField.setText(oa.toString());  //给文本框赋值
-	//            bTextField.setText(ob.toString());
-	//        }
-	//    });
-
-	//    addKeyListener(new KeyAdapter() {
-	//        @Override
-	//        public void keyReleased(KeyEvent e) {
-	//            event();
-	//        }
-	//    });
 
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{		
-		//		int col = tables.get(2).getSelectedColumn();
-		//		int row = tables.get(2).getSelectedRow();
-		//		tables.get(2).getCellEditor(row, col).stopCellEditing();
-		//		System.out.println(col + " " + row + " " + tables.get(2).getValueAt(row, col));
-		//		
-
-		//		TableCellListener tcl = (TableCellListener)e.getSource();
-		//        System.out.println("Row   : " + tcl.getRow());
-		//        System.out.println("Column: " + tcl.getColumn());
-		//        System.out.println("Old   : " + tcl.getOldValue());
-		//        System.out.println("New   : " + tcl.getNewValue());
-
 		if(e.getSource() == del_stmt_button)
 		{
 
@@ -1133,7 +1048,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					}
 				}
 				
-				jtb.setModel(tm);			
+				jtb.setModel(tm);	
 			}
 
 			//			int col1 = tables.get(2).getSelectedColumn();
@@ -1552,6 +1467,13 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				}
 			}
 		}
+		
+		//reset table listener to handle after click any button, the tableChanged function can not be activated
+		for (int t = 0; t < tables.size(); t++)
+		{
+			tables.get(t).addMouseListener(this);
+			tables.get(t).getModel().addTableModelListener(this);
+		}
 	}
 
 
@@ -1650,8 +1572,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
         DebuggerTableModel model = (DebuggerTableModel)e.getSource();
         String columnName = model.getColumnName(column);
         Object data = model.getValueAt(row, column);
-        System.out.println("col name： "+columnName);
-        System.out.println("row: "+ row + " col: " + column +" value: "+data.toString());
+        log.info("col name： "+columnName);
+        log.info("row: "+ row + " col: " + column +" value: "+data.toString());
         
         JTable fTable = tables.get(0);
         int fCountCol = fTable.getColumnCount();
