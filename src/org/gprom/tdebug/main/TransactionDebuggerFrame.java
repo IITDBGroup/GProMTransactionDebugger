@@ -1082,6 +1082,10 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			//			newMap.clear();
 			//			oldMap.clear();
 			//			
+			
+			//reset what-if button
+			clickWhatIf = false;
+				
 			int countSqls = sqlTextAreas.size();
 			log.info("count sql: "+countSqls);
 
@@ -1955,23 +1959,24 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					}
 					
 				}
-				
-				if(i != 0 && addU)
+				if(!clickWhatIf)
 				{
-					int updateIndex = i;
-					String uName = "U" + updateIndex;
-					Node uNode = graph.addNode(uName);
-					//set node position x and y axis
-					uNode.setAttribute("xy", attribute, 0); 						
-					attribute++;
+					if(i != 0 && addU)
+					{
+						int updateIndex = i;
+						String uName = "U" + updateIndex;
+						Node uNode = graph.addNode(uName);
+						//set node position x and y axis
+						uNode.setAttribute("xy", attribute, 0); 						
+						attribute++;
 
-					uNode.addAttribute("label", uName);
-					uNode.setAttribute("ui.color", 0.5);
-					nodes.add(uNode);
-					
-					sqlLabels.get(i-1).setForeground(Color.RED);
+						uNode.addAttribute("label", uName);
+						uNode.setAttribute("ui.color", 0.5);
+						nodes.add(uNode);
+
+						sqlLabels.get(i-1).setForeground(Color.RED);
+					}
 				}
-				
 				String nodeName = "t" + String.valueOf(row-1) + "[" + String.valueOf(i) + "]";
 				Node tempNode = graph.addNode(nodeName);
 				//set node position x and y axis
