@@ -2050,7 +2050,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					sqlLabels.get(i-1).setForeground(Color.RED);
 				}
 				
-				String nodeName = "t" + String.valueOf(row) + "[" + String.valueOf(i) + "]";
+				String nodeName = "t" + String.valueOf(row-1) + "[" + String.valueOf(i) + "]";
 				Node tempNode = graph.addNode(nodeName);
 				//set node position x and y axis
 				tempNode.setAttribute("xy", attribute, 0); 						
