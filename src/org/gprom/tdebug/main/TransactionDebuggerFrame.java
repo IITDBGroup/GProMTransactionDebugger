@@ -1569,15 +1569,11 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	public void mouseClicked(MouseEvent e)
 	{
 		for (int i = 0; i < tables.size(); i++)
-		{
 			tables.get(i).clearSelection();
-		}
 		
 		//highlight transaction statement e.g., U1..
 		for (int i = 0; i < sqlLabels.size(); i++)
-		{
 			sqlLabels.get(i).setForeground(Color.BLACK);
-		}
 		
 		JTable table = (JTable) e.getSource();
 		for (int i = 0; i < tables.size(); i++)
@@ -1586,29 +1582,31 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			
 			//highlight tuples
 			int r = currentTable.rowAtPoint(e.getPoint()) ;
-			log.info("current numUp is: " + numUps.get(i));
-			if(r < numUps.get(i))
-				currentTable.setRowSelectionInterval(r, r);
-			
-			if (currentTable == table)
+			log.info("row is : " + r + "current numUp is: " + numUps.get(i));
+			if(r >= 0)  //handle mouse click outside of the table area
 			{
-				//int index = currentTable.rowAtPoint(e.getPoint());
-				int row = currentTable.rowAtPoint(e.getPoint()) + 1;
-				showGraph(i, row);
-				break;
-				
-//				old highlight				
-//				currentTable.setRowSelectionInterval(index, index);
-//				//get the index for next table that need to be highlighted
-//				index++;
-//				log.info("t" + index + "[" + i + "]");
-//				//highlightTables(i, "t" + (index) + "[" + i + "]");
-//				for (int j = 0; j < i + 1; j++) {
-//					tables.get(j).setRowSelectionInterval(index, index);
-//				}
+				if(r < numUps.get(i))
+					currentTable.setRowSelectionInterval(r, r);
+
+				if (currentTable == table)
+				{
+					//int index = currentTable.rowAtPoint(e.getPoint());
+					int row = currentTable.rowAtPoint(e.getPoint()) + 1;	
+					showGraph(i, row);
+					break;
+
+					//				old highlight				
+					//				currentTable.setRowSelectionInterval(index, index);
+					//				//get the index for next table that need to be highlighted
+					//				index++;
+					//				log.info("t" + index + "[" + i + "]");
+					//				//highlightTables(i, "t" + (index) + "[" + i + "]");
+					//				for (int j = 0; j < i + 1; j++) {
+					//					tables.get(j).setRowSelectionInterval(index, index);
+					//				}
+				}
 			}
 		}
-
 	}
 
 	
