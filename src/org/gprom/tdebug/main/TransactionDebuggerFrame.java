@@ -419,6 +419,10 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			jp.setBorder(BorderFactory.createLineBorder(Color.gray, 3));
 			stmt_table_panel.add(jp);
 			JTable table = new JTable(tm);
+			
+			if(i != 0)
+				table.setEnabled(false);
+			
 			table.setSelectionBackground(new Color(50, 205, 50));
             //tm.isCellEditable(1, 1);
 			
@@ -501,7 +505,6 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		}
 				
 		this.add(main_scrollPane);
-		//this.add(main_scrollPane1);
 
 //		graphPanel = new JPanel();
 //		graphPanel.setLayout(null);
