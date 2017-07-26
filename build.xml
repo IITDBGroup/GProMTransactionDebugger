@@ -115,6 +115,7 @@ GProM Transaction Debugger (GTDB) is a non-invasive post-mortem debugger for tra
 			classpathref="libraries" debug="on" includeantruntime="false">
 			<compilerarg value="-Xlint:unchecked" />
 		</javac>
+		<copy file="${log4j-properties}" todir="${binarydir}" />
 	</target>
 
 	<target name="Deploy" depends="Jar">
