@@ -4,6 +4,8 @@ The **GProM Transaction Debugger** (**GTDB**) is a Java GUI application for post
 
 GTDB is a non-invasive tool for post-mortem debugging of transactions that supports what-if scenarios  - evaluating hypothetical changes to transaction code or data. With GTDB, you can inspect what has happened during the execution of a transaction after the fact. GTDB shows the SQL code executed by the transaction and the states of tables after each statement of the transaction. Additionally, GTDB also recovers provenance for rows, i.e., data dependencies between row versions and information about which updates modified a row. GTDB can be safely user on production databases, since debugging is non-invasive - the debugger does not change the state of the database in any way and does not require transactions to be modified to enable debugging. This is made possible using reenactment, a declarative replay technique we have developed, that replays a transaction over the state of the DB seen by its original execution including all its interactions with concurrently executed transactions from the history. In turn, reenactment relies on the temporal database (Flashback archive) and audit logging (Fine-grained auditing) capabilities available in Oracle. More information about reenactment and GTDB can be found the IIT DBGroup's webpage: [GProM](http://www.cs.iit.edu/%7edbgroup/research/gprom.php).
 
+![debug panel](https://github.com/IITDBGroup/GProMTransactionDebugger/blob/master/doc/images/debugpanel.png)
+
 ## Publications
 
 For a full list see [http://www.cs.iit.edu/%7edbgroup/research/gprom.php](http://www.cs.iit.edu/%7edbgroup/research/gprom.php).
