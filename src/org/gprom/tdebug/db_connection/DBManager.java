@@ -92,36 +92,36 @@ public class DBManager {
 		return resultSet;
     }
     
-    public ResultSet getDataCommit() throws Exception{
-    	Connection connection = getConnection();
-    	Statement statement = null;
-    	String query;
-    	ResultSet resultSet = null;
-		try {
-			statement = connection.createStatement();
-			query ="SELECT DISTINCT VERSIONS_STARTSCN, VERSIONS_XID, VERSIONS_STARTTIME FROM R VERSIONS BETWEEN SCN MINVALUE AND MAXVALUE ORDER BY VERSIONS_XID";//UNIFIED_AUDIT_TRAIL  SYS.fga_log$
-        	resultSet = statement.executeQuery(query);
-		}catch (SQLException e) {
-			LoggerUtil.logException(e, log);
-			throw(e);
-		}
-		return resultSet;
+    public ResultSet getDataCommit() throws Exception {
+	    	Connection connection = getConnection();
+	    	Statement statement = null;
+	    	String query;
+	    	ResultSet resultSet = null;
+	    	try {
+	    		statement = connection.createStatement();
+	    		query ="SELECT DISTINCT VERSIONS_STARTSCN, VERSIONS_XID, VERSIONS_STARTTIME FROM R VERSIONS BETWEEN SCN MINVALUE AND MAXVALUE ORDER BY VERSIONS_XID";//UNIFIED_AUDIT_TRAIL  SYS.fga_log$
+	    		resultSet = statement.executeQuery(query);
+	    	}catch (SQLException e) {
+	    		LoggerUtil.logException(e, log);
+	    		throw(e);
+	    	}
+	    	return resultSet;
     }
-    
-    public ResultSet getIsolationLevel() throws Exception{
-    	Connection connection = getConnection();
-    	Statement statement = null;
-    	String query;
-    	ResultSet resultSet = null;
-		try {
-			statement = connection.createStatement();
-			query ="SELECT CASE WHEN (count(DISTINCT scn) > 1) THEN 1 ELSE 0 END AS readCommmit, xid FROM SYS.fga_log$ GROUP BY xid ORDER BY xid";//UNIFIED_AUDIT_TRAIL  SYS.fga_log$
-        	resultSet = statement.executeQuery(query);
-		}catch (SQLException e) {
-			LoggerUtil.logException(e, log);
-			throw(e);
-		}
-		return resultSet;
+
+    public ResultSet getIsolationLevel() throws Exception {
+	    	Connection connection = getConnection();
+	    	Statement statement = null;
+	    	String query;
+	    	ResultSet resultSet = null;
+	    	try {
+	    		statement = connection.createStatement();
+	    		query ="SELECT CASE WHEN (count(DISTINCT scn) > 1) THEN 1 ELSE 0 END AS readCommmit, xid FROM SYS.fga_log$ GROUP BY xid ORDER BY xid";//UNIFIED_AUDIT_TRAIL  SYS.fga_log$
+	    		resultSet = statement.executeQuery(query);
+	    	}catch (SQLException e) {
+	    		LoggerUtil.logException(e, log);
+	    		throw(e);
+	    	}
+	    	return resultSet;
     }
     
     
@@ -147,7 +147,9 @@ public class DBManager {
 			throw(e);
 		}
 		try {
-			connection = DriverManager.getConnection(url, user, password);
+			if (connection == null || connection.isClosed()) {
+				connection = DriverManager.getConnection(url, user, password);
+			}
 			if (connection.isClosed())
 				log.error("fail to connecting to the Database!");
 		} catch (SQLException e) {

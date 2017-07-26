@@ -1,7 +1,11 @@
 package org.gprom.tdebug.db_connection;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
+
+
 
 public interface DBConfigInterface {
 	
@@ -29,12 +33,12 @@ public interface DBConfigInterface {
 	public static final String DEFAULT_USERNAME = "gprom";
 	public static final String DEFAULT_PASSWORD = "gprom";
 	public static final AuditTable DEFAULT_AUDIT_TABLE = AuditTable.FGA_LOG;
-	public static final String DEFAUL_GPROM_PATH = "/usr/local/bin/gprom";
+	public static final String DEFAUL_GPROM_PATH = "/usr/local/bin";
 	
 	public void setProperties (Properties p);
 	public Properties getProperties();
 	public void loadProperties() throws IOException;
 	public String getConnectionProperty(ConfigProperty prop);
 	public void setConnectionProperty(ConfigProperty prop, String value);
-			
+	public String getAuditTableName(String a);
 }

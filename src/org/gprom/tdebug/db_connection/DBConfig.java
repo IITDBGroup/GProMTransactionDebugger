@@ -6,9 +6,12 @@ package org.gprom.tdebug.db_connection;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
+import org.gprom.tdebug.db_connection.DBConfigInterface.AuditTable;
 import org.gprom.tdebug.main.CLIOptions;
 
 /**
@@ -21,7 +24,16 @@ public class DBConfig implements DBConfigInterface {
 	
 	private Properties p = new Properties();
 	
-	static public DBConfig inst = new DBConfig();
+	public static final Map<AuditTable,String> auditTableNames = new HashMap<AuditTable, String> ();
+	
+	static {
+		auditTableNames.put(AuditTable.FGA_LOG, "FGA_LOG$");
+		auditTableNames.put(AuditTable.UNIFIED_AUDIT, "UNIFIED_AUDIT_TRAIL");
+	}
+	
+	public static DBConfig inst = new DBConfig();
+	
+	
 	
 	private DBConfig() {
 		p.setProperty(ConfigProperty.AUDIT_TABLE.toString(), DEFAULT_AUDIT_TABLE.toString());
@@ -93,6 +105,14 @@ public class DBConfig implements DBConfigInterface {
 	@Override
 	public void setConnectionProperty(ConfigProperty prop, String value) {
 		p.setProperty(prop.toString(), value);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.gprom.tdebug.db_connection.DBConfigInterface#getAuditTableName(org.gprom.tdebug.db_connection.DBConfigInterface.AuditTable)
+	 */
+	@Override
+	public String getAuditTableName(String a) {
+		return auditTableNames.get(AuditTable.valueOf(a));
 	}
 
 }

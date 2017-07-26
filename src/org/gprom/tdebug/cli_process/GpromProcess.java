@@ -322,13 +322,15 @@ public static String getSerializableReenactSQL(String scn, String statements) th
 	private static int runGProMRaw (String command, StringBuilder out) throws Exception {
 		int returnVal = -1;
 		StringBuilder err = new StringBuilder();
+		String auditTable = DBConfig.inst.getAuditTableName(DBConfig.inst.getConnectionProperty(ConfigProperty.AUDIT_TABLE));
 		
 		ProcessBuilder pb = new ProcessBuilder("./gprom",  
 				"-host",  DBConfig.inst.getConnectionProperty(ConfigProperty.HOST), 
 				"-db",  DBConfig.inst.getConnectionProperty(ConfigProperty.SID), 
 				"-port", DBConfig.inst.getConnectionProperty(ConfigProperty.PORT), 
 				"-user",  DBConfig.inst.getConnectionProperty(ConfigProperty.USERNAME),  
-				"-passwd", DBConfig.inst.getConnectionProperty(ConfigProperty.PASSWORD), 
+				"-passwd", DBConfig.inst.getConnectionProperty(ConfigProperty.PASSWORD),
+				"-Boracle.audittable", auditTable,
 				"-log", "-loglevel",  "0",  
 				"-sql", command, 
 				"-backend", "oracle","-Pexecutor", "sql");
@@ -392,6 +394,7 @@ public static String getSerializableReenactSQL(String scn, String statements) th
 		
 		return returnVal;
 	}
+
 	
 	private class ProcStreamReader extends Thread {
 		InputStream is;
