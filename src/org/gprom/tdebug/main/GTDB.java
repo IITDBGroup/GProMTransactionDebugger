@@ -115,9 +115,9 @@ import de.jaret.util.ui.timebars.swing.renderer.DefaultTitleRenderer;
  * @author Peter Kliem
  * @version $Id: EventMonitoringExample.java 1073 2010-11-22 21:25:33Z kliem $
  */
-public class EventMonitoringMain {
+public class GTDB {
 	
-	static Logger log = Logger.getLogger(EventMonitoringMain.class);
+	static Logger log = Logger.getLogger(GTDB.class);
 	
 	TimeBarViewer _tbv;
 	TimeBarMarkerImpl _tm;
@@ -129,7 +129,7 @@ public class EventMonitoringMain {
 	public static void main(String[] args) throws Exception {
 		DBConfig.inst.loadProperties();
 		DBManager.getInstance().getConnection();
-		EventMonitoringMain example = new EventMonitoringMain();
+		GTDB example = new GTDB();
 		example.run();
 	}
 

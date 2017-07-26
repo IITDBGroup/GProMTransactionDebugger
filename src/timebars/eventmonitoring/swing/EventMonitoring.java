@@ -35,7 +35,7 @@ class EventMonitoring {
 			
 			public void actionPerformed(ActionEvent e) {
 				 try {
-					EventMonitoringMain.main(new String[0]);
+					GTDB.main(new String[0]);
 				}
 				catch (Exception e1) {
 					LoggerUtil.logException(e1, log);
