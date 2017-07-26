@@ -333,9 +333,36 @@ public static String getSerializableReenactSQL(String scn, String statements) th
 				"-sql", command, 
 				"-backend", "oracle","-Pexecutor", "sql");
 
-		log.debug("run gprom command:\n\n" + command);
+		File path = new File(DBConfig.inst.getConnectionProperty(ConfigProperty.GPROM_PATH));
+		File gpromLoc = new File(path, "gprom");
+		String libPathEnvVar;
 		
-		pb.directory(new File(DBConfig.inst.getConnectionProperty(ConfigProperty.GPROM_PATH)));// Gprom absolute path
+		// get name of variable for dynamic link library path
+		log.info("OS: " + System.getProperty("os.name"));
+		if (System.getProperty("os.name").contains("Mac"))
+			libPathEnvVar = "DYLD_LIBRARY_PATH";
+		else
+			libPathEnvVar = "LD_LIBRARY_PATH";
+		
+		// output environment variables relevant for linking Oracle libraries
+		if (DBConfig.inst.hasConnectionProperty(ConfigProperty.LD_LIBRARY_PATH)) {
+			String val = DBConfig.inst.getConnectionProperty(ConfigProperty.LD_LIBRARY_PATH);
+			
+			pb.environment().put(libPathEnvVar, val);
+			log.info("override " + libPathEnvVar + "=" + val);
+		}
+		
+		if (pb.environment().containsKey(libPathEnvVar)) {
+			log.info("DYLD_LIBRARY_PATH=<" + pb.environment().get(libPathEnvVar) + ">");
+		}
+		
+		// check that gprom binary exists
+		if (!gpromLoc.exists() || !gpromLoc.isFile())
+			throw new Exception("gprom binary not found at <" + gpromLoc.getAbsolutePath() + ">");
+		
+		log.debug("run gprom command:\n\n" + command);	
+		
+		pb.directory(path);// Gprom absolute path
 		log.info("pb dir <" + pb.directory().getAbsolutePath() + ">\n"+pb.command().toString());
 		
 		Process process = null;
@@ -343,6 +370,7 @@ public static String getSerializableReenactSQL(String scn, String statements) th
 			ProcStreamReader outR;
 			ProcStreamReader errR;
 			
+			// start gprom and spawn threads that read from std error and std output
 			process = pb.start(); 
 			outR = inst.new ProcStreamReader("out", process.getInputStream(), out);
 			errR = inst.new ProcStreamReader("err", process.getErrorStream(), err);

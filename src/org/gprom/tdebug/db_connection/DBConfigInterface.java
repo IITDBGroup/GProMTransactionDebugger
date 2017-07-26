@@ -19,7 +19,8 @@ public interface DBConfigInterface {
 		USERNAME,
 		PASSWORD,
 		AUDIT_TABLE,
-		GPROM_PATH
+		GPROM_PATH,
+		LD_LIBRARY_PATH
 	}
 	
 	public static final String DEFAULT_HOST = "127.0.0.1";

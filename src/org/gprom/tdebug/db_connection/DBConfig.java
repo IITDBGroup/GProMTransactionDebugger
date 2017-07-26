@@ -82,6 +82,10 @@ public class DBConfig implements DBConfigInterface {
 	public String getConnectionProperty(ConfigProperty prop) {
 		return p.getProperty(prop.toString());
 	}
+	
+	public boolean hasConnectionProperty(ConfigProperty prop) {
+		return p.containsKey(prop.toString());
+	}
 
 	/* (non-Javadoc)
 	 * @see org.gprom.tdebug.db_connection.DBConfigInterface#setConnectionProperty(org.gprom.tdebug.db_connection.DBConfigInterface.ConfigProperty, java.lang.String)
