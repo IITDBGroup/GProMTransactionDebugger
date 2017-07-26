@@ -183,10 +183,11 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
 		}
 		else if (columnIndex == 1) {
 		}
-		else{
-		columnIndex = columnIndex - 2;
-		Map<Integer, Object> map = rsList.get(rowIndex);
-		map.put(indexList.get(columnIndex), value);
+		else
+		{
+			columnIndex = columnIndex - 2;
+			Map<Integer, Object> map = rsList.get(rowIndex);
+			map.put(indexList.get(columnIndex), value);
 		}
 		
 		//used for key is name

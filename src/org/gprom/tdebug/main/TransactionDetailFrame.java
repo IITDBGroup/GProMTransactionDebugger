@@ -103,9 +103,16 @@ public class TransactionDetailFrame extends JFrame implements ActionListener{
 				.getIntervals().get(0);
 		osName = interval2.getOsName();
 		sessionid = interval2.getSessionId();
+		
+		String isoLevel = "";
+		if(currentRow.getIsoLevel().equals("1"))
+			isoLevel = "READ COMMITTED";
+		else
+			isoLevel = "SERIALIZABLE";
+		
 		ED = "3/4/16 12:26:36";
-		String str = "OS UserName:"+osName+"\nSessionId:"+sessionid + "\nStart Time:" + ST
-				+ "\nCommit Time:" + ED;
+		String str = "OS UserName: "+osName+"\nSessionId: "+sessionid + "\nStart Time: " + ST
+				+ "\nCommit Time: " + ED + "\nIsolation Level: " + isoLevel;
 		TextArea tf3 = new TextArea(5,20);
 		tf3.setText(str);
 		//tf3.setPreferredSize(new Dimension(500, 55));
