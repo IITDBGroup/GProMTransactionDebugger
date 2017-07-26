@@ -25,6 +25,8 @@ public class GpromProcess {
 
 	static Logger log = Logger.getLogger(GpromProcess.class);
 	
+	private static GpromProcess inst = new GpromProcess();
+	
 //	private String XID = "";
 //	
 //	public GpromProcess(String transactionID) {
@@ -48,7 +50,7 @@ public class GpromProcess {
 //	}
 	
 	
-	public static String getTransactionIntermediateSQL(String XID) {
+	public static String getTransactionIntermediateSQL(String XID) throws Exception {
 		String auditTable = null;
         //for old gprom version
 //		ProcessBuilder pb = new ProcessBuilder("./test/testrewriter",  "-host",  HOST,  "-db",  SID, 
@@ -70,48 +72,256 @@ public class GpromProcess {
 //				"-port", PORT, "-user",  USERNAME,  "-passwd", PASSWORD, "-log", "-loglevel",  "0",  "-sql",
 //				"PROVENANCE WITH ONLY UPDATED SHOW INTERMEDIATE OF TRANSACTION '"  + XID + "';", "-backend", "oracle","-Pexecutor", "sql");
 
-		ProcessBuilder pb = new ProcessBuilder("./gprom",  
-				"-host",  DBConfig.inst.getConnectionProperty(ConfigProperty.HOST), 
-				"-db",  DBConfig.inst.getConnectionProperty(ConfigProperty.SID), 
-				"-port", DBConfig.inst.getConnectionProperty(ConfigProperty.PORT), 
-				"-user",  DBConfig.inst.getConnectionProperty(ConfigProperty.USERNAME),  
-				"-passwd", DBConfig.inst.getConnectionProperty(ConfigProperty.PASSWORD), 
-				"-log", "-loglevel",  "0",  
-				"-sql", "PROVENANCE WITH ONLY UPDATED SHOW INTERMEDIATE STATEMENT ANNOTATIONS OF TRANSACTION '"  + XID + "';", 
-				"-backend", "oracle","-Pexecutor", "sql",
-				"-Boracle.audittable", auditTable);
-
-		pb.directory(new File(DBConfig.inst.getConnectionProperty(ConfigProperty.GPROM_PATH)));// Gprom absolute path
-		log.info("pb string : "+pb.command().toString());
-		log.info("pb dir: " + pb.directory());
-
-//		File log = new File("/Users/nebula/Documents/GP_GUI/log.txt");
-//		pb.redirectErrorStream(true);
-//		pb.redirectOutput(Redirect.appendTo(log));
+//		ProcessBuilder pb = new ProcessBuilder("./gprom",  
+//				"-host",  DBConfig.inst.getConnectionProperty(ConfigProperty.HOST), 
+//				"-db",  DBConfig.inst.getConnectionProperty(ConfigProperty.SID), 
+//				"-port", DBConfig.inst.getConnectionProperty(ConfigProperty.PORT), 
+//				"-user",  DBConfig.inst.getConnectionProperty(ConfigProperty.USERNAME),  
+//				"-passwd", DBConfig.inst.getConnectionProperty(ConfigProperty.PASSWORD), 
+//				"-log", "-loglevel",  "0",  
+//				"-sql", "PROVENANCE WITH ONLY UPDATED SHOW INTERMEDIATE STATEMENT ANNOTATIONS OF TRANSACTION '"  + XID + "';", 
+//				"-backend", "oracle","-Pexecutor", "sql",
+//				"-Boracle.audittable", auditTable);
+//
+//		pb.directory(new File(DBConfig.inst.getConnectionProperty(ConfigProperty.GPROM_PATH)));// Gprom absolute path
+//		log.info("pb string : "+pb.command().toString());
+//		log.info("pb dir: " + pb.directory());
+//
+////		File log = new File("/Users/nebula/Documents/GP_GUI/log.txt");
+////		pb.redirectErrorStream(true);
+////		pb.redirectOutput(Redirect.appendTo(log));
+//		 
+//		Process process = null;
+//		try {
+//			process = pb.start(); 
+//
+//			int errorInt = process.waitFor();
+//			if (errorInt != 0) {
+//				log.info("Some error with Gprom Process: " + errorInt);
+//			}
+//		} catch (IOException e) {
+//			LoggerUtil.logException(e,log);
+//		} catch (InterruptedException e) {
+//			LoggerUtil.logException(e,log);
+//		}
+//		log.info("after try");
+//		String sql = streamtoString(process.getInputStream()).trim();
+//		sql = sql.substring(0, sql.length() - 1); //get rid of semicolon
+////		log.info("sql length : "+sql.length());
+//		log.info("sql" + sql);
+////		log.info("finish");
+//		return sql;
+//		
 		 
-		Process process = null;
-		try {
-			process = pb.start(); 
-
-			int errorInt = process.waitFor();
-			if (errorInt != 0) {
-				log.info("Some error with Gprom Process: " + errorInt);
-			}
-		} catch (IOException e) {
-			LoggerUtil.logException(e,log);
-		} catch (InterruptedException e) {
-			LoggerUtil.logException(e,log);
-		}
-		log.info("after try");
-		String sql = streamtoString(process.getInputStream()).trim();
-		sql = sql.substring(0, sql.length() - 1); //get rid of semicolon
-//		log.info("sql length : "+sql.length());
-		log.info("sql" + sql);
-//		log.info("finish");
-		return sql;
+		StringBuilder out = new StringBuilder();
+		String command = "PROVENANCE WITH ONLY UPDATED SHOW INTERMEDIATE STATEMENT ANNOTATIONS OF TRANSACTION '"  + XID + "';";
+		
+		runGProM(command, out);
+		
+		return out.toString();
 	}
 
-	public static String getReenactSQL(String scn, String statements) {
+	public static String getReenactSQL(String scn, String statements) throws Exception {
+//		
+//		ProcessBuilder pb = new ProcessBuilder("./gprom",  
+//				"-host",  DBConfig.inst.getConnectionProperty(ConfigProperty.HOST), 
+//				"-db",  DBConfig.inst.getConnectionProperty(ConfigProperty.SID), 
+//				"-port", DBConfig.inst.getConnectionProperty(ConfigProperty.PORT), 
+//				"-user",  DBConfig.inst.getConnectionProperty(ConfigProperty.USERNAME),  
+//				"-passwd", DBConfig.inst.getConnectionProperty(ConfigProperty.PASSWORD), 
+//				"-log", "-loglevel",  "0",  
+//				"-sql", "REENACT WITH ISOLATION LEVEL READCOMMITTED COMMIT SCN " + scn + " PROVENANCE ONLY UPDATED SHOW INTERMEDIATE STATEMENT ANNOTATIONS ("  + statements + ");", 
+//				"-backend", "oracle","-Pexecutor", "sql");
+//
+//		pb.directory(new File(DBConfig.inst.getConnectionProperty(ConfigProperty.GPROM_PATH)));// Gprom absolute path
+//		log.info("pb string : "+pb.command().toString());
+//		
+//		Process process = null;
+//		try {
+//			process = pb.start(); 
+//
+//			int errorInt = process.waitFor();
+//			if (errorInt != 0) {
+//				log.info("Some error with Gprom Process: " + errorInt);
+//			}
+//		} catch (IOException e) {
+//			LoggerUtil.logException(e,log);
+//		} catch (InterruptedException e) {
+//			LoggerUtil.logException(e,log);
+//		}
+//		log.info("after try");
+//		String sql = streamtoString(process.getInputStream()).trim();
+//		sql = sql.substring(0, sql.length() - 1); //get rid of semicolon
+////		log.info("sql length : "+sql.length());
+//		log.info("sql" + sql);
+//		
+//		return sql;
+//		
+		StringBuilder out = new StringBuilder();
+		String command = "REENACT WITH ISOLATION LEVEL READCOMMITTED COMMIT SCN " + scn + " PROVENANCE ONLY UPDATED SHOW INTERMEDIATE STATEMENT ANNOTATIONS ("  + statements + ");";
+		
+		runGProM(command, out);
+		
+		return out.toString();
+	}
+	
+	
+public static String getSerializableReenactSQL(String scn, String statements) throws Exception {
+		
+//		ProcessBuilder pb = new ProcessBuilder("./gprom",  
+//				"-host",  DBConfig.inst.getConnectionProperty(ConfigProperty.HOST), 
+//				"-db",  DBConfig.inst.getConnectionProperty(ConfigProperty.SID), 
+//				"-port", DBConfig.inst.getConnectionProperty(ConfigProperty.PORT), 
+//				"-user",  DBConfig.inst.getConnectionProperty(ConfigProperty.USERNAME),  
+//				"-passwd", DBConfig.inst.getConnectionProperty(ConfigProperty.PASSWORD), 
+//				"-log", "-loglevel",  "0",  
+//				"-sql", "REENACT AS OF SCN " + scn + " WITH PROVENANCE ONLY UPDATED SHOW INTERMEDIATE STATEMENT ANNOTATIONS ("  + statements + ");", 
+//				"-backend", "oracle","-Pexecutor", "sql");
+//
+//		pb.directory(new File(DBConfig.inst.getConnectionProperty(ConfigProperty.GPROM_PATH)));// Gprom absolute path
+//		log.info("pb string : "+pb.command().toString());
+//		
+//		Process process = null;
+//		try {
+//			process = pb.start(); 
+//
+//			int errorInt = process.waitFor();
+//			if (errorInt != 0) {
+//				log.info("Some error with Gprom Process: " + errorInt);
+//			}
+//		} catch (IOException e) {
+//			LoggerUtil.logException(e,log);
+//		} catch (InterruptedException e) {
+//			LoggerUtil.logException(e,log);
+//		}
+//		log.info("after try");
+//		String sql = streamtoString(process.getInputStream()).trim();
+//		sql = sql.substring(0, sql.length() - 1); //get rid of semicolon
+////		log.info("sql length : "+sql.length());
+//		log.info("sql" + sql);
+//		
+//		return sql;	
+
+		StringBuilder out = new StringBuilder();
+		String command = "REENACT AS OF SCN " + scn + " WITH PROVENANCE ONLY UPDATED SHOW INTERMEDIATE STATEMENT ANNOTATIONS ("  + statements + ");";
+		
+		runGProM(command, out);
+		
+		return out.toString();
+	}
+	
+	public static String getSerializableReenactAllSQL(String scn, String statements) throws Exception {
+		
+//		ProcessBuilder pb = new ProcessBuilder("./gprom",  
+//				"-host",  DBConfig.inst.getConnectionProperty(ConfigProperty.HOST), 
+//				"-db",  DBConfig.inst.getConnectionProperty(ConfigProperty.SID), 
+//				"-port", DBConfig.inst.getConnectionProperty(ConfigProperty.PORT), 
+//				"-user",  DBConfig.inst.getConnectionProperty(ConfigProperty.USERNAME),  
+//				"-passwd", DBConfig.inst.getConnectionProperty(ConfigProperty.PASSWORD), 
+//				"-log", "-loglevel",  "0",  
+//				"-sql", "REENACT AS OF SCN " + scn + " WITH PROVENANCE SHOW INTERMEDIATE STATEMENT ANNOTATIONS("  + statements + ");", 
+//				"-backend", "oracle","-Pexecutor", "sql");
+//
+//		pb.directory(new File(DBConfig.inst.getConnectionProperty(ConfigProperty.GPROM_PATH)));// Gprom absolute path
+//		log.info("pb string : "+pb.command().toString());
+//		
+//		Process process = null;
+//		try {
+//			process = pb.start(); 
+//
+//			int errorInt = process.waitFor();
+//			if (errorInt != 0) {
+//				log.info("Some error with Gprom Process: " + errorInt);
+//			}
+//		} catch (IOException e) {
+//			LoggerUtil.logException(e,log);
+//		} catch (InterruptedException e) {
+//			LoggerUtil.logException(e,log);
+//		}
+//		log.info("after try");
+//		String sql = streamtoString(process.getInputStream()).trim();
+//		sql = sql.substring(0, sql.length() - 1); //get rid of semicolon
+////		log.info("sql length : "+sql.length());
+//		log.info("sql" + sql);
+//		
+		StringBuilder out = new StringBuilder();
+		String command = "REENACT AS OF SCN " + scn + " WITH PROVENANCE SHOW INTERMEDIATE STATEMENT ANNOTATIONS("  + statements + ");";
+		
+		runGProM(command, out);
+		
+		return out.toString();
+	}
+	
+	public static String getReenactAllSQL(String scn, String statements) throws Exception {
+//		
+//		ProcessBuilder pb = new ProcessBuilder("./gprom",  
+//				"-host",  DBConfig.inst.getConnectionProperty(ConfigProperty.HOST), 
+//				"-db",  DBConfig.inst.getConnectionProperty(ConfigProperty.SID), 
+//				"-port", DBConfig.inst.getConnectionProperty(ConfigProperty.PORT), 
+//				"-user",  DBConfig.inst.getConnectionProperty(ConfigProperty.USERNAME),  
+//				"-passwd", DBConfig.inst.getConnectionProperty(ConfigProperty.PASSWORD), 
+//				"-log", "-loglevel",  "0",  
+//				"-sql", "REENACT WITH ISOLATION LEVEL READCOMMITTED COMMIT SCN " + scn +" PROVENANCE SHOW INTERMEDIATE STATEMENT ANNOTATIONS ("  + statements + ");", 
+//				"-backend", "oracle","-Pexecutor", "sql");
+//
+//		pb.directory(new File(DBConfig.inst.getConnectionProperty(ConfigProperty.GPROM_PATH)));// Gprom absolute path
+//		log.info("pb string : "+pb.command().toString());
+//		
+//		Process process = null;
+//		try {
+//			process = pb.start(); 
+//
+//			int errorInt = process.waitFor();
+//			if (errorInt != 0) {
+//				log.info("Some error with Gprom Process: " + errorInt);
+//			}
+//		} catch (IOException e) {
+//			LoggerUtil.logException(e,log);
+//		} catch (InterruptedException e) {
+//			LoggerUtil.logException(e,log);
+//		}
+//		log.info("after try");
+//		String sql = streamtoString(process.getInputStream()).trim();
+//		sql = sql.substring(0, sql.length() - 1); //get rid of semicolon
+////		log.info("sql length : "+sql.length());
+//		log.info("sql" + sql);
+//		
+		StringBuilder out = new StringBuilder();
+		String command =  "REENACT WITH ISOLATION LEVEL READCOMMITTED COMMIT SCN " + scn +" PROVENANCE SHOW INTERMEDIATE STATEMENT ANNOTATIONS ("  + statements + ");";
+		
+		runGProM(command, out);
+		
+		return out.toString();
+	}
+	
+	
+	
+//	private static String streamtoString(InputStream inputStream) {
+//        StringBuilder sb = new StringBuilder();
+//        BufferedReader br = null;
+//        try {
+//	            br = new BufferedReader(new InputStreamReader(inputStream));
+//	            String line = null;
+//	            while ((line = br.readLine()) != null) {
+//	                sb.append(line + " ");// + System.getProperty("line.separator")
+//	            }
+//	            br.close();
+//	        } catch(IOException e) {
+//	        	LoggerUtil.logException(e,log);
+//	        }
+//        return sb.toString().trim();
+//    }
+	private static int runGProM (String command, StringBuilder out) throws Exception {
+		int retVal = runGProMRaw(command, out);
+		out.deleteCharAt(out.lastIndexOf(";"));
+		if (retVal == 0)
+			log.info("SQL - " + out.toString());
+		return retVal;
+	}
+
+	private static int runGProMRaw (String command, StringBuilder out) throws Exception {
+		int returnVal = -1;
+		StringBuilder err = new StringBuilder();
 		
 		ProcessBuilder pb = new ProcessBuilder("./gprom",  
 				"-host",  DBConfig.inst.getConnectionProperty(ConfigProperty.HOST), 
@@ -120,162 +330,68 @@ public class GpromProcess {
 				"-user",  DBConfig.inst.getConnectionProperty(ConfigProperty.USERNAME),  
 				"-passwd", DBConfig.inst.getConnectionProperty(ConfigProperty.PASSWORD), 
 				"-log", "-loglevel",  "0",  
-				"-sql", "REENACT WITH ISOLATION LEVEL READCOMMITTED COMMIT SCN " + scn + " PROVENANCE ONLY UPDATED SHOW INTERMEDIATE STATEMENT ANNOTATIONS ("  + statements + ");", 
+				"-sql", command, 
 				"-backend", "oracle","-Pexecutor", "sql");
 
+		log.debug("run gprom command:\n\n" + command);
+		
 		pb.directory(new File(DBConfig.inst.getConnectionProperty(ConfigProperty.GPROM_PATH)));// Gprom absolute path
-		log.info("pb string : "+pb.command().toString());
+		log.info("pb dir <" + pb.directory().getAbsolutePath() + ">\n"+pb.command().toString());
 		
 		Process process = null;
 		try {
+			ProcStreamReader outR;
+			ProcStreamReader errR;
+			
 			process = pb.start(); 
-
-			int errorInt = process.waitFor();
-			if (errorInt != 0) {
-				log.info("Some error with Gprom Process: " + errorInt);
+			outR = inst.new ProcStreamReader("out", process.getInputStream(), out);
+			errR = inst.new ProcStreamReader("err", process.getErrorStream(), err);
+			outR.start();
+			errR.start();
+			
+			returnVal = process.waitFor();
+			if (returnVal != 0) {
+				log.fatal("Some error with Gprom Process - return value:" + returnVal);
+				log.fatal("Output was: " + out.toString());
+				log.fatal("Error output was " + err.toString());
+				throw new Exception("GProM error");
 			}
 		} catch (IOException e) {
 			LoggerUtil.logException(e,log);
 		} catch (InterruptedException e) {
 			LoggerUtil.logException(e,log);
 		}
-		log.info("after try");
-		String sql = streamtoString(process.getInputStream()).trim();
-		sql = sql.substring(0, sql.length() - 1); //get rid of semicolon
-//		log.info("sql length : "+sql.length());
-		log.info("sql" + sql);
 		
-		return sql;
+		return returnVal;
 	}
 	
-	
-public static String getSerializableReenactSQL(String scn, String statements) {
-		
-		ProcessBuilder pb = new ProcessBuilder("./gprom",  
-				"-host",  DBConfig.inst.getConnectionProperty(ConfigProperty.HOST), 
-				"-db",  DBConfig.inst.getConnectionProperty(ConfigProperty.SID), 
-				"-port", DBConfig.inst.getConnectionProperty(ConfigProperty.PORT), 
-				"-user",  DBConfig.inst.getConnectionProperty(ConfigProperty.USERNAME),  
-				"-passwd", DBConfig.inst.getConnectionProperty(ConfigProperty.PASSWORD), 
-				"-log", "-loglevel",  "0",  
-				"-sql", "REENACT AS OF SCN " + scn + " WITH PROVENANCE ONLY UPDATED SHOW INTERMEDIATE STATEMENT ANNOTATIONS ("  + statements + ");", 
-				"-backend", "oracle","-Pexecutor", "sql");
+	private class ProcStreamReader extends Thread {
+		InputStream is;
+		String type;
+		StringBuilder b;
 
-		pb.directory(new File(DBConfig.inst.getConnectionProperty(ConfigProperty.GPROM_PATH)));// Gprom absolute path
-		log.info("pb string : "+pb.command().toString());
-		
-		Process process = null;
-		try {
-			process = pb.start(); 
-
-			int errorInt = process.waitFor();
-			if (errorInt != 0) {
-				log.info("Some error with Gprom Process: " + errorInt);
-			}
-		} catch (IOException e) {
-			LoggerUtil.logException(e,log);
-		} catch (InterruptedException e) {
-			LoggerUtil.logException(e,log);
+		ProcStreamReader(String type, InputStream is, StringBuilder b) {
+			this.type = type;
+			this.is = is;
+			this.b = b;
 		}
-		log.info("after try");
-		String sql = streamtoString(process.getInputStream()).trim();
-		sql = sql.substring(0, sql.length() - 1); //get rid of semicolon
-//		log.info("sql length : "+sql.length());
-		log.info("sql" + sql);
-		
-		return sql;
-	}
-	
-	public static String getSerializableReenactAllSQL(String scn, String statements) {
-		
-		ProcessBuilder pb = new ProcessBuilder("./gprom",  
-				"-host",  DBConfig.inst.getConnectionProperty(ConfigProperty.HOST), 
-				"-db",  DBConfig.inst.getConnectionProperty(ConfigProperty.SID), 
-				"-port", DBConfig.inst.getConnectionProperty(ConfigProperty.PORT), 
-				"-user",  DBConfig.inst.getConnectionProperty(ConfigProperty.USERNAME),  
-				"-passwd", DBConfig.inst.getConnectionProperty(ConfigProperty.PASSWORD), 
-				"-log", "-loglevel",  "0",  
-				"-sql", "REENACT AS OF SCN " + scn + " WITH PROVENANCE SHOW INTERMEDIATE STATEMENT ANNOTATIONS("  + statements + ");", 
-				"-backend", "oracle","-Pexecutor", "sql");
 
-		pb.directory(new File(DBConfig.inst.getConnectionProperty(ConfigProperty.GPROM_PATH)));// Gprom absolute path
-		log.info("pb string : "+pb.command().toString());
-		
-		Process process = null;
-		try {
-			process = pb.start(); 
-
-			int errorInt = process.waitFor();
-			if (errorInt != 0) {
-				log.info("Some error with Gprom Process: " + errorInt);
+		public void run() {
+			try	{
+				InputStreamReader isr = new InputStreamReader(is);
+				BufferedReader br = new BufferedReader(isr);
+				String line=null;
+				while ( (line = br.readLine()) != null)
+				{
+					if (b != null)
+						b.append(line + "\n");
+					log.debug(type + ">" + line);    
+				}
+			} catch (IOException ioe)
+			{
+				ioe.printStackTrace();  
 			}
-		} catch (IOException e) {
-			LoggerUtil.logException(e,log);
-		} catch (InterruptedException e) {
-			LoggerUtil.logException(e,log);
 		}
-		log.info("after try");
-		String sql = streamtoString(process.getInputStream()).trim();
-		sql = sql.substring(0, sql.length() - 1); //get rid of semicolon
-//		log.info("sql length : "+sql.length());
-		log.info("sql" + sql);
-		
-		return sql;
 	}
-	
-	public static String getReenactAllSQL(String scn, String statements) {
-		
-		ProcessBuilder pb = new ProcessBuilder("./gprom",  
-				"-host",  DBConfig.inst.getConnectionProperty(ConfigProperty.HOST), 
-				"-db",  DBConfig.inst.getConnectionProperty(ConfigProperty.SID), 
-				"-port", DBConfig.inst.getConnectionProperty(ConfigProperty.PORT), 
-				"-user",  DBConfig.inst.getConnectionProperty(ConfigProperty.USERNAME),  
-				"-passwd", DBConfig.inst.getConnectionProperty(ConfigProperty.PASSWORD), 
-				"-log", "-loglevel",  "0",  
-				"-sql", "REENACT WITH ISOLATION LEVEL READCOMMITTED COMMIT SCN " + scn +" PROVENANCE SHOW INTERMEDIATE STATEMENT ANNOTATIONS ("  + statements + ");", 
-				"-backend", "oracle","-Pexecutor", "sql");
-
-		pb.directory(new File(DBConfig.inst.getConnectionProperty(ConfigProperty.GPROM_PATH)));// Gprom absolute path
-		log.info("pb string : "+pb.command().toString());
-		
-		Process process = null;
-		try {
-			process = pb.start(); 
-
-			int errorInt = process.waitFor();
-			if (errorInt != 0) {
-				log.info("Some error with Gprom Process: " + errorInt);
-			}
-		} catch (IOException e) {
-			LoggerUtil.logException(e,log);
-		} catch (InterruptedException e) {
-			LoggerUtil.logException(e,log);
-		}
-		log.info("after try");
-		String sql = streamtoString(process.getInputStream()).trim();
-		sql = sql.substring(0, sql.length() - 1); //get rid of semicolon
-//		log.info("sql length : "+sql.length());
-		log.info("sql" + sql);
-		
-		return sql;
-	}
-	
-	
-	
-	private static String streamtoString(InputStream inputStream) {
-        StringBuilder sb = new StringBuilder();
-        BufferedReader br = null;
-        try {
-	            br = new BufferedReader(new InputStreamReader(inputStream));
-	            String line = null;
-	            while ((line = br.readLine()) != null) {
-	                sb.append(line + " ");// + System.getProperty("line.separator")
-	            }
-	            br.close();
-	        } catch(IOException e) {
-	        	LoggerUtil.logException(e,log);
-	        }
-        return sb.toString().trim();
-    }
 
 }
