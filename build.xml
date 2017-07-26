@@ -142,6 +142,7 @@ GProM Transaction Debugger (GTDB) is a non-invasive post-mortem debugger for tra
 			<zipfileset src="${librarydir}/scala-library.jar"/>
 			<zipfileset src="${librarydir}/jfreechart.jar"/>
 			<zipfileset src="${librarydir}/gs-algo.jar"/>
+			<zipfileset src="${librarydir}/args4j.jar"/>
 			<file file="${log4j-properties}"/>
 			<!--
 			<zipfileset src="${librarydir}/jfreechart.jar"/>

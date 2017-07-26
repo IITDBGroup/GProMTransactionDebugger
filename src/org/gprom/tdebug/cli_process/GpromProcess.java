@@ -83,6 +83,7 @@ public class GpromProcess {
 
 		pb.directory(new File(DBConfig.inst.getConnectionProperty(ConfigProperty.GPROM_PATH)));// Gprom absolute path
 		log.info("pb string : "+pb.command().toString());
+		log.info("pb dir: " + pb.directory());
 
 //		File log = new File("/Users/nebula/Documents/GP_GUI/log.txt");
 //		pb.redirectErrorStream(true);

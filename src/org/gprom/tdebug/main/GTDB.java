@@ -81,6 +81,8 @@ import org.gprom.tdebug.cli_process.DotWrapper;
 import org.gprom.tdebug.cli_process.GpromProcess;
 import org.gprom.tdebug.db_connection.DBConfig;
 import org.gprom.tdebug.db_connection.DBManager;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
 
 import timebars.eventmonitoring.model.CollectingTimeBarNode;
 import timebars.eventmonitoring.model.EventInterval;
@@ -127,6 +129,24 @@ public class GTDB {
 	private final static boolean HIERARCHICAL = false;
 
 	public static void main(String[] args) throws Exception {
+		CmdLineParser parser;
+		parser = new CmdLineParser(CLIOptions.getInst());
+				
+		try {
+			parser.parseArgument(args);
+		}
+		catch (CmdLineException e) {
+			e.printStackTrace(System.err);
+			parser.printUsage(System.err);
+			throw e;
+		}
+		
+		if (CLIOptions.getInst().isShowHelp())
+		{
+			parser.printUsage(System.err);
+			System.exit(0);
+		}
+		
 		DBConfig.inst.loadProperties();
 		DBManager.getInstance().getConnection();
 		GTDB example = new GTDB();

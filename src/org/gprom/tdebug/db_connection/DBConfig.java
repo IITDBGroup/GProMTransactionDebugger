@@ -3,10 +3,13 @@
  */
 package org.gprom.tdebug.db_connection;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
+import org.gprom.tdebug.main.CLIOptions;
 
 /**
  * @author lord_pretzel
@@ -52,10 +55,21 @@ public class DBConfig implements DBConfigInterface {
 	@Override
 	public void loadProperties()  {
 		try {
-			p.load(this.getClass().getClassLoader().getResourceAsStream(DBConfig.configFile));
+			File confFile = CLIOptions.getInst().getConfigFilePath();
+			
+			if (confFile == null) {
+				p.load(this.getClass().getClassLoader().getResourceAsStream(DBConfig.configFile));
+			}
+			else {
+				if (!confFile.exists()) {
+					System.err.println("configuration file does not exist <" + confFile.getAbsolutePath() + ">");
+					System.exit(1);
+				}
+				p.load(new FileInputStream(confFile));
+			}
 		}
 		catch (IOException e) {
-			log.error("did not find configuration tdebug.properties");
+			log.error("did not find configuration file tdebug.properties");
 			e.printStackTrace();
 			System.exit(1);
 		}
