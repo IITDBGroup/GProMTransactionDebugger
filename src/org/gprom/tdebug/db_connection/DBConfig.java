@@ -57,6 +57,7 @@ public class DBConfig implements DBConfigInterface {
 		catch (IOException e) {
 			log.error("did not find configuration tdebug.properties");
 			e.printStackTrace();
+			System.exit(1);
 		}
 	}
 

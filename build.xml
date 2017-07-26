@@ -1,0 +1,196 @@
+<project 
+	name="GTDB" 
+	default="Deploy" 
+	basedir="."
+	xmlns:ivy="antlib:org.apache.ivy.ant"
+	>
+	<description>
+GProM Transaction Debugger (GTDB) is a non-invasive post-mortem debugger for transactions with support for provenance and what-if scenarios.
+	</description>
+
+
+	<!-- Directories -->
+	<property name="binarydir" location="${basedir}/bin" />
+	<property name="builddir" location="${basedir}/build" />
+	<property name="librarydir" location="${basedir}/lib" />
+	<property name="bldlibdir" location="${basedir}/buildlib" />
+	<property name="sourcedir" location="${basedir}/src" />
+	<property name="docdir" location="${basedir}/doc/javadoc" />
+	
+	<!-- Files -->
+	<property name="log4j-properties" location="${sourcedir}/log4.properties" />
+	<property name="configFile" location="${sourcedir}/tdebug.properties" />
+	<property name="oracle-jdbc-driver" location="${librarydir}/ojdbc7.jar" />
+	
+	<!-- Ivy -->
+    <property name="ivy.install.version" value="2.1.0" />
+    <condition property="ivy.home" value="${env.IVY_HOME}">
+      <isset property="env.IVY_HOME" />
+    </condition>
+    <property name="ivy.jar.dir" value="${bldlibdir}" />
+    <property name="ivy.jar.file" value="${ivy.jar.dir}/ivy.jar" />
+
+	<!-- Jar --> 
+  	<property name="mainClass" value="org.gprom.tdebug.main.EventMonitoringMain" />
+
+	<!-- targets -->
+	<!-- Ivy -->
+    <target name="download-ivy" unless="offline">
+
+        <mkdir dir="${ivy.jar.dir}"/>
+        <!-- download Ivy from web site so that it can be used even without any special installation -->
+        <get src="http://repo2.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" 
+             dest="${ivy.jar.file}" usetimestamp="true"/>
+    </target>
+
+    <target name="init-ivy" depends="download-ivy">
+      <!-- try to load ivy here from ivy home, in case the user has not already dropped
+              it into ant's lib dir (note that the latter copy will always take precedence).
+              We will not fail as long as local lib dir exists (it may be empty) and
+              ivy is in at least one of ant's lib dir or the local lib dir. -->
+        <path id="ivy.lib.path">
+            <fileset dir="${ivy.jar.dir}" includes="*.jar"/>
+        </path>
+        <taskdef resource="org/apache/ivy/ant/antlib.xml"
+                 uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
+    </target>
+	
+	<!-- download jar files with ivy -->
+	<target name="download-dependencies" depends="init-ivy">
+		<ivy:resolve />
+		<ivy:retrieve sync="false" type="jar" pattern="${librarydir}/[artifact].[ext]" />
+		<mkdir dir="${bldlibdir}"/>
+		<move todir="${bldlibdir}">
+			<fileset dir="${librarydir}">
+				<include name="ant*.jar"/>
+				<include name="jarjar.jar"/>
+	    		</fileset>
+		</move>
+	</target>
+	
+	<!-- Internal Taskdefs -->
+	<target name="setup-additional-anttasks" depends="download-dependencies">
+		<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+			<classpath>
+				<pathelement location="${bldlibdir}/ant-contrib.jar"/>
+			</classpath>
+		</taskdef>
+	</target>
+	
+	<target name="Clean" depends="setup-additional-anttasks">
+		<mkdir dir="${builddir}" />
+		<!-- ClassPath Setup -->
+		<path id="libraries">
+			<fileset dir="${librarydir}"/>
+		</path>
+
+		<pathconvert property="jarClasspath" pathsep="    ">
+			<path>
+				<fileset dir="${librarydir}">
+					<exclude name="ant*.jar" />
+				</fileset>
+			</path>
+			<mapper>
+				<chainedmapper>
+					<flattenmapper/>
+					<globmapper from="*.jar" to="lib/*.jar" casesensitive="no"/>
+				</chainedmapper>
+			</mapper>
+		</pathconvert>
+		<echo message="Class path for Jarfile: ${jarClasspath}"/>
+	</target>
+	
+	<target name="Compile" depends="Clean">
+	  	<fail message="Please download version 7 of Oracle's JDBC driver and place the file ojdbc7.jar into the ${librarydir} folder.">
+			<condition>
+				<not>
+					<resourceexists>
+					  <file file="${oracle-jdbc-driver}"/>
+					</resourceexists>
+				</not>
+			</condition>
+	   	</fail>
+		<mkdir dir="${binarydir}"/>
+		<javac srcdir="${sourcedir}" destdir="${binarydir}" 
+			classpathref="libraries" debug="on" includeantruntime="false">
+			<compilerarg value="-Xlint:unchecked" />
+		</javac>
+	</target>
+
+	<target name="Deploy" depends="Jar">
+		<copy todir="${builddir}" file="${configFile}"/>
+	</target>
+
+	<target name="Jar" depends="Compile">
+		<delete file="${binarydir}/tdebug.properties"/>
+		<mkdir dir="${builddir}" />
+		<taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
+		        classpath="${bldlibdir}/jarjar.jar"/>
+		<jarjar destfile="${builddir}/gtdb.jar" basedir="${binarydir}">
+			<manifest>
+				<attribute name="Main-Class" value="${mainClass}" />
+				<attribute name="Created-By" value="Illinois Institute of Technology" />
+				<attribute name="Class-Path" value="." />
+			</manifest>
+			<zipfileset src="${librarydir}/gs-ui.jar"/>
+			<zipfileset src="${librarydir}/hamcrest-core.jar"/>
+			<zipfileset src="${librarydir}/timebars-1.49.jar"/>
+			<zipfileset src="${librarydir}/ojdbc7.jar"/>
+			<zipfileset src="${librarydir}/gs-core.jar"/>
+			<zipfileset src="${librarydir}/log4j.jar"/>
+			<zipfileset src="${librarydir}/jaretutil-0.32.jar"/>
+			<zipfileset src="${librarydir}/scala-library.jar"/>
+			<zipfileset src="${librarydir}/jfreechart.jar"/>
+			<zipfileset src="${librarydir}/gs-algo.jar"/>
+			<file file="${log4j-properties}"/>
+			<!--
+			<zipfileset src="${librarydir}/jfreechart.jar"/>
+			<zipfileset src="${librarydir}/mbox2.jar"/>
+			
+			<zipfileset src="${librarydir}/junit.jar"/>
+			<zipfileset src="${librarydir}/activation.jar"/>
+			<zipfileset src="${librarydir}/commons-math3.jar"/>
+			<zipfileset src="${librarydir}/pherd.jar"/>
+			<zipfileset src="${librarydir}/javaee-api.jar"/>
+			<zipfileset src="${librarydir}/commons-math.jar"/>
+			<zipfileset src="${librarydir}/xml-apis.jar"/>
+			<zipfileset src="${librarydir}/itext.jar"/>
+			<zipfileset src="${librarydir}/bcprov-jdk14.jar">
+				<exclude name="**/*.RSA, **/*.SF, **/*.DSA"/>
+			</zipfileset>
+			<zipfileset src="${librarydir}/jcommon.jar"/>
+			<zipfileset src="${librarydir}/mail.jar">
+				<exclude name="**/*.RSA, **/*.SF, **/*.DSA"/>
+			</zipfileset>
+			<zipfileset src="${librarydir}/scala-library.jar"/>
+			<zipfileset src="${librarydir}/bcmail-jdk14.jar">
+				<exclude name="**/*.RSA, **/*.SF, **/*.DSA"/>
+			</zipfileset>
+			<zipfileset src="${librarydir}/geronimo-jms_1.1_spec.jar"/>
+
+<file file="${tdebug.properties}"/>
+-->
+		</jarjar>
+	</target>
+
+	
+	<target name="GenerateJavaDoc">
+		<javadoc access="private" 
+			author="true" 
+			classpathref="libraries" 
+			destdir="${docdir}" 
+			nodeprecated="false" 
+			nodeprecatedlist="false"
+			noindex="false" 
+			nonavbar="false" 
+			notree="false" 
+			packagenames="tresc" 
+			source="1.7" 
+			sourcepath="${sourcedir}" 
+			splitindex="true" 
+			use="true" 
+			version="true">
+		</javadoc>
+	</target>
+
+</project>

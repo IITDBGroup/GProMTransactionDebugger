@@ -22,3 +22,5 @@
 /bin/
 /bin/
 .DS_Store
+build
+buildlib
