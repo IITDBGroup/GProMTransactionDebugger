@@ -18,7 +18,7 @@ GProM Transaction Debugger (GTDB) is a non-invasive post-mortem debugger for tra
 	<property name="docdir" location="${basedir}/doc/javadoc" />
 	
 	<!-- Files -->
-	<property name="log4j-properties" location="${sourcedir}/log4.properties" />
+	<property name="log4j-properties" location="${sourcedir}/log4j.properties" />
 	<property name="configFile" location="${sourcedir}/tdebug.properties" />
 	<property name="oracle-jdbc-driver" location="${librarydir}/ojdbc7.jar" />
 	
@@ -31,7 +31,7 @@ GProM Transaction Debugger (GTDB) is a non-invasive post-mortem debugger for tra
     <property name="ivy.jar.file" value="${ivy.jar.dir}/ivy.jar" />
 
 	<!-- Jar --> 
-  	<property name="mainClass" value="org.gprom.tdebug.main.EventMonitoringMain" />
+  	<property name="mainClass" value="org.gprom.tdebug.main.GTDB" />
 
 	<!-- targets -->
 	<!-- Ivy -->
