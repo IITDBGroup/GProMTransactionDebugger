@@ -139,7 +139,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	
 	
 	
-	public TransactionDebuggerFrame(EventTimeBarRow row)
+	public TransactionDebuggerFrame(EventTimeBarRow row, List<String> tableNames)
 	{
 		super();
 		this.currentRow = row;
