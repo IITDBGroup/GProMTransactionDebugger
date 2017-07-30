@@ -50,7 +50,7 @@ public class GpromProcess {
 //	}
 	
 	
-	public static String getTransactionIntermediateSQL(String XID) throws Exception {
+	public static String getTransactionIntermediateSQL(String XID, String table) throws Exception {
 		String auditTable = null;
         //for old gprom version
 //		ProcessBuilder pb = new ProcessBuilder("./test/testrewriter",  "-host",  HOST,  "-db",  SID, 
@@ -114,14 +114,37 @@ public class GpromProcess {
 //		
 		 
 		StringBuilder out = new StringBuilder();
-		String command = "PROVENANCE WITH ONLY UPDATED SHOW INTERMEDIATE STATEMENT ANNOTATIONS OF TRANSACTION '"  + XID + "';";
+		String command = "PROVENANCE WITH ONLY UPDATED SHOW INTERMEDIATE STATEMENT ANNOTATIONS TABLE "+ table + " OF TRANSACTION '"  + XID + "';";
+		
+		runGProM(command, out);
+		
+		return out.toString();
+	}
+	
+	
+	public static String getWholeTransactionIntermediateSQL(String XID, String table) throws Exception {
+		String auditTable = null;
+		switch(AuditTable.valueOf(DBConfig.inst.getConnectionProperty(ConfigProperty.AUDIT_TABLE)))
+		{
+		case FGA_LOG:
+			auditTable= "fga_log$";
+			break;
+		case UNIFIED_AUDIT:
+			auditTable= "unified_audit";
+			break;
+		default:
+			break;
+		}
+		 
+		StringBuilder out = new StringBuilder();
+		String command = "PROVENANCE WITH SHOW INTERMEDIATE STATEMENT ANNOTATIONS TABLE "+ table + " OF TRANSACTION '"  + XID + "';";
 		
 		runGProM(command, out);
 		
 		return out.toString();
 	}
 
-	public static String getReenactSQL(String scn, String statements) throws Exception {
+	public static String getReenactSQL(String scn, String statements, String tableName) throws Exception {
 //		
 //		ProcessBuilder pb = new ProcessBuilder("./gprom",  
 //				"-host",  DBConfig.inst.getConnectionProperty(ConfigProperty.HOST), 
@@ -158,7 +181,7 @@ public class GpromProcess {
 //		return sql;
 //		
 		StringBuilder out = new StringBuilder();
-		String command = "REENACT WITH ISOLATION LEVEL READCOMMITTED COMMIT SCN " + scn + " PROVENANCE ONLY UPDATED SHOW INTERMEDIATE STATEMENT ANNOTATIONS ("  + statements + ");";
+		String command = "REENACT WITH ISOLATION LEVEL READCOMMITTED COMMIT SCN " + scn + " PROVENANCE ONLY UPDATED SHOW INTERMEDIATE STATEMENT ANNOTATIONS TABLE " + tableName + " ("  + statements + ");";
 		
 		runGProM(command, out);
 		
@@ -166,7 +189,7 @@ public class GpromProcess {
 	}
 	
 	
-public static String getSerializableReenactSQL(String scn, String statements) throws Exception {
+public static String getSerializableReenactSQL(String scn, String statements, String tableName) throws Exception {
 		
 //		ProcessBuilder pb = new ProcessBuilder("./gprom",  
 //				"-host",  DBConfig.inst.getConnectionProperty(ConfigProperty.HOST), 
@@ -203,14 +226,14 @@ public static String getSerializableReenactSQL(String scn, String statements) th
 //		return sql;	
 
 		StringBuilder out = new StringBuilder();
-		String command = "REENACT AS OF SCN " + scn + " WITH PROVENANCE ONLY UPDATED SHOW INTERMEDIATE STATEMENT ANNOTATIONS ("  + statements + ");";
+		String command = "REENACT AS OF SCN " + scn + " WITH PROVENANCE ONLY UPDATED SHOW INTERMEDIATE STATEMENT ANNOTATIONS Table " + tableName + " ("  + statements + ");";
 		
 		runGProM(command, out);
 		
 		return out.toString();
 	}
 	
-	public static String getSerializableReenactAllSQL(String scn, String statements) throws Exception {
+	public static String getSerializableReenactAllSQL(String scn, String statements, String tableName) throws Exception {
 		
 //		ProcessBuilder pb = new ProcessBuilder("./gprom",  
 //				"-host",  DBConfig.inst.getConnectionProperty(ConfigProperty.HOST), 
@@ -245,14 +268,14 @@ public static String getSerializableReenactSQL(String scn, String statements) th
 //		log.info("sql" + sql);
 //		
 		StringBuilder out = new StringBuilder();
-		String command = "REENACT AS OF SCN " + scn + " WITH PROVENANCE SHOW INTERMEDIATE STATEMENT ANNOTATIONS("  + statements + ");";
+		String command = "REENACT AS OF SCN " + scn + " WITH PROVENANCE SHOW INTERMEDIATE STATEMENT ANNOTATIONS TABLE " + tableName + " ("  + statements + ");";
 		
 		runGProM(command, out);
 		
 		return out.toString();
 	}
 	
-	public static String getReenactAllSQL(String scn, String statements) throws Exception {
+	public static String getReenactAllSQL(String scn, String statements, String tableName) throws Exception {
 //		
 //		ProcessBuilder pb = new ProcessBuilder("./gprom",  
 //				"-host",  DBConfig.inst.getConnectionProperty(ConfigProperty.HOST), 
@@ -287,7 +310,7 @@ public static String getSerializableReenactSQL(String scn, String statements) th
 //		log.info("sql" + sql);
 //		
 		StringBuilder out = new StringBuilder();
-		String command =  "REENACT WITH ISOLATION LEVEL READCOMMITTED COMMIT SCN " + scn +" PROVENANCE SHOW INTERMEDIATE STATEMENT ANNOTATIONS ("  + statements + ");";
+		String command =  "REENACT WITH ISOLATION LEVEL READCOMMITTED COMMIT SCN " + scn +" PROVENANCE SHOW INTERMEDIATE STATEMENT ANNOTATIONS TABLE " + tableName +" ("  + statements + ");";
 		
 		runGProM(command, out);
 		
