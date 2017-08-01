@@ -28,7 +28,7 @@ public class DBConnection {
 			//query ="SELECT * FROM UNIFIED_AUDIT_TRAIL  WHERE  EVENT_TIMESTAMP > to_date('02/18/2016', 'MM/DD/YYYY') ORDER BY EVENT_TIMESTAMP ASC";//UNIFIED_AUDIT_TRAIL  SYS.fga_log$
 
 			//used fro SYS.FGA_LOG$
-			query ="SELECT * FROM SYS.FGA_LOG$";  //WHERE  EVENT_TIMESTAMP > to_date('02/18/2016', 'MM/DD/YYYY') ORDER BY EVENT_TIMESTAMP ASC";//UNIFIED_AUDIT_TRAIL  SYS.fga_log$
+			query ="SELECT * FROM SYS.FGA_LOG$ WHERE  EVENT_TIMESTAMP > to_date('07/18/2017', 'MM/DD/YYYY') ORDER BY EVENT_TIMESTAMP ASC";  //WHERE  EVENT_TIMESTAMP > to_date('02/18/2016', 'MM/DD/YYYY') ORDER BY EVENT_TIMESTAMP ASC";//UNIFIED_AUDIT_TRAIL  SYS.fga_log$
 			resultSet = statement.executeQuery(query);
 		}catch (SQLException e) {
 			// TODO Auto-generated catch block

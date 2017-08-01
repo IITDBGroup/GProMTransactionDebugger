@@ -239,6 +239,12 @@ try {
 			LoggerUtil.logException(e,log);
 		}
 		/**flash_back_nodes*/
+        log.info("commit node list size: "+nodesCommit.size());
+        for(int i=0; i<nodesCommit.size(); i++)
+        {
+        	log.info("TID: "+nodesCommit.get(i).getTransactionId() + " commit time: "+nodesCommit.get(i).getTimeStamp());
+        }
+        
 		HashMap<String, TransactionNode> map1 = new HashMap<String, TransactionNode>();
 		for(int k = 0; k < nodesCommit.size(); k++){   //Insert Transaction nodes into the hashMap.
 			map1.put(nodesCommit.get(k).getTransactionId(), nodesCommit.get(k));
@@ -277,11 +283,7 @@ try {
 		}
 		
 		
-		
-		
-		
-		
-		
+				
 		/**audit_log_nodes*/
 		HashMap<String, ListNode> map = new HashMap<String, ListNode>();
 		for(int k = 0; k < nodes.size(); k++){   //Insert Transaction nodes into the hashMap.
@@ -308,38 +310,42 @@ try {
 //		  
 //		} 
 		
-		for (String key : map.keySet()){
+		for (String key : map.keySet())
+		{
+						
+			log.info("begin: ");
+			if(map1.containsKey(key)){
+				log.info("True" + " TID is " + key);
+			}
+			else{
+				log.info("False" + " TID is "+ key);
+			}
+			
 			if(map1.containsKey(key)){
 				
 				DefaultRowHeader header = new DefaultRowHeader("T_ID "
 						+ key);
 				EventTimeBarRow row = new EventTimeBarRow(header);
 				
-				log.info("audit_log_transaction_ID:aaa" + key);
+				log.info("audit_log_transaction_ID: " + key);
 				row.setXID(key);
 				row.setStartSCN(map1.get(key).getStartSCN());
 				
-				if(map1.containsKey(key)){
-					log.info("True");
-				}
-				else{
-					log.info("False");
-				}
-
 				if(map2.containsKey(key)){
 					row.setIsoLevel(map2.get(key));
-					log.info(key + " : " + map2.get(key));
+					log.info("key : isolation level -> "+ key + " : " + map2.get(key));
 				}
 				
-				int c1 = 0;
-				int c2 = 1;
-				
-				
-				
-				if (map.get(key).Size() == 1){
+//				int c1 = 0;
+//				int c2 = 1;
+//				
+//							
+				if (map.get(key).Size() == 1)
+				{
 					
-					log.info("transaction start time" + map.get(key).GetNode(map.get(key).Size() - 1).getTimeStamp().toString());
-					log.info("commit" + map1.get(key).getTimeStamp().toString());
+					log.info("Only one statement!");
+					log.info("transaction start time is " + map.get(key).GetNode(map.get(key).Size() - 1).getTimeStamp().toString());
+					log.info("transaction commit time is " + map1.get(key).getTimeStamp().toString());
 					
 					
 					start.setDateTime(map.get(key).GetNode(map.get(key).Size() - 1).getTimeStamp().getDate(),
@@ -362,13 +368,15 @@ try {
 					row.addInterval(interval);
 				}
 //	04000C00F9090000			
-				else{
-					
-					for (int g = 0; g < map.get(key).Size() - 1; g++){
-						log.info(map.get(key).GetNode(g).getTimeStamp().toString());
-						log.info(map.get(key).GetNode(g + 1).getTimeStamp().toString());
-						log.info("commit" + map1.get(key).getTimeStamp().toString());
-						log.info("transaction node" + key);
+				else
+				{
+					log.info("More statements!");
+					for (int g = 0; g < map.get(key).Size() - 1; g++)
+					{
+						log.info("transaction node " + key);
+						log.info("The " + g + " start time is " + map.get(key).GetNode(g).getTimeStamp().toString());
+						log.info("The " + g + " end   time is " + map.get(key).GetNode(g + 1).getTimeStamp().toString());
+						log.info("The commit time is " + map1.get(key).getTimeStamp().toString());						
 						
 						start.setDateTime(map.get(key).GetNode(g).getTimeStamp().getDate(),
 								(map.get(key).GetNode(g).getTimeStamp().getMonth() + 1), map.get(key).GetNode(g).getTimeStamp().getYear() + 1900,
@@ -380,8 +388,8 @@ try {
 						
 					//	EventInterval interval = new EventInterval(start.copy().advanceHours(c1), end.copy().advanceHours(c2));
 						EventInterval interval = new EventInterval(start.copy().advanceHours(0), end.copy().advanceHours(0));
-						c1++;
-						c2++;
+//						c1++;
+//						c2++;
 						interval.setSql(map.get(key).GetNode(g).getQuery());
 						interval.setTitle(map.get(key).GetNode(g).getActionName());
 						interval.setOsName(map.get(key).GetNode(g).getOsUser());
