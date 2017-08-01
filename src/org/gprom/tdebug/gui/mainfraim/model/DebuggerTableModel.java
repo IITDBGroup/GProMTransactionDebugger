@@ -27,56 +27,47 @@ public class DebuggerTableModel extends AbstractTableModel {
 	private static final long serialVersionUID = 1L;
 	static Logger log = Logger.getLogger(DebuggerTableModel.class);
 	
-	private ResultSet rs = null;
-	private ResultSetMetaData rsmd = null;
+
 	private int stmtIndex;
 	private List<Integer> indexList = null;
 	private Map<String, List<String>> prevRelation = new HashMap<String, List<String>>();
 	private Map<String, List<String>> nextRelation = new HashMap<String, List<String>>();
 	private EventTimeBarRow currentRow;
 	private int numRows;
-	private int cRow; //used for change data
-	private int cCol;
-	private Object cValue;
-	private List<JTable> tables = new ArrayList<JTable>();
+
 	List<Map<Integer, Object>> rsList;
+	List<String> rsNameList = new ArrayList<String>();
+	private boolean showTableFlag;
+	private String tableName = "";
 	
-	public DebuggerTableModel(List<Map<Integer, Object>> rsList, ResultSet rs, List<Integer> indexList, int stmtIndex, EventTimeBarRow currentRow, int numRows, List<JTable> tables) {
+	public DebuggerTableModel(List<Map<Integer, Object>> rsList, List<Integer> indexList, int stmtIndex, EventTimeBarRow currentRow, int numRows, List<String> rsNameList,boolean showTableFlag, String tableName) {
 		super();
-		this.rs = rs;
-		try {
-			rsmd = rs.getMetaData();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+
 		this.indexList = indexList;
-		this.tables = tables;
 		this.rsList = rsList;
+		this.rsNameList = rsNameList;
+		this.showTableFlag = showTableFlag;
+		this.tableName = tableName;
 		
 		this.stmtIndex = stmtIndex;
 		this.currentRow = currentRow;
 		this.numRows = numRows;
 	}
 	
-	public DebuggerTableModel(List<Map<Integer, Object>> rsList, ResultSet rs, List<Integer> indexList, int stmtIndex, EventTimeBarRow currentRow, int numRows,
-			int cRow, int cCol, Object cValue, List<JTable> tables) {
+	public DebuggerTableModel(List<Map<Integer, Object>> rsList, List<Integer> indexList, int stmtIndex, EventTimeBarRow currentRow, int numRows,
+			int cRow, int cCol, Object cValue, List<String> rsNameList, boolean showTableFlag, String tableName) {
 		super();
-		this.rs = rs;
-		try {
-			rsmd = rs.getMetaData();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+
 		this.indexList = indexList;
-		this.tables = tables;
 		this.rsList = rsList;
+		this.rsNameList = rsNameList;
+		this.showTableFlag = showTableFlag;
+		this.tableName = tableName;
 		
 		this.stmtIndex = stmtIndex;
 		this.currentRow = currentRow;
 		this.numRows = numRows;
-		this.cRow = cRow;
-		this.cCol = cCol;
-		this.cValue = cValue;
+		
 	}
 
 	public void setPrevTupleIndex(String targetIndex, String tupleIndex) {
@@ -86,12 +77,9 @@ public class DebuggerTableModel extends AbstractTableModel {
 			prevRelation.put(targetIndex, list);
 		}
 		list.add(tupleIndex);
-//		log.info("prev" + prevRelation);
 
 	}
 	
-	
-
 	
 	public void setNextTupleIndex(String targetIndex, String tupleIndex) {
 		List<String> list = nextRelation.get(targetIndex);
@@ -101,9 +89,10 @@ public class DebuggerTableModel extends AbstractTableModel {
 			
 		}
 		list.add(tupleIndex);
-//		log.info("next" + nextRelation);
+
 	}
-public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<String>>myHashNext) {
+	
+	public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<String>>myHashNext) {
 		myHashPre = prevRelation;
 		myHashNext = nextRelation;
 	}
@@ -111,67 +100,37 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
 	
 	@Override
 	public int getRowCount(){
-		int rowCount = 0;
-		try {
-			rs.last();
-			rowCount = rs.getRow();
-//			log.info("row count:" + rowCount);
-			rs.first();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-
-		return rowCount;
-//		return 999999;
+		
+		return rsList.size();
 	}
 
 	@Override
 	public int getColumnCount() {
-//		try {
-//			log.info("column count:" + rsmd.getColumnCount());
-//			return rsmd.getColumnCount() + 1; //+ 1 because we need to add the index of tuple
-			return indexList.size() + 2; // because we only need to access the part of result set
-			//return indexList.size(); // because we only need to access the part of result set
 
-			//		} catch (SQLException e) {
-//			e.printStackTrace();
-//		}
-//		return 0;
+			return indexList.size() + 2; // because we only need to access the part of result set
 	}
 	
     public String getColumnName(int col) {
-        try {
-        	if(numRows == 0)
-        	{
-        		if (col == 0) 
-        			return "";
-        		else if (col == 1)
-        			return "";
-        	}
-        	else
-        	{
-        		if (col == 0) 
-        			return "Tuple Index";        		
-        		else if (col == 1)
-        			return "TransID";
-        	}
-			//return rsmd.getColumnName(indexList.get(--col)); // -- make index start from 0
-        	col = col - 2; 
-        	log.info("col = "+(col));
-        	return rsmd.getColumnName(indexList.get(col));
-        } catch (SQLException e) {
-			e.printStackTrace();
-		}
     	
-//        try {
-//			//return rsmd.getColumnName(indexList.get(--col)); // -- make index start from 0
-//        	log.info("col = "+(col));
-//        	return rsmd.getColumnName(indexList.get(col));
-//        } catch (SQLException e) {
-//			e.printStackTrace();
-//		}
-    	
-        return "";
+    	if(numRows == 0 || showTableFlag)
+    	{
+    		if (col == 0) 
+    			return "";
+    		else if (col == 1)
+    			return "";
+    	}
+    	else
+    	{
+    		if (col == 0) 
+    			return "Tuple Index";        		
+    		else if (col == 1)
+    			return "TransID";
+    	}
+
+    	col = col - 2; 
+    	log.info("col = "+(col) + " List index = "+indexList.get(col) + " Name = " + rsNameList.get(indexList.get(col)));
+
+    	return rsNameList.get(indexList.get(col));
     }
 
 
@@ -215,19 +174,7 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
 		
-		//log.info("row: "+rowIndex + "----------------numRows :  "+numRows);
-		if(rowIndex < numRows)
-		{
-			if (columnIndex == 0) {
-				return (Object)("t" + (rowIndex) + "[" + stmtIndex + "]");	
-			}
-
-			if (columnIndex == 1) {
-				String tid = currentRow.getXID();
-				return (Object)(tid);	
-			}
-		}
-		else
+		if(showTableFlag)
 		{
 			if (columnIndex == 0) {
 				return (Object)("");	
@@ -238,72 +185,37 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
 				return (Object)(tid);	
 			}
 		}
+		else
+		{
+			if(rowIndex < numRows)
+			{
+				if (columnIndex == 0) {
+					return (Object)("t" + (rowIndex) + "[" + stmtIndex + "]");	
+				}
+
+				if (columnIndex == 1) {
+					String tid = currentRow.getXID();
+					return (Object)(tid);	
+				}
+			}
+			else
+			{
+				if (columnIndex == 0) {
+					return (Object)("");	
+				}
+
+				if (columnIndex == 1) {
+					String tid = "";
+					return (Object)(tid);	
+				}
+			}
+		}
 		
 		columnIndex = columnIndex - 2;
 		
 		Map<Integer, Object> map = rsList.get(rowIndex);
 		Object result = map.get(indexList.get(columnIndex));
-				
-		//used for key is name
-//		Map<String, Object> map = rsList.get(rowIndex);
-//		String cName = "";
-//		try {
-//			cName = rsmd.getColumnName(indexList.get(columnIndex));
-//		} catch (SQLException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		Object result = map.get(cName);
-		
-		//old
-//		Object result = null;
-//		
-//		rowIndex = rowIndex + 1;
-//
-//		if(rowIndex+1 > numRows)
-//		{
-//			if (columnIndex == 0) {
-//				return (Object)("");	
-//			}
-//
-//			if (columnIndex == 1) {
-//				String tid = "";
-//				return (Object)(tid);	
-//			}
-//		}
-//		else
-//		{
-//			if (columnIndex == 0) {
-//				return (Object)("t" + (rowIndex+1) + "[" + stmtIndex + "]");	
-//			}
-//
-//			if (columnIndex == 1) {
-//				String tid = currentRow.getXID();
-//				return (Object)(tid);	
-//			}
-//		}
-//		
-//		columnIndex = columnIndex - 2;
-//		columnIndex = indexList.get(columnIndex);// -- make index start from 0
-//		try {
-//			rs.absolute(rowIndex);
-//			result = rs.getObject(columnIndex);
-//			
-//		} catch (SQLException e) {
-//			e.printStackTrace();
-//		}
-//		
-//		log.info("cRow: "+cRow+" cCol: "+cCol);
-//		log.info("rowIndex: "+ rowIndex+" columnIndex: "+ columnIndex);
-//		if(rowIndex - 1 == cRow && columnIndex - 1 == cCol)
-//		{
-//			log.info("cRow: "+cRow+" cCol: "+cCol);
-//			result = cValue;
-//		}
-
-//        
-//		
-		
+	
 		return result;
 	}
 
@@ -331,10 +243,8 @@ public void forGraphSQL(Map<String, List<String>>myHashPre, Map<String, List<Str
 		this.addColumn(string, array);
 	}
 	
-
-	
-//	public void getGraph(int level) {
-//		log.info(x);
-//	}
-	
+	public String getTableName() {
+		// TODO Auto-generated method stub
+		return this.tableName;
+	}
 }

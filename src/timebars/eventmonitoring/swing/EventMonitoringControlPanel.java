@@ -62,9 +62,9 @@ public class EventMonitoringControlPanel extends JPanel {
 	TimeBarViewer _viewer;
     JSlider _timeScaleSlider;
     JSlider _rowHeigthSlider;
-    JComboBox _sorterCombo;
-    JComboBox _filterCombo;
-    JComboBox _intervalFilterCombo;
+//    JComboBox _sorterCombo;
+//    JComboBox _filterCombo;
+//    JComboBox _intervalFilterCombo;
     TimeBarMarkerImpl _marker;
     JButton _freisetzenButton;
     JMenuBar menubar;
