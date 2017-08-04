@@ -1717,13 +1717,14 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		
 		int r = table.rowAtPoint(e.getPoint());		
 		if(r >=0) //handle mouse click outside of the table area
-		{
+		{			
 			int p = index/numCell;
 			int f = p*numCell;
+			log.info("p: "+p + " index: "+index + " numCell: "+numCell + " f: "+f);
 
 			for (int i = f; i <= index; i++)
 			{
-				if(!tableEmptyFlagList.get(i))
+				if(!tableEmptyFlagList.get(i) && r < numUps.get(i)) //tableEmptyFlagList.get(i) check if this table is empty, r < numUps.get(i) check if this table contain the row r+1
 					tables.get(i).setRowSelectionInterval(r, r);
 			}
 
@@ -1971,7 +1972,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 //		log.info("prevT size:" + nextT.size());
 		
 		
-		//structure
+		//structure tables
 		//e.g.,
 		// 	 		 orig     R_up1   R_up2    S_up3
         //row 1: 	 data 	  data    data     empty
@@ -1981,7 +1982,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		//			  F		   F       F        T
 		//            F        T       T        F
 		
-		//lStmtMap size 2   u1  u2
+		//lStmtMap size 2   u1  u2     list begin from 1 (row 1)
 		//  R ->  row 1:    1   0
 		//    ->  row 2:    0   1
 		//   			    u3
@@ -1999,24 +2000,25 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		int h = level/numCell;  //e.g.,  7/4 = 1 (click the table 7 (0-7), each table (one row) has 4 statements including the original one), or 3/4 = 0    
 		int hh = h*numCell;     //e.g.,  1*4 = 4 (which is the first table in second row (table 4 (0-7))), or 0*4 = 0
 		
-		for(int i = first,j=0; i <= level; i++)
+		log.info("first: "+first);
+		for(int i = first,j=-1; i <= level; i++)
 		{
 			int st = i - hh; //e.g., when click level = 7, second row last columns table, 7-4 = 3 the statement 3.(U3)
 			log.info("i: "+i + " tableEmptyFlagList size: "+tableEmptyFlagList.size());
+			log.info("row: "+row + " numUs: "+numUps.get(i)+ " table empty? "+ tableEmptyFlagList.get(i));
 			if(row <= numUps.get(i) && !tableEmptyFlagList.get(i))
 			{
 				boolean addU = false;
 				if(i != first)
 				{
-
+                    log.info("lStmtMap.table size: "+lStmtMap.get(tableName).size());
 					log.info("row: "+row+" i: "+i + " j: "+j);
 					log.info(" addU: "+lStmtMap.get(tableName).get(row).get(j));
-					if(lStmtMap.get(tableName).get(row).get(j).toString().equals("1"))
-						addU = true;
+
+					if(lStmtMap.get(tableName).get(row).get(j) != null)
+						if(lStmtMap.get(tableName).get(row).get(j).toString().equals("1"))
+							addU = true;
 					log.info("addU: "+addU);
-
-					j++;
-
 				}
 
 				if(i != first && addU)  //or st != 0
@@ -2046,7 +2048,14 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				nodes.add(tempNode);
 			}
 			
-		
+			log.info(" table empty? "+ tableEmptyFlagList.get(i));
+			if(!tableEmptyFlagList.get(i))
+			{
+				log.info("table not empty!! ");
+				j++;
+			}
+			log.info("after-> i: "+i + " j: "+j);
+					
 		}
 		
 		
