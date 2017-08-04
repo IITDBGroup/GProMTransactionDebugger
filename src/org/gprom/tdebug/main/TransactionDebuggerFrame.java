@@ -264,6 +264,17 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			heightMainScrollPanel = heightMainScrollPanel  + ADD;	
 		main_scrollPane.setBounds(DEBUGGER_LEFT_PADDING, 5, WIDTHFORMAINSCROLLPANE, heightMainScrollPanel + 70);
 		
+		//show the scroll bar when needed
+		main_scrollPane.setHorizontalScrollBarPolicy( 
+				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED); 
+		main_scrollPane.setVerticalScrollBarPolicy( 
+				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED); 
+//always show the scroll bar
+//		main_scrollPane.setHorizontalScrollBarPolicy( 
+//				JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS); 
+//		main_scrollPane.setVerticalScrollBarPolicy( 
+//				JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); 
+		
 //---------------in stmt_table_panel-------------- first line (original + each statement) ----------------------------------------
 		JPanel jp1 = new JPanel();
 		JTextArea ja1 = new JTextArea(5, 20);
@@ -742,7 +753,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				for(int t = 0, c = 0; t<distinctTableNames.size(); c = c + numCell, t++)
 				{
 
-
+					
 					log.info("numCell: "+numCell+" totalNumtables: "+totalNumtables+" tNameCount size: "+tNameCount.size());
 					log.info("cc: "+c);
 					String appendSql = "";
