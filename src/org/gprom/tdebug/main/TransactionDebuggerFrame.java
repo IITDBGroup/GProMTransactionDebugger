@@ -728,8 +728,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		if (e.getSource() == whatif_button)
 		{
 
-			if(lNewMap.size() > 0)
-			{
+//			if(lNewMap.size() > 0)
+//			{
 				clickWhatIf = true;  //user should click what-if button firstly, then user can click show affected or show all button
 				log.info("-----------------------------click what if button---------------------------");
 
@@ -737,8 +737,11 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				log.info("numCell: "+numCell+" totalNumtables: "+totalNumtables);
 				numUps.clear();
 				lStmtMap.clear();
+				
+
 				for(int t = 0, c = 0; t<distinctTableNames.size(); c = c + numCell, t++)
 				{
+
 
 					log.info("numCell: "+numCell+" totalNumtables: "+totalNumtables+" tNameCount size: "+tNameCount.size());
 					log.info("cc: "+c);
@@ -757,6 +760,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					String tableName = firstTable.getName();				
 					int colCount = firstTable.getColumnCount();	
 
+					if(lNewMap.size() > 0)
+					{
 					if(lNewMap.containsKey(tableName))
 					{
 
@@ -805,12 +810,13 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 									setClause = setClause + " , ";
 									wheClause = wheClause + " AND ";
 								}
-
 							}
 
 							appendSql = appendSql + tableName + " " + setClause + " " + wheClause + ";";
 							log.info("sql = "+ appendSql);				
 						}
+					}
+					}
 
 
 						int count = tableModels.size();
@@ -830,8 +836,11 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 								newSql = newSql + "OPTIONS (AS OF SCN " + scn_rc + ") "  + sqlTextAreas.get(i).getText() + "; ";
 							}
 
-							if(newMap1.size() != 0)
+							//if(newMap1.size() != 0)
+							 if(!appendSql.equals(""))
 								newSql = "OPTIONS (NO PROVENANCE AS OF SCN " + currentRow.getStartSCN() + ") " + appendSql + " " + newSql;
+							 else
+								 newSql = " " + newSql;
 						}
 						else
 						{
@@ -842,8 +851,11 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 								newSql = newSql + sqlTextAreas.get(i).getText() + "; ";
 							}
 
-							if(newMap1.size() != 0)
+							//if(newMap1.size() != 0)
+							 if(!appendSql.equals(""))
 								newSql = "OPTIONS (NO PROVENANCE) " + appendSql + " " + newSql;
+							 else
+								newSql = " " + newSql;
 						}
 						log.info("new sqls: "+newSql);
 
@@ -1000,8 +1012,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					}
 
 				}
-			}
-		}
+			//}
+		//}
 
 
 		if (e.getSource() == opt_internal_button)
