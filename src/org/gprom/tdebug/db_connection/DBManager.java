@@ -22,9 +22,9 @@ public class DBManager {
 	private static final String DRIVER = "oracle.jdbc.driver.OracleDriver";
 	
 	private static final String UNIFIED_QUERY = "SELECT * FROM UNIFIED_AUDIT_TRAIL "
-			+ "WHERE  EVENT_TIMESTAMP > to_date('07/20/2017', 'MM/DD/YYYY') "
+			+ "WHERE  EVENT_TIMESTAMP > to_date('07/29/2017', 'MM/DD/YYYY') "
 			+ "ORDER BY EVENT_TIMESTAMP ASC";
-	private static final String FGA_QUERY = "SELECT * FROM SYS.FGA_LOG$" + " WHERE  NTIMESTAMP# > to_date('07/29/2017', 'MM/DD/YYYY') ";
+	private static final String FGA_QUERY = "SELECT * FROM SYS.FGA_LOG$" + " WHERE  NTIMESTAMP# > to_date('07/29/2016', 'MM/DD/YYYY') ";
 	
 	/** the url to the database **/
 	private String url;

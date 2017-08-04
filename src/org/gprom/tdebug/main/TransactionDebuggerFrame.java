@@ -264,6 +264,17 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			heightMainScrollPanel = heightMainScrollPanel  + ADD;	
 		main_scrollPane.setBounds(DEBUGGER_LEFT_PADDING, 5, WIDTHFORMAINSCROLLPANE, heightMainScrollPanel + 70);
 		
+		//show the scroll bar when needed
+		main_scrollPane.setHorizontalScrollBarPolicy( 
+				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED); 
+		main_scrollPane.setVerticalScrollBarPolicy( 
+				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED); 
+//always show the scroll bar
+//		main_scrollPane.setHorizontalScrollBarPolicy( 
+//				JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS); 
+//		main_scrollPane.setVerticalScrollBarPolicy( 
+//				JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); 
+		
 //---------------in stmt_table_panel-------------- first line (original + each statement) ----------------------------------------
 		JPanel jp1 = new JPanel();
 		JTextArea ja1 = new JTextArea(5, 20);
@@ -728,8 +739,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		if (e.getSource() == whatif_button)
 		{
 
-			if(lNewMap.size() > 0)
-			{
+//			if(lNewMap.size() > 0)
+//			{
 				clickWhatIf = true;  //user should click what-if button firstly, then user can click show affected or show all button
 				log.info("-----------------------------click what if button---------------------------");
 
@@ -737,9 +748,12 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				log.info("numCell: "+numCell+" totalNumtables: "+totalNumtables);
 				numUps.clear();
 				lStmtMap.clear();
+				
+
 				for(int t = 0, c = 0; t<distinctTableNames.size(); c = c + numCell, t++)
 				{
 
+					
 					log.info("numCell: "+numCell+" totalNumtables: "+totalNumtables+" tNameCount size: "+tNameCount.size());
 					log.info("cc: "+c);
 					String appendSql = "";
@@ -757,6 +771,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					String tableName = firstTable.getName();				
 					int colCount = firstTable.getColumnCount();	
 
+					if(lNewMap.size() > 0)
+					{
 					if(lNewMap.containsKey(tableName))
 					{
 
@@ -805,12 +821,13 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 									setClause = setClause + " , ";
 									wheClause = wheClause + " AND ";
 								}
-
 							}
 
 							appendSql = appendSql + tableName + " " + setClause + " " + wheClause + ";";
 							log.info("sql = "+ appendSql);				
 						}
+					}
+					}
 
 
 						int count = tableModels.size();
@@ -830,8 +847,11 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 								newSql = newSql + "OPTIONS (AS OF SCN " + scn_rc + ") "  + sqlTextAreas.get(i).getText() + "; ";
 							}
 
-							if(newMap1.size() != 0)
+							//if(newMap1.size() != 0)
+							 if(!appendSql.equals(""))
 								newSql = "OPTIONS (NO PROVENANCE AS OF SCN " + currentRow.getStartSCN() + ") " + appendSql + " " + newSql;
+							 else
+								 newSql = " " + newSql;
 						}
 						else
 						{
@@ -842,8 +862,11 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 								newSql = newSql + sqlTextAreas.get(i).getText() + "; ";
 							}
 
-							if(newMap1.size() != 0)
+							//if(newMap1.size() != 0)
+							 if(!appendSql.equals(""))
 								newSql = "OPTIONS (NO PROVENANCE) " + appendSql + " " + newSql;
+							 else
+								newSql = " " + newSql;
 						}
 						log.info("new sqls: "+newSql);
 
@@ -1000,8 +1023,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					}
 
 				}
-			}
-		}
+			//}
+		//}
 
 
 		if (e.getSource() == opt_internal_button)
@@ -1717,13 +1740,14 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		
 		int r = table.rowAtPoint(e.getPoint());		
 		if(r >=0) //handle mouse click outside of the table area
-		{
+		{			
 			int p = index/numCell;
 			int f = p*numCell;
+			log.info("p: "+p + " index: "+index + " numCell: "+numCell + " f: "+f);
 
 			for (int i = f; i <= index; i++)
 			{
-				if(!tableEmptyFlagList.get(i))
+				if(!tableEmptyFlagList.get(i) && r < numUps.get(i)) //tableEmptyFlagList.get(i) check if this table is empty, r < numUps.get(i) check if this table contain the row r+1
 					tables.get(i).setRowSelectionInterval(r, r);
 			}
 
@@ -1971,7 +1995,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 //		log.info("prevT size:" + nextT.size());
 		
 		
-		//structure
+		//structure tables
 		//e.g.,
 		// 	 		 orig     R_up1   R_up2    S_up3
         //row 1: 	 data 	  data    data     empty
@@ -1981,7 +2005,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		//			  F		   F       F        T
 		//            F        T       T        F
 		
-		//lStmtMap size 2   u1  u2
+		//lStmtMap size 2   u1  u2     list begin from 1 (row 1)
 		//  R ->  row 1:    1   0
 		//    ->  row 2:    0   1
 		//   			    u3
@@ -1999,24 +2023,25 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		int h = level/numCell;  //e.g.,  7/4 = 1 (click the table 7 (0-7), each table (one row) has 4 statements including the original one), or 3/4 = 0    
 		int hh = h*numCell;     //e.g.,  1*4 = 4 (which is the first table in second row (table 4 (0-7))), or 0*4 = 0
 		
-		for(int i = first,j=0; i <= level; i++)
+		log.info("first: "+first);
+		for(int i = first,j=-1; i <= level; i++)
 		{
 			int st = i - hh; //e.g., when click level = 7, second row last columns table, 7-4 = 3 the statement 3.(U3)
 			log.info("i: "+i + " tableEmptyFlagList size: "+tableEmptyFlagList.size());
+			log.info("row: "+row + " numUs: "+numUps.get(i)+ " table empty? "+ tableEmptyFlagList.get(i));
 			if(row <= numUps.get(i) && !tableEmptyFlagList.get(i))
 			{
 				boolean addU = false;
 				if(i != first)
 				{
-
+                    log.info("lStmtMap.table size: "+lStmtMap.get(tableName).size());
 					log.info("row: "+row+" i: "+i + " j: "+j);
 					log.info(" addU: "+lStmtMap.get(tableName).get(row).get(j));
-					if(lStmtMap.get(tableName).get(row).get(j).toString().equals("1"))
-						addU = true;
+
+					if(lStmtMap.get(tableName).get(row).get(j) != null)
+						if(lStmtMap.get(tableName).get(row).get(j).toString().equals("1"))
+							addU = true;
 					log.info("addU: "+addU);
-
-					j++;
-
 				}
 
 				if(i != first && addU)  //or st != 0
@@ -2046,7 +2071,14 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				nodes.add(tempNode);
 			}
 			
-		
+			log.info(" table empty? "+ tableEmptyFlagList.get(i));
+			if(!tableEmptyFlagList.get(i))
+			{
+				log.info("table not empty!! ");
+				j++;
+			}
+			log.info("after-> i: "+i + " j: "+j);
+					
 		}
 		
 		
