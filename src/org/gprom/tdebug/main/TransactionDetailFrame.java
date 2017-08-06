@@ -102,7 +102,7 @@ public class TransactionDetailFrame extends JFrame implements ActionListener{
 		else
 			isoLevel = "SERIALIZABLE";
 		
-		ED = "3/4/16 12:26:36";
+		//ED = "3/4/16 12:26:36";
 		String str = "OS UserName: "+osName+"\nSessionId: "+sessionid + "\nStart Time: " + ST
 				+ "\nCommit Time: " + ED + "\nIsolation Level: " + isoLevel;
 		TextArea tf3 = new TextArea(5,20);

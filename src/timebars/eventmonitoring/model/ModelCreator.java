@@ -23,6 +23,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Random;
 
 import org.apache.log4j.Logger;
@@ -189,9 +190,16 @@ public class ModelCreator {
                 else if(stmtType.equals("8"))
                 	actionName = "DELETE";
 				
+                String lsql = "";
+                if(resultSet.getString("LSQL") == null)
+                	lsql = resultSet.getString("LSQLTEXT");
+                else
+                	lsql = resultSet.getString("LSQL");
 				
 				node = new TransactionNode(
-						resultSet.getString(resultSet.findColumn("LSQLTEXT")), 
+						//resultSet.getString(resultSet.findColumn("LSQLTEXT")), 
+						//resultSet.getString("LSQLTEXT"), 
+						lsql,
 						resultSet.getString("SCN"),
 						resultSet.getTimestamp("NTIMESTAMP#"),
 						resultSet.getString("OSUID"),
@@ -205,6 +213,11 @@ public class ModelCreator {
 			// TODO Auto-generated catch block
 			LoggerUtil.logException(e,log);
 		}
+		
+		//print nodes
+		for(int i=0; i<nodes.size(); i++)
+			log.info("TID: "+nodes.get(i).getTransactionId() + " Time: "+ nodes.get(i).getTimeStamp());
+		
 		
 		TransactionNode nodeCommit;
 		ArrayList<TransactionNode> nodesCommit = new ArrayList<TransactionNode>();
@@ -285,13 +298,19 @@ try {
 		
 				
 		/**audit_log_nodes*/
-		HashMap<String, ListNode> map = new HashMap<String, ListNode>();
+		HashMap<String, ListNode> map = new LinkedHashMap<String, ListNode>();
 		for(int k = 0; k < nodes.size(); k++){   //Insert Transaction nodes into the hashMap.
+			log.info("loop nodes: "+nodes.get(k).getTransactionId() + " Time: "+ nodes.get(k).getTimeStamp());
 			if(!map.containsKey(nodes.get(k).getTransactionId())){
 				map.put(nodes.get(k).getTransactionId(), new ListNode());
 			}
 			ListNode ln = map.get(nodes.get(k).getTransactionId());
 			ln.AddNode(nodes.get(k));	
+		}
+		
+		for (String key : map.keySet())
+		{
+			log.info("map tid: "+ key);
 		}
 		
 //		Iterator iter = map.entrySet().iterator();
@@ -315,7 +334,7 @@ try {
 						
 			log.info("begin: ");
 			if(map1.containsKey(key)){
-				log.info("True" + " TID is " + key);
+				log.info("True" + " TID is " + key );
 			}
 			else{
 				log.info("False" + " TID is "+ key);

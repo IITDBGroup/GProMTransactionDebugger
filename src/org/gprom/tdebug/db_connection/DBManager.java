@@ -24,8 +24,21 @@ public class DBManager {
 	private static final String UNIFIED_QUERY = "SELECT * FROM UNIFIED_AUDIT_TRAIL "
 			+ "WHERE  EVENT_TIMESTAMP > to_date('07/29/2017', 'MM/DD/YYYY') "
 			+ "ORDER BY EVENT_TIMESTAMP ASC";
-	private static final String FGA_QUERY = "SELECT * FROM SYS.FGA_LOG$" + " WHERE  NTIMESTAMP# > to_date('07/29/2016', 'MM/DD/YYYY') ";
-	
+	//private static final String FGA_QUERY = "SELECT * FROM SYS.FGA_LOG$" + " WHERE  NTIMESTAMP# > to_date('07/29/2016', 'MM/DD/YYYY') ";
+	private static final String FGA_QUERY = "SELECT STMT_TYPE, " 
+									//+"LSQLTEXT, "
+									//+ "CASE WHEN DBMS_LOB.GETLENGTH(LSQLTEXT) <= 4000 THEN DBMS_LOB.SUBSTR(LSQLTEXT,4000) ELSE LSQLTEXT END, "
+									+ "CASE WHEN DBMS_LOB.GETLENGTH(lsqltext) > 4000 THEN lsqltext ELSE NULL END AS LSQL,"
+									+ "CASE WHEN DBMS_LOB.GETLENGTH(lsqltext) <= 4000 THEN DBMS_LOB.SUBSTR(lsqltext,4000) ELSE NULL END AS LSQLTEXT, "
+									+ "SCN, "
+									+ "NTIMESTAMP#, "
+									+ "OSUID, "
+									+ "SESSIONID, "
+									+ "XID "
+									+ "FROM SYS.FGA_LOG$ " 									 
+									+ "WHERE  NTIMESTAMP# > to_date('07/20/2017', 'MM/DD/YYYY') "
+									+ "ORDER BY NTIMESTAMP# ASC";
+
 	/** the url to the database **/
 	private String url;
 	/** user name in database **/
@@ -99,7 +112,7 @@ public class DBManager {
 	    	ResultSet resultSet = null;
 	    	try {
 	    		statement = connection.createStatement();
-	    		query ="SELECT DISTINCT VERSIONS_STARTSCN, VERSIONS_XID, VERSIONS_STARTTIME FROM R VERSIONS BETWEEN SCN MINVALUE AND MAXVALUE ORDER BY VERSIONS_XID";//UNIFIED_AUDIT_TRAIL  SYS.fga_log$
+	    		query ="SELECT DISTINCT VERSIONS_STARTSCN, VERSIONS_XID, VERSIONS_STARTTIME FROM R VERSIONS BETWEEN SCN MINVALUE AND MAXVALUE ORDER BY VERSIONS_STARTTIME";//UNIFIED_AUDIT_TRAIL  SYS.fga_log$
 	    		resultSet = statement.executeQuery(query);
 	    	}catch (SQLException e) {
 	    		LoggerUtil.logException(e, log);
