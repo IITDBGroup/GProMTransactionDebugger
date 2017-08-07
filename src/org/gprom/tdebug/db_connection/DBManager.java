@@ -1,5 +1,6 @@
 package org.gprom.tdebug.db_connection;
 import java.sql.*;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -34,7 +35,8 @@ public class DBManager {
 									+ "NTIMESTAMP#, "
 									+ "OSUID, "
 									+ "SESSIONID, "
-									+ "XID "
+									+ "XID, "
+									+ "OBJ$NAME "
 									+ "FROM SYS.FGA_LOG$ " 									 
 									+ "WHERE  NTIMESTAMP# > to_date('07/20/2017', 'MM/DD/YYYY') "
 									+ "ORDER BY NTIMESTAMP# ASC";
@@ -105,18 +107,28 @@ public class DBManager {
 		return resultSet;
     }
     
-    public ResultSet getDataCommit() throws Exception {
+    public ResultSet getDataCommit(List<String> tables) throws Exception {
 	    	Connection connection = getConnection();
 	    	Statement statement = null;
-	    	String query;
+	    	String query = "";
+	    	String b = "SELECT DISTINCT VERSIONS_STARTSCN, VERSIONS_XID, VERSIONS_STARTTIME FROM ";
+	    	String e = " VERSIONS BETWEEN SCN MINVALUE AND MAXVALUE";
 	    	ResultSet resultSet = null;
 	    	try {
 	    		statement = connection.createStatement();
-	    		query ="SELECT DISTINCT VERSIONS_STARTSCN, VERSIONS_XID, VERSIONS_STARTTIME FROM R VERSIONS BETWEEN SCN MINVALUE AND MAXVALUE ORDER BY VERSIONS_STARTTIME";//UNIFIED_AUDIT_TRAIL  SYS.fga_log$
+	    		for(int i=0; i<tables.size(); i++)
+	    		{
+	    			if(i==0)
+	    				query = b + tables.get(i) + e;
+	    			else
+	    				query = query + " UNION " + b + tables.get(i) + e;
+	    		}
+	    		log.info("commit query: " + query);
+	    		//query ="SELECT DISTINCT VERSIONS_STARTSCN, VERSIONS_XID, VERSIONS_STARTTIME FROM R VERSIONS BETWEEN SCN MINVALUE AND MAXVALUE ORDER BY VERSIONS_STARTTIME";//UNIFIED_AUDIT_TRAIL  SYS.fga_log$
 	    		resultSet = statement.executeQuery(query);
-	    	}catch (SQLException e) {
-	    		LoggerUtil.logException(e, log);
-	    		throw(e);
+	    	}catch (SQLException e1) {
+	    		LoggerUtil.logException(e1, log);
+	    		throw(e1);
 	    	}
 	    	return resultSet;
     }

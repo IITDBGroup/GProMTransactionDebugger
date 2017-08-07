@@ -24,6 +24,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Random;
 
 import org.apache.log4j.Logger;
@@ -52,6 +53,8 @@ public class ModelCreator {
 	static Logger log = Logger.getLogger(ModelCreator.class); 
 	
 	static Random _random = new Random(12345);
+	
+	static List<String> tables = new ArrayList<String>();
 
 	public static HierarchicalTimeBarModel createHierarchicalModel() {
 
@@ -127,7 +130,7 @@ public class ModelCreator {
 		ResultSet resultSetIsoLevel = null;
 		try {
 			resultSet = DBManager.getInstance().getData();
-			resultSetCommit = DBManager.getInstance().getDataCommit();
+			//resultSetCommit = DBManager.getInstance().getDataCommit();
 			resultSetIsoLevel = DBManager.getInstance().getIsolationLevel();
 		}
 		catch (Exception e1) {
@@ -178,6 +181,12 @@ public class ModelCreator {
 //						resultSet.getString("TRANSACTION_ID"),
 //						resultSet.getString("ACTION_NAME"));
 
+				//get table name
+				String tableName = resultSet.getString("OBJ$NAME");
+				if(!tables.contains(tableName))
+					tables.add(tableName);
+				
+				
 				//used for SYS.FGA_LOG$
 				String stmtType = resultSet.getString("STMT_TYPE");
 				String actionName = null;
@@ -207,6 +216,7 @@ public class ModelCreator {
 						resultSet.getString("XID"),
 						actionName);
 				
+				
 				nodes.add(node);
 			}
 		} catch (SQLException e) {
@@ -214,9 +224,20 @@ public class ModelCreator {
 			LoggerUtil.logException(e,log);
 		}
 		
+		//print table name
+		for(int i=0; i<tables.size(); i++)
+			log.info("Table: " + tables.get(i));
+		
 		//print nodes
 		for(int i=0; i<nodes.size(); i++)
 			log.info("TID: "+nodes.get(i).getTransactionId() + " Time: "+ nodes.get(i).getTimeStamp());
+		
+		try {
+			resultSetCommit = DBManager.getInstance().getDataCommit(tables);
+		} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		
 		
 		TransactionNode nodeCommit;
