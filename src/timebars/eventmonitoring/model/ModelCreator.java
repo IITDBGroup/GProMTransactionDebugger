@@ -210,7 +210,7 @@ public class ModelCreator {
 						//resultSet.getString("LSQLTEXT"), 
 						lsql,
 						resultSet.getString("SCN"),
-						resultSet.getTimestamp("NTIMESTAMP#"),
+						resultSet.getTimestamp("SCNTIME"),
 						resultSet.getString("OSUID"),
 						resultSet.getString("SESSIONID"), 
 						resultSet.getString("XID"),
