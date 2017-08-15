@@ -39,7 +39,7 @@ public class DBManager {
 									+ "XID, "
 									+ "OBJ$NAME "
 									+ "FROM SYS.FGA_LOG$ " 									 
-									+ "WHERE  NTIMESTAMP# > to_date('06/20/2017', 'MM/DD/YYYY') "
+									+ "WHERE  NTIMESTAMP# > to_date('07/29/2017', 'MM/DD/YYYY') "
 									+ "ORDER BY NTIMESTAMP# ASC";
 
 	/** the url to the database **/

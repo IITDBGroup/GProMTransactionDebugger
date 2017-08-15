@@ -149,6 +149,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	private List<Boolean> tableEmptyFlagList = new ArrayList<Boolean>();
 	private Map<String, Integer> tNameCount = new HashMap<String, Integer>();
 	
+	private Map<String,List<Integer>> tableDataTypeListMap = new HashMap<String,List<Integer>>();
+	
 	private static int totalNumtables = -1;
 
 		
@@ -249,6 +251,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		// } catch (IOException e1) {
 		// e1.printStackTrace();
 		// }
+		log.info("begin setup");
 		
 		totalNumtables = (currentRow.getIntervals().size() + 1) * distinctTableNames.size();
 		log.info("Total number of tables is : " + totalNumtables + " Each row contains the number of tables : " + totalNumtables/tableNames.size()
@@ -349,13 +352,16 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 			List<Map<Integer, Object>> rsList = null;
 			List<String> rsNameList = new ArrayList<String>();
+			List<Integer> rsTypeList = new ArrayList<Integer>();
 			rsNameList.add(" ");
+			rsTypeList.add(0);
 			try {
 				rsList = convertList(rs);		
 				for(int i=1; i< rs.getMetaData().getColumnCount()+1; i++)
 				{
 					rsNameList.add(rs.getMetaData().getColumnName(i));	
-					log.info("name: "+rs.getMetaData().getColumnName(i));
+					rsTypeList.add(rs.getMetaData().getColumnType(i));	
+					log.info("name: "+rs.getMetaData().getColumnName(i)+" type: "+ rs.getMetaData().getColumnType(i));
 				}
 			} catch (SQLException e2) {
 				// TODO Auto-generated catch block
@@ -424,14 +430,15 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			{
 				// set up indexList
 				List<Integer> indexList = new ArrayList<Integer>();
+				List<Integer> dataTypeList = new ArrayList<Integer>();
 				String currentTableName = null;
-
 				for (int j = 1; j < rsNameList.size(); j++)
 				{
 					if (i == 0 && Pattern.matches("PROV_(?!U|query).*", rsNameList.get(j)))
 					{
-						log.info("i=0, j = "+j);
+						log.info("i=0, j = "+j + " name: " + rsNameList.get(j) +" type: "+ rsTypeList.get(j));
 						indexList.add(j);
+						dataTypeList.add(rsTypeList.get(j));
 					} 
 					else if (Pattern.matches("PROV_U" + i + "__.*", rsNameList.get(j)))
 					{
@@ -439,7 +446,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 						indexList.add(j);
 					}		
 				}
-
+				if(i == 0)
+					tableDataTypeListMap.put(ncEntry.getKey(), dataTypeList);
 				// tablename
 				currentTableName = ncEntry.getKey();
 
@@ -798,6 +806,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 						Map<Integer, List<Object>> newMap1 = lNewMap.get(tableName);
 						Map<Integer, List<Object>> oldMap1 = lOldMap.get(tableName);
+						List<Integer> dataTypeList = tableDataTypeListMap.get(tableName);
 						for (Entry<Integer, List<Object>> entry : newMap1.entrySet()) //how many update in result sql (number of tuples were updated)
 						{
 							int k = entry.getKey();
@@ -813,9 +822,16 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 							for(int i=0; i<newV.size(); i++)
 							{
-								setClause = setClause + colNames.get(i) + " = " + newV.get(i);
-								wheClause = wheClause + colNames.get(i) + " = " + oldV.get(i);
-
+								if(dataTypeList.get(i) == 12)
+								{
+									setClause = setClause + colNames.get(i) + " = '" + newV.get(i) + "'";
+									wheClause = wheClause + colNames.get(i) + " = '" + oldV.get(i) + "'";
+								}
+								else
+								{
+									setClause = setClause + colNames.get(i) + " = " + newV.get(i);
+									wheClause = wheClause + colNames.get(i) + " = " + oldV.get(i);
+								}
 								if(i+1 != newV.size())
 								{
 									setClause = setClause + " , ";
