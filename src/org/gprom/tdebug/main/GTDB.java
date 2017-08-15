@@ -114,8 +114,7 @@ import de.jaret.util.ui.timebars.swing.renderer.DefaultTitleRenderer;
 /**
  * GProM Transaction Debugger main entry point.
  * 
- * @author Peter Kliem
- * @version $Id: EventMonitoringExample.java 1073 2010-11-22 21:25:33Z kliem $
+ * @author Xing Niu
  */
 public class GTDB {
 	
