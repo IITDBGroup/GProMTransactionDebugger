@@ -128,8 +128,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	
 	//store all old values of first table, when table data changed get matched old value from here 
 	private Map<Integer, List<Object>> old = new HashMap<Integer, List<Object>>();
-	private Map<Integer, List<Object>> oldMap = new HashMap<Integer, List<Object>>();
-	private Map<Integer, List<Object>> newMap = new HashMap<Integer, List<Object>>();
+//	private Map<Integer, List<Object>> oldMap = new HashMap<Integer, List<Object>>();
+//	private Map<Integer, List<Object>> newMap = new HashMap<Integer, List<Object>>();
 	
 	//store each list in a list, each element is for different table
 //	private List<Map<Integer, List<Object>>> lOld = new ArrayList<Map<Integer, List<Object>>>();
@@ -148,6 +148,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	private List<String> tableNames = new ArrayList<String>();
 	private List<Boolean> tableEmptyFlagList = new ArrayList<Boolean>();
 	private Map<String, Integer> tNameCount = new HashMap<String, Integer>();
+	
+	private Map<String,List<Integer>> tableDataTypeListMap = new HashMap<String,List<Integer>>();
 	
 	private static int totalNumtables = -1;
 
@@ -237,6 +239,52 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
         
         lStmtMap.put(tableName, stmtMap);
 	}
+	
+	
+	private void changeFirstTableWhenReenactRC(String currentTableName, DebuggerTableModel tm)
+	{
+		log.info("begin changeFirstTableWhenReenactRC");
+		//if in read commit level, need to change the first table's value to same with followings
+		Map<Integer, List<Object>> oldMap = lOldMap.get(currentTableName);
+		Map<Integer, List<Object>> newMap = lNewMap.get(currentTableName);	
+		if(currentRow.getIsoLevel().equals("1"))
+		{
+			for(int r=0; r<tm.getRowCount(); r++)
+			{
+				boolean flag = true;
+				for (Entry<Integer, List<Object>> ol : oldMap.entrySet()) 
+				{
+					flag = true;
+					int ko = ol.getKey();
+					List<Object> vo = ol.getValue();
+					for(int ob=0; ob<vo.size(); ob++)
+					{
+						log.info("oldMap: "+vo.get(ob));
+						log.info("tm: "+tm.getValueAt(r, ob+2));
+						log.info("row: " + r + " col: "+ ob);
+
+						if(!vo.get(ob).equals(tm.getValueAt(r, ob+2)))
+						{
+							flag = false;
+							break;
+						}
+					}
+
+					if(flag == true)
+					{						
+						for(int c1=2; c1<tm.getColumnCount(); c1++)
+						{
+							List<Object> vn = newMap.get(ko);
+							tm.setValueAt(vn.get(c1-2), r, c1);
+						}
+						log.info("find %s (first value) " + vo.get(0) + " at row " + r);
+						break;
+					}									
+
+				}
+			}
+		}
+	}
 
 	private void setup()
 	{
@@ -249,6 +297,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		// } catch (IOException e1) {
 		// e1.printStackTrace();
 		// }
+		log.info("begin setup");
 		
 		totalNumtables = (currentRow.getIntervals().size() + 1) * distinctTableNames.size();
 		log.info("Total number of tables is : " + totalNumtables + " Each row contains the number of tables : " + totalNumtables/tableNames.size()
@@ -349,13 +398,16 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 			List<Map<Integer, Object>> rsList = null;
 			List<String> rsNameList = new ArrayList<String>();
+			List<Integer> rsTypeList = new ArrayList<Integer>();
 			rsNameList.add(" ");
+			rsTypeList.add(0);
 			try {
 				rsList = convertList(rs);		
 				for(int i=1; i< rs.getMetaData().getColumnCount()+1; i++)
 				{
 					rsNameList.add(rs.getMetaData().getColumnName(i));	
-					log.info("name: "+rs.getMetaData().getColumnName(i));
+					rsTypeList.add(rs.getMetaData().getColumnType(i));	
+					log.info("name: "+rs.getMetaData().getColumnName(i)+" type: "+ rs.getMetaData().getColumnType(i));
 				}
 			} catch (SQLException e2) {
 				// TODO Auto-generated catch block
@@ -424,14 +476,15 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			{
 				// set up indexList
 				List<Integer> indexList = new ArrayList<Integer>();
+				List<Integer> dataTypeList = new ArrayList<Integer>();
 				String currentTableName = null;
-
 				for (int j = 1; j < rsNameList.size(); j++)
 				{
 					if (i == 0 && Pattern.matches("PROV_(?!U|query).*", rsNameList.get(j)))
 					{
-						log.info("i=0, j = "+j);
+						log.info("i=0, j = "+j + " name: " + rsNameList.get(j) +" type: "+ rsTypeList.get(j));
 						indexList.add(j);
+						dataTypeList.add(rsTypeList.get(j));
 					} 
 					else if (Pattern.matches("PROV_U" + i + "__.*", rsNameList.get(j)))
 					{
@@ -439,7 +492,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 						indexList.add(j);
 					}		
 				}
-
+				if(i == 0)
+					tableDataTypeListMap.put(ncEntry.getKey(), dataTypeList);
 				// tablename
 				currentTableName = ncEntry.getKey();
 
@@ -794,10 +848,11 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 							}
 						}
 
-						log.info("new map size: "+ newMap.size());
+						//log.info("new map size: "+ newMap.size());
 
 						Map<Integer, List<Object>> newMap1 = lNewMap.get(tableName);
 						Map<Integer, List<Object>> oldMap1 = lOldMap.get(tableName);
+						List<Integer> dataTypeList = tableDataTypeListMap.get(tableName);
 						for (Entry<Integer, List<Object>> entry : newMap1.entrySet()) //how many update in result sql (number of tuples were updated)
 						{
 							int k = entry.getKey();
@@ -806,23 +861,34 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 							log.info("new list size: "+ newV.size());
 							log.info("old list size: "+ oldV.size());
 
-							appendSql = "UPDATE ";
-							//				String tableName = "";
+							
+							String updateClause = "UPDATE ";
+							if(currentRow.getIsoLevel().equals("1")) //read commit
+								appendSql = appendSql + "OPTIONS (NO PROVENANCE AS OF SCN " + currentRow.getStartSCN() + ") " + updateClause;
+							else
+								appendSql = appendSql + " OPTIONS (NO PROVENANCE) " + updateClause;
+							//appendSql = "UPDATE ";
 							String setClause = "SET ";
 							String wheClause = "WHERE ";
 
 							for(int i=0; i<newV.size(); i++)
 							{
-								setClause = setClause + colNames.get(i) + " = " + newV.get(i);
-								wheClause = wheClause + colNames.get(i) + " = " + oldV.get(i);
-
+								if(dataTypeList.get(i) == 12)
+								{
+									setClause = setClause + colNames.get(i) + " = '" + newV.get(i) + "'";
+									wheClause = wheClause + colNames.get(i) + " = '" + oldV.get(i) + "'";
+								}
+								else
+								{
+									setClause = setClause + colNames.get(i) + " = " + newV.get(i);
+									wheClause = wheClause + colNames.get(i) + " = " + oldV.get(i);
+								}
 								if(i+1 != newV.size())
 								{
 									setClause = setClause + " , ";
 									wheClause = wheClause + " AND ";
 								}
 							}
-
 							appendSql = appendSql + tableName + " " + setClause + " " + wheClause + ";";
 							log.info("sql = "+ appendSql);				
 						}
@@ -838,7 +904,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 						String newSql = "";
 
-						if(currentRow.getIsoLevel().equals("1"))
+						if(currentRow.getIsoLevel().equals("1")) //read commit
 						{
 							for(int i=0; i<countSqls; i++)
 							{
@@ -849,11 +915,14 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 							//if(newMap1.size() != 0)
 							 if(!appendSql.equals(""))
-								newSql = "OPTIONS (NO PROVENANCE AS OF SCN " + currentRow.getStartSCN() + ") " + appendSql + " " + newSql;
+							 {
+								//newSql = "OPTIONS (NO PROVENANCE AS OF SCN " + currentRow.getStartSCN() + ") " + appendSql + " " + newSql;
+								newSql =  appendSql + " " + newSql;
+							 }
 							 else
 								 newSql = " " + newSql;
 						}
-						else
+						else  //serializable
 						{
 							for(int i=0; i<countSqls; i++)
 							{
@@ -864,7 +933,10 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 							//if(newMap1.size() != 0)
 							 if(!appendSql.equals(""))
-								newSql = "OPTIONS (NO PROVENANCE) " + appendSql + " " + newSql;
+							 {
+								//newSql = "OPTIONS (NO PROVENANCE) " + appendSql + " " + newSql;
+								 newSql = appendSql + " " + newSql;
+							 }
 							 else
 								newSql = " " + newSql;
 						}
@@ -1018,6 +1090,9 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 							DebuggerTableModel tm = new DebuggerTableModel(rsList, indexList, i, currentRow, numUp, rsNameList, showTableFlag, currentTableName);	
 							//DebuggerTableModel tm = new DebuggerTableModel(rsList, indexList, i, currentRow, numUp, row1, col1, s1, rsNameList, showTableFlag, currentTableName);
+							
+							//if in read commit level, need to change the first table's value to same with followings
+							changeFirstTableWhenReenactRC(currentTableName,tm);
 							jtb.setModel(tm);
 						}
 					}
@@ -1375,6 +1450,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 //								showTableFlag = true;
 						
 					DebuggerTableModel tm = new DebuggerTableModel(rsList, indexList, i, currentRow, numUp, rsNameList, showTableFlag, currentTableName);	
+					changeFirstTableWhenReenactRC(currentTableName,tm);
 					jtb.setModel(tm);
 				}
 				
@@ -1556,6 +1632,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 							//								showTableFlag = true;
 
 							DebuggerTableModel tm = new DebuggerTableModel(rsList, indexList, i, currentRow, numUp, rsNameList, showTableFlag, currentTableName);	
+							changeFirstTableWhenReenactRC(currentTableName,tm);
 							jtb.setModel(tm);
 						}
 				}
@@ -1668,7 +1745,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
         		else      			
         		{
         			Map<Integer, List<Object>> oldMap1 = lOldMap.get(tName);
-            		if(!oldMap.containsKey(row))
+            		if(!oldMap1.containsKey(row))
             		{
             			Map<Integer, List<Object>> old = lOld.get(tName);
             			List l = old.get(row);    

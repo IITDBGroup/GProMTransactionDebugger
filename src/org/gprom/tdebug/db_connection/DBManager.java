@@ -32,13 +32,14 @@ public class DBManager {
 									+ "CASE WHEN DBMS_LOB.GETLENGTH(lsqltext) > 4000 THEN lsqltext ELSE NULL END AS LSQL,"
 									+ "CASE WHEN DBMS_LOB.GETLENGTH(lsqltext) <= 4000 THEN DBMS_LOB.SUBSTR(lsqltext,4000) ELSE NULL END AS LSQLTEXT, "
 									+ "SCN, "
-									+ "NTIMESTAMP#, "
+									//+ "NTIMESTAMP#, "
+									+ "SCN_TO_TIMESTAMP(SCN) AS SCNTIME, "
 									+ "OSUID, "
 									+ "SESSIONID, "
 									+ "XID, "
 									+ "OBJ$NAME "
 									+ "FROM SYS.FGA_LOG$ " 									 
-									+ "WHERE  NTIMESTAMP# > to_date('07/20/2017', 'MM/DD/YYYY') "
+									+ "WHERE  NTIMESTAMP# > to_date('07/29/2017', 'MM/DD/YYYY') "
 									+ "ORDER BY NTIMESTAMP# ASC";
 
 	/** the url to the database **/
