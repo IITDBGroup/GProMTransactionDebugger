@@ -37,16 +37,29 @@ public class DebuggerTableModel extends AbstractTableModel {
 
 	List<Map<Integer, Object>> rsList;
 	List<String> rsNameList = new ArrayList<String>();
+	List<String> rsRealNameList = new ArrayList<String>();
 	private boolean showTableFlag;
 	private String tableName = "";
+	private boolean rsEmptyFlag;
 	
-	public DebuggerTableModel(List<Map<Integer, Object>> rsList, List<Integer> indexList, int stmtIndex, EventTimeBarRow currentRow, int numRows, List<String> rsNameList,boolean showTableFlag, String tableName) {
+	public DebuggerTableModel(List<Map<Integer, Object>> rsList, 
+							  List<Integer> indexList, 
+							  int stmtIndex, 
+							  EventTimeBarRow currentRow, 
+							  int numRows, 
+							  List<String> rsNameList, 
+							  List<String> rsRealNameList,
+							  boolean showTableFlag,
+							  boolean rsEmptyFlag,
+							  String tableName) {
 		super();
 
 		this.indexList = indexList;
 		this.rsList = rsList;
 		this.rsNameList = rsNameList;
+		this.rsRealNameList = rsRealNameList;
 		this.showTableFlag = showTableFlag;
+		this.rsEmptyFlag = rsEmptyFlag;
 		this.tableName = tableName;
 		
 		this.stmtIndex = stmtIndex;
@@ -54,14 +67,27 @@ public class DebuggerTableModel extends AbstractTableModel {
 		this.numRows = numRows;
 	}
 	
-	public DebuggerTableModel(List<Map<Integer, Object>> rsList, List<Integer> indexList, int stmtIndex, EventTimeBarRow currentRow, int numRows,
-			int cRow, int cCol, Object cValue, List<String> rsNameList, boolean showTableFlag, String tableName) {
+	public DebuggerTableModel(List<Map<Integer, Object>> rsList, 
+							  List<Integer> indexList, 
+							  int stmtIndex, 
+							  EventTimeBarRow currentRow, 
+							  int numRows,
+							  int cRow, 
+							  int cCol, 
+							  Object cValue, 
+							  List<String> rsNameList,
+							  List<String> rsRealNameList,
+							  boolean showTableFlag, 
+							  boolean rsEmptyFlag,
+							  String tableName) {
 		super();
 
 		this.indexList = indexList;
 		this.rsList = rsList;
 		this.rsNameList = rsNameList;
+		this.rsRealNameList = rsRealNameList;
 		this.showTableFlag = showTableFlag;
+		this.rsEmptyFlag = rsEmptyFlag;
 		this.tableName = tableName;
 		
 		this.stmtIndex = stmtIndex;
@@ -112,6 +138,34 @@ public class DebuggerTableModel extends AbstractTableModel {
 	
     public String getColumnName(int col) {
     	
+    	if((numRows == 0 || showTableFlag) && !rsEmptyFlag)
+    	//if(numRows == 0 || showTableFlag)
+    	{
+    		if (col == 0) 
+    			return "";
+    		else if (col == 1)
+    			return "";
+    	}
+    	else
+    	{
+    		if (col == 0) 
+    			return "Tuple Index";        		
+    		else if (col == 1)
+    			return "TransID";
+    	}
+
+    	col = col - 2; 
+    	log.info("col = "+(col) + " List index = "+indexList.get(col) 
+    	+ "Prov Name = " + rsNameList.get(indexList.get(col))
+    	+ "Real Name = " + rsRealNameList.get(indexList.get(col)));
+
+    	//return rsNameList.get(indexList.get(col));
+    	return rsRealNameList.get(indexList.get(col));
+    }
+    
+    
+    public String getProvColumnName(int col) {
+    	
     	if(numRows == 0 || showTableFlag)
     	{
     		if (col == 0) 
@@ -128,7 +182,9 @@ public class DebuggerTableModel extends AbstractTableModel {
     	}
 
     	col = col - 2; 
-    	log.info("col = "+(col) + " List index = "+indexList.get(col) + " Name = " + rsNameList.get(indexList.get(col)));
+    	log.info("col = "+(col) + " List index = "+indexList.get(col) 
+    	+ "Prov Name = " + rsNameList.get(indexList.get(col))
+    	+ "Real Name = " + rsRealNameList.get(indexList.get(col)));
 
     	return rsNameList.get(indexList.get(col));
     }
