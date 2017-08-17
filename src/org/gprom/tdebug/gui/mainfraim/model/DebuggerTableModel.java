@@ -40,6 +40,7 @@ public class DebuggerTableModel extends AbstractTableModel {
 	List<String> rsRealNameList = new ArrayList<String>();
 	private boolean showTableFlag;
 	private String tableName = "";
+	private boolean rsEmptyFlag;
 	
 	public DebuggerTableModel(List<Map<Integer, Object>> rsList, 
 							  List<Integer> indexList, 
@@ -48,7 +49,8 @@ public class DebuggerTableModel extends AbstractTableModel {
 							  int numRows, 
 							  List<String> rsNameList, 
 							  List<String> rsRealNameList,
-							  boolean showTableFlag, 
+							  boolean showTableFlag,
+							  boolean rsEmptyFlag,
 							  String tableName) {
 		super();
 
@@ -57,6 +59,7 @@ public class DebuggerTableModel extends AbstractTableModel {
 		this.rsNameList = rsNameList;
 		this.rsRealNameList = rsRealNameList;
 		this.showTableFlag = showTableFlag;
+		this.rsEmptyFlag = rsEmptyFlag;
 		this.tableName = tableName;
 		
 		this.stmtIndex = stmtIndex;
@@ -75,6 +78,7 @@ public class DebuggerTableModel extends AbstractTableModel {
 							  List<String> rsNameList,
 							  List<String> rsRealNameList,
 							  boolean showTableFlag, 
+							  boolean rsEmptyFlag,
 							  String tableName) {
 		super();
 
@@ -83,6 +87,7 @@ public class DebuggerTableModel extends AbstractTableModel {
 		this.rsNameList = rsNameList;
 		this.rsRealNameList = rsRealNameList;
 		this.showTableFlag = showTableFlag;
+		this.rsEmptyFlag = rsEmptyFlag;
 		this.tableName = tableName;
 		
 		this.stmtIndex = stmtIndex;
@@ -133,7 +138,8 @@ public class DebuggerTableModel extends AbstractTableModel {
 	
     public String getColumnName(int col) {
     	
-    	if(numRows == 0 || showTableFlag)
+    	if((numRows == 0 || showTableFlag) && !rsEmptyFlag)
+    	//if(numRows == 0 || showTableFlag)
     	{
     		if (col == 0) 
     			return "";

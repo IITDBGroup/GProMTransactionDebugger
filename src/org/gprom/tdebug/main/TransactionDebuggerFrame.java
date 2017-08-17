@@ -344,7 +344,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED); 
 		main_scrollPane.setVerticalScrollBarPolicy( 
 				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED); 
-//always show the scroll bar
+//		always show the scroll bar
 //		main_scrollPane.setHorizontalScrollBarPolicy( 
 //				JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS); 
 //		main_scrollPane.setVerticalScrollBarPolicy( 
@@ -446,11 +446,23 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			for(int i=0; i<rsRealNameList.size(); i++)
 				log.info("real name: "+rsRealNameList.get(i));
 			
+			
 			//get how many tuples in the initial table
 			//num of update if update based on diff column
 			int numUp = 0;
 			int pos = -1;
 			String nameKey = "";
+
+			//check if result set is empty
+			boolean rsEmptyFlag = false;
+			try {
+				rs.beforeFirst();
+				if(!rs.next())
+					rsEmptyFlag = true;
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			
 			//get how many not null tuples in this table (numUp)
 			try {
@@ -502,7 +514,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			log.info("current row size : "+currentRow.getIntervals().size());
 			//for (int i = 0; i < currentRow.getIntervals().size() + 1; i++)
 			//for(int i=0; i<ncEntry.getValue()+1;i++)
-			for(int i=0; i<tableNames.size() + 1;i++)
+			for(int i=0; i<tableNames.size() + 1;i++) //tableNames contain duplicate table name
 			{
 				// set up indexList
 				List<Integer> indexList = new ArrayList<Integer>();
@@ -510,6 +522,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				String currentTableName = null;
 				for (int j = 1; j < rsNameList.size(); j++)
 				{
+					//if (i == 0 && Pattern.matches("PROV_(?!U|query|"+ tableNames.get(1).toUpperCase() +").*", rsNameList.get(j)))
 					if (i == 0 && Pattern.matches("PROV_(?!U|query).*", rsNameList.get(j)))
 					{
 						log.info("i=0, j = "+j + " name: " + rsNameList.get(j) +" type: "+ rsTypeList.get(j));
@@ -545,7 +558,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 						showTableFlag = true;
 				
 				tableEmptyFlagList.add(showTableFlag);
-				DebuggerTableModel tm = new DebuggerTableModel(rsList, indexList, i, currentRow, numUp, rsNameList, rsRealNameList, showTableFlag, currentTableName);
+				DebuggerTableModel tm = new DebuggerTableModel(rsList, indexList, i, currentRow, numUp, rsNameList, rsRealNameList, showTableFlag, rsEmptyFlag, currentTableName);
 				tableModels.add(tm);
 				JTable table = new JTable(tm);
 				table.setName(currentTableName);
@@ -1024,6 +1037,18 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 						for(int i=0; i<rsRealNameList.size(); i++)
 							log.info("real name: "+rsRealNameList.get(i));
 
+						
+						//check if result set is empty
+						boolean rsEmptyFlag = false;
+						try {
+							rs.beforeFirst();
+							if(!rs.next())
+								rsEmptyFlag = true;
+						} catch (SQLException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+						
 						//get how many tuples in the initial table
 						//num of update if update based on diff column
 						int numUp = 0;
@@ -1126,7 +1151,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 							//						if(!currentTableName.equals(tableNames.get(i-1)))
 							//							showTableFlag = true;
 
-							DebuggerTableModel tm = new DebuggerTableModel(rsList, indexList, i, currentRow, numUp, rsNameList,rsRealNameList, showTableFlag, currentTableName);	
+							DebuggerTableModel tm = new DebuggerTableModel(rsList, indexList, i, currentRow, numUp, rsNameList,rsRealNameList, showTableFlag,rsEmptyFlag, currentTableName);	
 							//DebuggerTableModel tm = new DebuggerTableModel(rsList, indexList, i, currentRow, numUp, row1, col1, s1, rsNameList, showTableFlag, currentTableName);
 							
 							//if in read commit level, need to change the first table's value to same with followings
@@ -1214,12 +1239,23 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				for(int i=0; i<rsRealNameList.size(); i++)
 					log.info("real name: "+rsRealNameList.get(i));
 
+				//check if the result set is empty
+				boolean rsEmptyFlag = false;
+				try {
+					rs.beforeFirst();
+					if(!rs.next())
+						rsEmptyFlag = true;
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
 				//get how many tuples in the initial table
 				//num of update if update based on diff column
 				int numUp = 0;
 				int pos = -1;
 				String nameKey = "";
-
+				
 				//get how many not null tuples in this table (numUp)
 				try {
 					//log.info("test: list size "+rsListS.size());
@@ -1316,7 +1352,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 							showTableFlag = true;
 
 					//tableEmptyFlagList.add(showTableFlag);
-					DebuggerTableModel tm = new DebuggerTableModel(rsList, indexList, i, currentRow, numUp, rsNameList, rsRealNameList, showTableFlag, currentTableName);
+					DebuggerTableModel tm = new DebuggerTableModel(rsList, indexList, i, currentRow, numUp, rsNameList, rsRealNameList, showTableFlag, rsEmptyFlag, currentTableName);
 					jtb.setModel(tm);
 				}
 
@@ -1401,6 +1437,19 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					for(int i=0; i<rsRealNameList.size(); i++)
 						log.info("real name: "+rsRealNameList.get(i));
 				
+					
+					
+					//check if the result set is empty
+					boolean rsEmptyFlag = false;
+					try {
+						rs.beforeFirst();
+						if(!rs.next())
+							rsEmptyFlag = true;
+					} catch (SQLException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					
 					//get how many tuples in the initial table
 					//num of update if update based on diff column
 					int numUp = 0;
@@ -1502,7 +1551,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 //							if(!currentTableName.equals(tableNames.get(i-1)))
 //								showTableFlag = true;
 						
-					DebuggerTableModel tm = new DebuggerTableModel(rsList, indexList, i, currentRow, numUp, rsNameList, rsRealNameList,  showTableFlag, currentTableName);	
+					DebuggerTableModel tm = new DebuggerTableModel(rsList, indexList, i, currentRow, numUp, rsNameList, rsRealNameList,  showTableFlag, rsEmptyFlag, currentTableName);	
 					if(!lOldMap.isEmpty() && !lNewMap.isEmpty())
 						changeFirstTableWhenReenactRC(currentTableName,tm);
 					jtb.setModel(tm);
@@ -1592,6 +1641,18 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 						for(int i=0; i<rsRealNameList.size(); i++)
 							log.info("real name: "+rsRealNameList.get(i));
 
+						
+						//check if the result set is empty
+						boolean rsEmptyFlag = false;
+						try {
+							rs.beforeFirst();
+							if(!rs.next())
+								rsEmptyFlag = true;
+						} catch (SQLException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+						
 						//get how many tuples in the initial table
 						//num of update if update based on diff column
 						int numUp = 0;
@@ -1692,7 +1753,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 							//							if(!currentTableName.equals(tableNames.get(i-1)))
 							//								showTableFlag = true;
 
-							DebuggerTableModel tm = new DebuggerTableModel(rsList, indexList, i, currentRow, numUp, rsNameList, rsRealNameList, showTableFlag, currentTableName);	
+							DebuggerTableModel tm = new DebuggerTableModel(rsList, indexList, i, currentRow, numUp, rsNameList, rsRealNameList, showTableFlag,rsEmptyFlag, currentTableName);	
 							if(!lOldMap.isEmpty() && !lNewMap.isEmpty())
 								changeFirstTableWhenReenactRC(currentTableName,tm);
 							jtb.setModel(tm);
