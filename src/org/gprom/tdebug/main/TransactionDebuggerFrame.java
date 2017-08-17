@@ -247,21 +247,18 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		//if in read commit level, need to change the first table's value to same with followings
 		Map<Integer, List<Object>> oldMap = lOldMap.get(currentTableName);
 		Map<Integer, List<Object>> newMap = lNewMap.get(currentTableName);	
-		log.info("newMap size" +oldMap.size());
-		log.info("test 111");
 		if(currentRow.getIsoLevel().equals("1"))
-		{log.info("test 222");
+		{
 			for(int r=0; r<tm.getRowCount(); r++)
 			{
 				boolean flag = true;
-				log.info("test 555" +oldMap.size());
 				for (Entry<Integer, List<Object>> ol : oldMap.entrySet()) 
-				{log.info("test 333");
+				{
 					flag = true;
 					int ko = ol.getKey();
 					List<Object> vo = ol.getValue();
 					for(int ob=0; ob<vo.size(); ob++)
-					{log.info("test 444");
+					{
 						log.info("oldMap: "+vo.get(ob));
 						log.info("tm: "+tm.getValueAt(r, ob+2));
 						log.info("row: " + r + " col: "+ ob);
