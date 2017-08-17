@@ -311,6 +311,21 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		
 		return realNameList;
 	}
+	
+	private static boolean checkIsRsEmpty(ResultSet rs)
+	{
+		boolean rsEmptyFlag = false;
+		try {
+			rs.beforeFirst();
+			if(!rs.next())
+				rsEmptyFlag = true;
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return rsEmptyFlag;
+	}
 
 	private void setup()
 	{
@@ -454,15 +469,16 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			String nameKey = "";
 
 			//check if result set is empty
-			boolean rsEmptyFlag = false;
-			try {
-				rs.beforeFirst();
-				if(!rs.next())
-					rsEmptyFlag = true;
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			boolean rsEmptyFlag = checkIsRsEmpty(rs);
+//			boolean rsEmptyFlag = false;
+//			try {
+//				rs.beforeFirst();
+//				if(!rs.next())
+//					rsEmptyFlag = true;
+//			} catch (SQLException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
 			
 			//get how many not null tuples in this table (numUp)
 			try {
@@ -1039,15 +1055,16 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 						
 						//check if result set is empty
-						boolean rsEmptyFlag = false;
-						try {
-							rs.beforeFirst();
-							if(!rs.next())
-								rsEmptyFlag = true;
-						} catch (SQLException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
+						boolean rsEmptyFlag = checkIsRsEmpty(rs);
+//						boolean rsEmptyFlag = false;
+//						try {
+//							rs.beforeFirst();
+//							if(!rs.next())
+//								rsEmptyFlag = true;
+//						} catch (SQLException e1) {
+//							// TODO Auto-generated catch block
+//							e1.printStackTrace();
+//						}
 						
 						//get how many tuples in the initial table
 						//num of update if update based on diff column
@@ -1240,15 +1257,16 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					log.info("real name: "+rsRealNameList.get(i));
 
 				//check if the result set is empty
-				boolean rsEmptyFlag = false;
-				try {
-					rs.beforeFirst();
-					if(!rs.next())
-						rsEmptyFlag = true;
-				} catch (SQLException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+				boolean rsEmptyFlag = checkIsRsEmpty(rs);
+//				boolean rsEmptyFlag = false;
+//				try {
+//					rs.beforeFirst();
+//					if(!rs.next())
+//						rsEmptyFlag = true;
+//				} catch (SQLException e1) {
+//					// TODO Auto-generated catch block
+//					e1.printStackTrace();
+//				}
 				
 				//get how many tuples in the initial table
 				//num of update if update based on diff column
@@ -1440,15 +1458,16 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					
 					
 					//check if the result set is empty
-					boolean rsEmptyFlag = false;
-					try {
-						rs.beforeFirst();
-						if(!rs.next())
-							rsEmptyFlag = true;
-					} catch (SQLException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
+					boolean rsEmptyFlag = checkIsRsEmpty(rs);
+//					boolean rsEmptyFlag = false;
+//					try {
+//						rs.beforeFirst();
+//						if(!rs.next())
+//							rsEmptyFlag = true;
+//					} catch (SQLException e1) {
+//						// TODO Auto-generated catch block
+//						e1.printStackTrace();
+//					}
 					
 					//get how many tuples in the initial table
 					//num of update if update based on diff column
@@ -1643,15 +1662,16 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 						
 						//check if the result set is empty
-						boolean rsEmptyFlag = false;
-						try {
-							rs.beforeFirst();
-							if(!rs.next())
-								rsEmptyFlag = true;
-						} catch (SQLException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
+						boolean rsEmptyFlag = checkIsRsEmpty(rs);
+//						boolean rsEmptyFlag = false;
+//						try {
+//							rs.beforeFirst();
+//							if(!rs.next())
+//								rsEmptyFlag = true;
+//						} catch (SQLException e1) {
+//							// TODO Auto-generated catch block
+//							e1.printStackTrace();
+//						}
 						
 						//get how many tuples in the initial table
 						//num of update if update based on diff column

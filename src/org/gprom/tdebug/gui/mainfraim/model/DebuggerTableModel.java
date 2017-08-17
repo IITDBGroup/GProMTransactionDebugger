@@ -137,9 +137,10 @@ public class DebuggerTableModel extends AbstractTableModel {
 	}
 	
     public String getColumnName(int col) {
-    	
-    	if((numRows == 0 || showTableFlag) && !rsEmptyFlag)
+    	   	   	
+    	//if((numRows == 0 || showTableFlag) && !rsEmptyFlag)
     	//if(numRows == 0 || showTableFlag)
+    	if((numRows == 0 && !rsEmptyFlag) || showTableFlag)
     	{
     		if (col == 0) 
     			return "";
@@ -153,7 +154,7 @@ public class DebuggerTableModel extends AbstractTableModel {
     		else if (col == 1)
     			return "TransID";
     	}
-
+    	
     	col = col - 2; 
     	log.info("col = "+(col) + " List index = "+indexList.get(col) 
     	+ "Prov Name = " + rsNameList.get(indexList.get(col))
