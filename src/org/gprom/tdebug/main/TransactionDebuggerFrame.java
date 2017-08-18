@@ -326,6 +326,51 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		
 		return rsEmptyFlag;
 	}
+	
+	
+	private int getNumUps(ResultSet rs, List<Map<Integer, Object>> rsList, String currentTableName)
+	{
+		int pos = -1;
+	    int numUp = 0;
+		
+		//get how many not null tuples in this table (numUp)
+	    try {
+			//log.info("test: list size "+rsListS.size());
+			int cont = 0;
+			rs.beforeFirst();
+			while(rs.next())
+			{
+				cont++;
+				for(int i=1; i< rs.getMetaData().getColumnCount()+1; i++)
+				{
+					log.info("row: "+cont + " name: "+ rs.getMetaData().getColumnName(i) + " value: " + rs.getString(i));
+					if(Pattern.matches("PROV_(?!U|query).*", rs.getMetaData().getColumnName(i)))
+					{
+						pos = i;
+						break;	
+					}
+				}
+				if(pos != -1)
+				{
+					String v = rs.getString(pos);
+					log.info("v: "+ v);
+					if(v != null)
+						numUp++;	
+				}				
+			}
+
+			//get statement orders
+			setupStatementOrder(rs, rsList, currentTableName);
+
+			log.info("cont: "+cont);
+			log.info("numUp: "+numUp);
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
+	    
+	    return numUp;
+	}
+	
 
 	private void setup()
 	{
@@ -461,69 +506,16 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			for(int i=0; i<rsRealNameList.size(); i++)
 				log.info("real name: "+rsRealNameList.get(i));
 			
+			//check if result set is empty
+			boolean rsEmptyFlag = checkIsRsEmpty(rs);
 			
 			//get how many tuples in the initial table
 			//num of update if update based on diff column
-			int numUp = 0;
-			int pos = -1;
-			String nameKey = "";
-
-			//check if result set is empty
-			boolean rsEmptyFlag = checkIsRsEmpty(rs);
-//			boolean rsEmptyFlag = false;
-//			try {
-//				rs.beforeFirst();
-//				if(!rs.next())
-//					rsEmptyFlag = true;
-//			} catch (SQLException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-			
-			//get how many not null tuples in this table (numUp)
-			try {
-				//rs.first();
-				//log.info("test: list size "+rsListS.size());
-				int cont = 0;
-				rs.beforeFirst();
-				while(rs.next())
-				{
-					cont++;
-					for(int i=1; i< rs.getMetaData().getColumnCount()+1; i++)
-					{
-						log.info("row: "+cont + " name: "+ rs.getMetaData().getColumnName(i) + " value: " + rs.getString(i));
-						if(Pattern.matches("PROV_(?!U|query).*", rs.getMetaData().getColumnName(i)))
-						{
-							pos = i;
-							break;	
-						}
-					}
-					if(pos != -1)
-					{
-						String v = rs.getString(pos);
-						log.info("v: "+ v);
-						if(v != null)
-							numUp++;	
-					}				
-				}
-				
-				
-				//get statement orders
-				setupStatementOrder(rs, rsList, ncEntry.getKey());
-								
-
-				log.info("cont: "+cont);
-				log.info("numUp: "+numUp);
-				//rs.first();
-			} catch (SQLException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+			int numUp = getNumUps(rs, rsList, ncEntry.getKey());
 
 			try {
 				rs.close();
 			} catch (SQLException e2) {
-				// TODO Auto-generated catch block
 				e2.printStackTrace();
 			}
 
@@ -717,34 +709,6 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		panel_view.setBounds(DEBUGGER_LEFT_PADDING, yPanelView, WIDTHFORGRAPHPANEL, 220);
 		panel_view.setBorder(BorderFactory.createLineBorder(Color.gray, 3));
 		this.add(panel_view);
-		
-//      comment out old graph					
-//		GUIUtility.createThumbnail("/Users/xun/Documents/python_workspace/SqlGui/src/dotFlow.png",
-//				"/Users/xun/Documents/java_workspace/gprom-gui/test2.png", 300, 400);
-//		File file = new File(new File(this.getClass().getResource("/").getPath()).getParent() + "/test2.png"); // use
-//																												// relative
-//																												// path
-//		BufferedImage image;
-//		try
-//		{
-//			image = ImageIO.read(file);
-//			imageLabel = new JLabel(new ImageIcon(image));
-//			imageLabel.setBounds(graphPanel.getWidth() / 2 - 300 / 2, 0, 450, 250);
-//
-//			// JLabel label2 = new JLabel(new ImageIcon(image));
-//			// JLabel label3 = new JLabel(new ImageIcon(image));
-//
-////			graphPanel.add(imageLabel);
-//			// jp8.add(label2);
-//			// jp9.add(label3);
-//
-//			// label1.setBounds(0, 10, 5, 10);
-//
-//		} catch (IOException e1)
-//		{
-//			e1.printStackTrace();
-//		}
-		//this.add(graphPanel);
 
 		// first column label name
 		panel_SQL = new JPanel();
@@ -817,8 +781,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 		this.add(show_affected_button);
 		this.add(show_all_button);
 		this.add(opt_internal_button);
-		this.add(add_stmt_button);
-		this.add(del_stmt_button);
+		//this.add(add_stmt_button);
+		//this.add(del_stmt_button);
 		this.add(whatif_button);
 		this.setVisible(true);
 	}
@@ -1056,59 +1020,10 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 						
 						//check if result set is empty
 						boolean rsEmptyFlag = checkIsRsEmpty(rs);
-//						boolean rsEmptyFlag = false;
-//						try {
-//							rs.beforeFirst();
-//							if(!rs.next())
-//								rsEmptyFlag = true;
-//						} catch (SQLException e1) {
-//							// TODO Auto-generated catch block
-//							e1.printStackTrace();
-//						}
 						
 						//get how many tuples in the initial table
 						//num of update if update based on diff column
-						int numUp = 0;
-						int pos = -1;
-						String nameKey = "";
-
-						//get how many not null tuples in this table (numUp)
-						try {
-							//rs.first();
-							//log.info("test: list size "+rsListS.size());
-							int cont = 0;
-							rs.beforeFirst();
-							while(rs.next())
-							{
-								cont++;
-								for(int i=1; i< rs.getMetaData().getColumnCount()+1; i++)
-								{
-									log.info("row: "+cont + " name: "+ rs.getMetaData().getColumnName(i) + " value: " + rs.getString(i));
-									if(Pattern.matches("PROV_(?!U|query).*", rs.getMetaData().getColumnName(i)))
-									{
-										pos = i;
-										break;	
-									}
-								}
-								if(pos != -1)
-								{
-									String v = rs.getString(pos);
-									log.info("v: "+ v);
-									if(v != null)
-										numUp++;	
-								}				
-							}
-
-							//get statement orders
-							setupStatementOrder(rs, rsList,tableName);
-
-							log.info("cont: "+cont);
-							log.info("numUp: "+numUp);				
-						} catch (SQLException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
-
+						int numUp = getNumUps(rs, rsList, tableName);
 
 						try {
 							rs.close();
@@ -1258,58 +1173,10 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 				//check if the result set is empty
 				boolean rsEmptyFlag = checkIsRsEmpty(rs);
-//				boolean rsEmptyFlag = false;
-//				try {
-//					rs.beforeFirst();
-//					if(!rs.next())
-//						rsEmptyFlag = true;
-//				} catch (SQLException e1) {
-//					// TODO Auto-generated catch block
-//					e1.printStackTrace();
-//				}
 				
 				//get how many tuples in the initial table
 				//num of update if update based on diff column
-				int numUp = 0;
-				int pos = -1;
-				String nameKey = "";
-				
-				//get how many not null tuples in this table (numUp)
-				try {
-					//log.info("test: list size "+rsListS.size());
-					int cont = 0;
-					rs.beforeFirst();
-					while(rs.next())
-					{
-						cont++;
-						for(int i=1; i< rs.getMetaData().getColumnCount()+1; i++)
-						{
-							log.info("row: "+cont + " name: "+ rs.getMetaData().getColumnName(i) + " value: " + rs.getString(i));
-							if(Pattern.matches("PROV_(?!U|query).*", rs.getMetaData().getColumnName(i)))
-							{
-								pos = i;
-								break;	
-							}
-						}
-						if(pos != -1)
-						{
-							String v = rs.getString(pos);
-							log.info("v: "+ v);
-							if(v != null)
-								numUp++;	
-						}				
-					}
-
-					//get statement orders
-					setupStatementOrder(rs, rsList, currentTableName);
-
-					log.info("cont: "+cont);
-					log.info("numUp: "+numUp);
-					//rs.first();
-				} catch (SQLException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+				int numUp = getNumUps(rs, rsList, currentTableName);
 
 				try {
 					rs.close();
@@ -1459,65 +1326,10 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					
 					//check if the result set is empty
 					boolean rsEmptyFlag = checkIsRsEmpty(rs);
-//					boolean rsEmptyFlag = false;
-//					try {
-//						rs.beforeFirst();
-//						if(!rs.next())
-//							rsEmptyFlag = true;
-//					} catch (SQLException e1) {
-//						// TODO Auto-generated catch block
-//						e1.printStackTrace();
-//					}
 					
 					//get how many tuples in the initial table
 					//num of update if update based on diff column
-					int numUp = 0;
-					int pos = -1;
-					String nameKey = "";
-					
-					//get how many not null tuples in this table (numUp)
-					try {
-						//rs.first();
-						//log.info("test: list size "+rsListS.size());
-						int cont = 0;
-						rs.beforeFirst();
-						while(rs.next())
-						{
-							cont++;
-							for(int i=1; i< rs.getMetaData().getColumnCount()+1; i++)
-							{
-								log.info("row: "+cont + " name: "+ rs.getMetaData().getColumnName(i) + " value: " + rs.getString(i));
-								if(Pattern.matches("PROV_(?!U|query).*", rs.getMetaData().getColumnName(i)))
-								{
-									pos = i;
-									break;	
-								}
-							}
-							if(pos != -1)
-							{
-								String v = rs.getString(pos);
-								log.info("v: "+ v);
-								if(v != null)
-									numUp++;	
-							}				
-						}
-						
-						//get statement orders
-						setupStatementOrder(rs, rsList,tableName);
-										
-						log.info("cont: "+cont);
-						log.info("numUp: "+numUp);				
-					} catch (SQLException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-
-					try {
-						rs.close();
-					} catch (SQLException e2) {
-						// TODO Auto-generated catch block
-						e2.printStackTrace();
-					}
+					int numUp = getNumUps(rs, rsList, tableName);
 
 					int numCell = totalNumtables/tNameCount.size();
 					log.info("current row size : "+currentRow.getIntervals().size());
@@ -1663,58 +1475,10 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 						
 						//check if the result set is empty
 						boolean rsEmptyFlag = checkIsRsEmpty(rs);
-//						boolean rsEmptyFlag = false;
-//						try {
-//							rs.beforeFirst();
-//							if(!rs.next())
-//								rsEmptyFlag = true;
-//						} catch (SQLException e1) {
-//							// TODO Auto-generated catch block
-//							e1.printStackTrace();
-//						}
 						
 						//get how many tuples in the initial table
 						//num of update if update based on diff column
-						int numUp = 0;
-						int pos = -1;
-						String nameKey = "";
-
-						//get how many not null tuples in this table (numUp)
-						try {
-							//rs.first();
-							//log.info("test: list size "+rsListS.size());
-							int cont = 0;
-							rs.beforeFirst();
-							while(rs.next())
-							{
-								cont++;
-								for(int i=1; i< rs.getMetaData().getColumnCount()+1; i++)
-								{
-									log.info("row: "+cont + " name: "+ rs.getMetaData().getColumnName(i) + " value: " + rs.getString(i));
-									if(Pattern.matches("PROV_(?!U|query).*", rs.getMetaData().getColumnName(i)))
-									{
-										pos = i;
-										break;	
-									}
-								}
-								if(pos != -1)
-								{
-									String v = rs.getString(pos);
-									log.info("v: "+ v);
-									if(v != null)
-										numUp++;	
-								}				
-							}
-
-							//get statement orders
-							setupStatementOrder(rs, rsList,tableName);
-
-							log.info("cont: "+cont);
-							log.info("numUp: "+numUp);				
-						} catch (SQLException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
+						int numUp = getNumUps(rs, rsList, tableName);
 
 						try {
 							rs.close();
