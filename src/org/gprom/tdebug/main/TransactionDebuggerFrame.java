@@ -116,18 +116,16 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	
 	private List<String> distinctTableNames = new ArrayList<String>(); //e.g., 0->R, 1->S , used to know following list element belong to which table
 	//store each list in a list, each element is for different table, e.g., (R) 0->List<JTable>, (S) 1->List<JTable> 
-	private List<List<JTable>> lTables = new ArrayList<List<JTable>>();
-	private List<List<DebuggerTableModel>> lTableModels = new ArrayList<List<DebuggerTableModel>>();
+	//private List<List<JTable>> lTables = new ArrayList<List<JTable>>();
+	//private List<List<DebuggerTableModel>> lTableModels = new ArrayList<List<DebuggerTableModel>>();
 	//private List<List<JTextArea>> lSqlTextAreas = new ArrayList<List<JTextArea>>();
 	//private List<List<JLabel>> lSqlLabels = new ArrayList<List<JLabel>>();
-	private List<List<Integer>> lNumUps = new ArrayList<List<Integer>>();
+	//private List<List<Integer>> lNumUps = new ArrayList<List<Integer>>();
 	
 	private EventTimeBarRow currentRow;
 	
-	private ResultSet rsReset;
-	
 	//store all old values of first table, when table data changed get matched old value from here 
-	private Map<Integer, List<Object>> old = new HashMap<Integer, List<Object>>();
+//	private Map<Integer, List<Object>> old = new HashMap<Integer, List<Object>>();
 //	private Map<Integer, List<Object>> oldMap = new HashMap<Integer, List<Object>>();
 //	private Map<Integer, List<Object>> newMap = new HashMap<Integer, List<Object>>();
 	
@@ -139,7 +137,6 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	private Map<String, Map<Integer, List<Object>>> lOldMap = new HashMap<String, Map<Integer, List<Object>>>();
 	private Map<String, Map<Integer, List<Object>>> lNewMap = new HashMap<String, Map<Integer, List<Object>>>();
 	
-	private String storeSql = "";
 	private Map<String, String> storeSqlList = new HashMap<String, String>();	
 	private boolean clickWhatIf = false;
 	private Map<String, Map<Integer, List<Object>>> lStmtMap = new HashMap<String, Map<Integer, List<Object>>>();
@@ -371,6 +368,56 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 	    return numUp;
 	}
 	
+	private void closeResultSet(ResultSet rs)
+	{
+		try {
+			rs.close();
+		} catch (SQLException e2) {
+			e2.printStackTrace();
+		}
+	}
+	
+	private void parseResult(int i, List<String> rsNameList, List<Integer> rsTypeList, List<Integer> indexList, String currentTableName, List<Integer> dataTypeList)
+	{
+		for (int j = 1; j < rsNameList.size(); j++)
+		{
+			//if (i == 0 && Pattern.matches("PROV_(?!U|query|"+ tableNames.get(1).toUpperCase() +").*", rsNameList.get(j)))
+			if (i == 0 && Pattern.matches("PROV_(?!U|query).*", rsNameList.get(j)))
+			{
+				log.info("i=0, j = "+j + " name: " + rsNameList.get(j) +" type: "+ rsTypeList.get(j));
+				indexList.add(j);
+				dataTypeList.add(rsTypeList.get(j));
+			} 
+			else if (Pattern.matches("PROV_U" + i + "__.*", rsNameList.get(j)))
+			{
+				log.info("i !=0, j = "+j);
+				indexList.add(j);
+			}		
+		}				
+		if(i == 0)
+			tableDataTypeListMap.put(currentTableName, dataTypeList);
+	}
+	
+	private static List<Integer> parseResult(int i, List<String> rsNameList)
+	{
+		List<Integer> indexList = new ArrayList<Integer>();
+		for (int j = 1; j < rsNameList.size(); j++)
+		{
+			if (i == 0 && Pattern.matches("PROV_(?!U|query).*", rsNameList.get(j)))
+			{
+				log.info("i=0, j = "+j);
+				indexList.add(j);
+			} 
+			else if (Pattern.matches("PROV_U" + i + "__.*", rsNameList.get(j)))
+			{
+				log.info("i !=0, j = "+j);
+				indexList.add(j);
+			}		
+		}
+		
+		return indexList;
+	}
+	
 
 	private void setup()
 	{
@@ -477,11 +524,10 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			catch (Exception e3) {
 				LoggerUtil.logException(e3, log);
 			}
-			//String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
+
 			ResultSet rs = DBManager.getInstance().executeQuery(sql);
 
 			//store rs data into a list map and store column name into a list
-
 			List<Map<Integer, Object>> rsList = null;
 			List<String> rsNameList = new ArrayList<String>();
 			List<Integer> rsTypeList = new ArrayList<Integer>();
@@ -502,7 +548,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			//remove the prefix of each column name
 			List<String> rsRealNameList = new ArrayList<String>();
 			rsRealNameList = getRealNameList(rsNameList);
-            //print
+            //print info
 			for(int i=0; i<rsRealNameList.size(); i++)
 				log.info("real name: "+rsRealNameList.get(i));
 			
@@ -512,12 +558,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 			//get how many tuples in the initial table
 			//num of update if update based on diff column
 			int numUp = getNumUps(rs, rsList, ncEntry.getKey());
-
-			try {
-				rs.close();
-			} catch (SQLException e2) {
-				e2.printStackTrace();
-			}
+			closeResultSet(rs);
 
 			log.info("current row size : "+currentRow.getIntervals().size());
 			//for (int i = 0; i < currentRow.getIntervals().size() + 1; i++)
@@ -527,27 +568,26 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				// set up indexList
 				List<Integer> indexList = new ArrayList<Integer>();
 				List<Integer> dataTypeList = new ArrayList<Integer>();
-				String currentTableName = null;
-				for (int j = 1; j < rsNameList.size(); j++)
-				{
-					//if (i == 0 && Pattern.matches("PROV_(?!U|query|"+ tableNames.get(1).toUpperCase() +").*", rsNameList.get(j)))
-					if (i == 0 && Pattern.matches("PROV_(?!U|query).*", rsNameList.get(j)))
-					{
-						log.info("i=0, j = "+j + " name: " + rsNameList.get(j) +" type: "+ rsTypeList.get(j));
-						indexList.add(j);
-						dataTypeList.add(rsTypeList.get(j));
-					} 
-					else if (Pattern.matches("PROV_U" + i + "__.*", rsNameList.get(j)))
-					{
-						log.info("i !=0, j = "+j);
-						indexList.add(j);
-					}		
-				}
-				if(i == 0)
-					tableDataTypeListMap.put(ncEntry.getKey(), dataTypeList);
-				// tablename
-				currentTableName = ncEntry.getKey();
+				String currentTableName = ncEntry.getKey();
+				parseResult(i, rsNameList, rsTypeList,indexList,currentTableName, dataTypeList);
 
+//				for (int j = 1; j < rsNameList.size(); j++)
+//				{
+//					//if (i == 0 && Pattern.matches("PROV_(?!U|query|"+ tableNames.get(1).toUpperCase() +").*", rsNameList.get(j)))
+//					if (i == 0 && Pattern.matches("PROV_(?!U|query).*", rsNameList.get(j)))
+//					{
+//						log.info("i=0, j = "+j + " name: " + rsNameList.get(j) +" type: "+ rsTypeList.get(j));
+//						indexList.add(j);
+//						dataTypeList.add(rsTypeList.get(j));
+//					} 
+//					else if (Pattern.matches("PROV_U" + i + "__.*", rsNameList.get(j)))
+//					{
+//						log.info("i !=0, j = "+j);
+//						indexList.add(j);
+//					}		
+//				}				
+//				if(i == 0)
+//					tableDataTypeListMap.put(currentTableName, dataTypeList);
 
 				if(i > 0)
 				{
@@ -834,9 +874,9 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					log.info("numCell: "+numCell+" totalNumtables: "+totalNumtables+" tNameCount size: "+tNameCount.size());
 					log.info("cc: "+c);
 					String appendSql = "";
-					int col1 = -1;
-					int row1 = -1;
-					Object s1 = null;
+					//int col1 = -1;
+					//int row1 = -1;
+					//Object s1 = null;
 
 					//e.g., used to add "OPTIONS (NO PROVENANCE AS OF SCN 1425819) 
 					//UPDATE R SET A=300,B=4 WHERE A=10 AND B=4;" in front of sql
@@ -845,12 +885,12 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					List<String> colNames = new ArrayList<String>();  //store original column names: e.g., A, B
 
 					JTable firstTable = tables.get(c);
-					String tableName = firstTable.getName();				
+					String currentTableName = firstTable.getName();				
 					int colCount = firstTable.getColumnCount();	
 
 					if(lNewMap.size() > 0)
 					{
-					if(lNewMap.containsKey(tableName))
+					if(lNewMap.containsKey(currentTableName))
 					{
 
 						for(int i=2; i<colCount; i++)
@@ -875,9 +915,9 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 						//log.info("new map size: "+ newMap.size());
 
-						Map<Integer, List<Object>> newMap1 = lNewMap.get(tableName);
-						Map<Integer, List<Object>> oldMap1 = lOldMap.get(tableName);
-						List<Integer> dataTypeList = tableDataTypeListMap.get(tableName);
+						Map<Integer, List<Object>> newMap1 = lNewMap.get(currentTableName);
+						Map<Integer, List<Object>> oldMap1 = lOldMap.get(currentTableName);
+						List<Integer> dataTypeList = tableDataTypeListMap.get(currentTableName);
 						for (Entry<Integer, List<Object>> entry : newMap1.entrySet()) //how many update in result sql (number of tuples were updated)
 						{
 							int k = entry.getKey();
@@ -914,7 +954,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 									wheClause = wheClause + " AND ";
 								}
 							}
-							appendSql = appendSql + tableName + " " + setClause + " " + wheClause + ";";
+							appendSql = appendSql + currentTableName + " " + setClause + " " + wheClause + ";";
 							log.info("sql = "+ appendSql);				
 						}
 					}
@@ -951,8 +991,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 						{
 							for(int i=0; i<countSqls; i++)
 							{
-								EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i);
-								String scn_rc = currentInterval.getSCN();
+								//EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i);
+								//String scn_rc = currentInterval.getSCN();
 								newSql = newSql + sqlTextAreas.get(i).getText() + "; ";
 							}
 
@@ -968,13 +1008,12 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 						log.info("new sqls: "+newSql);
 
 						//store sql
-						storeSqlList.put(tableName,newSql);
+						storeSqlList.put(currentTableName,newSql);
 
-						//String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
 						String sql = "";
 						if(currentRow.getIsoLevel().equals("1")) {
 							try {
-								sql = GpromProcess.getReenactSQL(currentRow.getStartSCN(),newSql, tableName);
+								sql = GpromProcess.getReenactSQL(currentRow.getStartSCN(),newSql, currentTableName);
 							}
 							catch (Exception e3) {
 								LoggerUtil.logException(e3, log);
@@ -985,7 +1024,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 							//if serializable, each scn same, get first one
 							EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(0);
 							try {
-								sql = GpromProcess.getSerializableReenactSQL(currentInterval.getSCN(), newSql, tableName);
+								sql = GpromProcess.getSerializableReenactSQL(currentInterval.getSCN(), newSql, currentTableName);
 							}
 							catch (Exception e3) {
 								LoggerUtil.logException(e3, log);
@@ -994,7 +1033,6 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 						ResultSet rs = DBManager.getInstance().executeQuery(sql);
 						//store rs data into a list map and store column name into a list
-						//rsReset = rs;
 						List<Map<Integer, Object>> rsList = null;
 						List<String> rsNameList = new ArrayList<String>();
 						rsNameList.add(" ");
@@ -1023,14 +1061,8 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 						
 						//get how many tuples in the initial table
 						//num of update if update based on diff column
-						int numUp = getNumUps(rs, rsList, tableName);
-
-						try {
-							rs.close();
-						} catch (SQLException e2) {
-							// TODO Auto-generated catch block
-							e2.printStackTrace();
-						}
+						int numUp = getNumUps(rs, rsList, currentTableName);
+						closeResultSet(rs);
 
 						log.info("current row size : "+currentRow.getIntervals().size());
 						//for (int i = 0; i < currentRow.getIntervals().size() + 1; i++)
@@ -1039,31 +1071,30 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 							int index = i;
 							for(int m=0; m<distinctTableNames.size(); m++)
 							{
-								if(tableName.equals(distinctTableNames.get(m)))
+								if(currentTableName.equals(distinctTableNames.get(m)))
 								{
 									index = index + m*numCell;
 								}
 							}
 
 							JTable jtb = tables.get(index);
-							// set up indexList
-							List<Integer> indexList = new ArrayList<Integer>();
-							String currentTableName = tableName;
-
-							//log.info("test columncont + 1 = "+rsmd.getColumnCount());
-							for (int j = 1; j < rsNameList.size(); j++)
-							{
-								if (i == 0 && Pattern.matches("PROV_(?!U|query).*", rsNameList.get(j)))
-								{
-									log.info("i=0, j = "+j);
-									indexList.add(j);
-								} 
-								else if (Pattern.matches("PROV_U" + i + "__.*", rsNameList.get(j)))
-								{
-									log.info("i !=0, j = "+j);
-									indexList.add(j);
-								}		
-							}
+							
+							// set up indexList							
+							List<Integer> indexList = parseResult(i, rsNameList);
+//							List<Integer> indexList = new ArrayList<Integer>();
+//							for (int j = 1; j < rsNameList.size(); j++)
+//							{
+//								if (i == 0 && Pattern.matches("PROV_(?!U|query).*", rsNameList.get(j)))
+//								{
+//									log.info("i=0, j = "+j);
+//									indexList.add(j);
+//								} 
+//								else if (Pattern.matches("PROV_U" + i + "__.*", rsNameList.get(j)))
+//								{
+//									log.info("i !=0, j = "+j);
+//									indexList.add(j);
+//								}		
+//							}
 
 							//log.info("index: " + indexList + currentTableName);
 							if(i > 0)
@@ -1144,11 +1175,10 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				catch (Exception e3) {
 					LoggerUtil.logException(e3, log);
 				}
-				//String sql = GpromProcess.getReenactSQL("UPDATE R SET A = 100 WHERE B = 3;");
+
 				ResultSet rs = DBManager.getInstance().executeQuery(sql);
 
-				//store rs data into a list map and store column name into a list
-		
+				//store rs data into a list map and store column name into a list		
 				List<Map<Integer, Object>> rsList = null;
 				List<String> rsNameList = new ArrayList<String>();
 				rsNameList.add(" ");
@@ -1177,13 +1207,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 				//get how many tuples in the initial table
 				//num of update if update based on diff column
 				int numUp = getNumUps(rs, rsList, currentTableName);
-
-				try {
-					rs.close();
-				} catch (SQLException e2) {
-					// TODO Auto-generated catch block
-					e2.printStackTrace();
-				}
+				closeResultSet(rs);
 
 				log.info("current row size : "+currentRow.getIntervals().size());
 				//for (int i = 0; i < currentRow.getIntervals().size() + 1; i++)
@@ -1202,23 +1226,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 					JTable jtb = tables.get(index);
 					
 					// set up indexList
-					List<Integer> indexList = new ArrayList<Integer>();
-					// index
-					//log.info("test columncont + 1 = "+rsmd.getColumnCount());
-					for (int j = 1; j < rsNameList.size(); j++)
-					{
-						if (i == 0 && Pattern.matches("PROV_(?!U|query).*", rsNameList.get(j)))
-						{
-							log.info("i=0, j = "+j);
-							indexList.add(j);
-						} 
-						else if (Pattern.matches("PROV_U" + i + "__.*", rsNameList.get(j)))
-						{
-							log.info("i !=0, j = "+j);
-							indexList.add(j);
-						}		
-					}
-
+					List<Integer> indexList = parseResult(i, rsNameList);
 
 					if(i > 0)
 					{
@@ -1247,25 +1255,27 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 
 		if (e.getSource() == show_affected_button)
 		{
-			if(clickWhatIf)
+			//			if(clickWhatIf)
+			//			{
+			lStmtMap.clear();
+			numUps.clear();
+
+			for(int t=0; t<distinctTableNames.size(); t++)
 			{
-				lStmtMap.clear();
-				numUps.clear();
-				
-				for(int t=0; t<distinctTableNames.size(); t++)
+
+				String currentTableName = distinctTableNames.get(t);
+				String sql = "";
+
+				if(clickWhatIf)
 				{
-					
-					String tableName = distinctTableNames.get(t);
-					String sql = "";
-						
 					if(lNewMap.containsKey(distinctTableNames.get(t)))
 					{
-						String newSql = storeSqlList.get(tableName);
-						log.info("table name: " + tableName +" new sqls: "+newSql);
-						
+						String newSql = storeSqlList.get(currentTableName);
+						log.info("table name: " + currentTableName +" new sqls: "+newSql);
+
 						if(currentRow.getIsoLevel().equals("1"))
 							try {
-								sql = GpromProcess.getReenactSQL(currentRow.getStartSCN(),newSql, tableName);
+								sql = GpromProcess.getReenactSQL(currentRow.getStartSCN(),newSql, currentTableName);
 							}
 						catch (Exception e3) {
 							LoggerUtil.logException(e3, log);
@@ -1275,7 +1285,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 							//if serializable, each scn same, get first one
 							EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(0);
 							try {
-								sql = GpromProcess.getSerializableReenactSQL(currentInterval.getSCN(), newSql, tableName);
+								sql = GpromProcess.getSerializableReenactSQL(currentInterval.getSCN(), newSql, currentTableName);
 							}
 							catch (Exception e3) {
 								LoggerUtil.logException(e3, log);
@@ -1291,130 +1301,125 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 							LoggerUtil.logException(e3, log);
 						}
 					}
-					//String sql = GpromProcess.getReenactSQL(newSql);
-					ResultSet rs = DBManager.getInstance().executeQuery(sql);
-					//ResultSetMetaData rsmd = null;
-
-					
-					
-					//store rs data into a list map and store column name into a list
-					//rsReset = rs;
-					List<Map<Integer, Object>> rsList = null;
-					List<String> rsNameList = new ArrayList<String>();
-					rsNameList.add(" ");
-
+				}
+				else
+				{
 					try {
-						rsList = convertList(rs);		
-						for(int i=1; i< rs.getMetaData().getColumnCount()+1; i++)
-						{
-							rsNameList.add(rs.getMetaData().getColumnName(i));	
-							log.info("name: "+rs.getMetaData().getColumnName(i));
-						}
-					} catch (SQLException e2) {
-						// TODO Auto-generated catch block
-						e2.printStackTrace();
-					}		
-					
-					//remove the prefix of each column name
-					List<String> rsRealNameList = new ArrayList<String>();
-					rsRealNameList = getRealNameList(rsNameList);
-		            //print
-					for(int i=0; i<rsRealNameList.size(); i++)
-						log.info("real name: "+rsRealNameList.get(i));
-				
-					
-					
-					//check if the result set is empty
-					boolean rsEmptyFlag = checkIsRsEmpty(rs);
-					
-					//get how many tuples in the initial table
-					//num of update if update based on diff column
-					int numUp = getNumUps(rs, rsList, tableName);
+						sql = GpromProcess.getTransactionIntermediateSQL(currentRow.getXID(), distinctTableNames.get(t));
+					}
+					catch (Exception e3) {
+						LoggerUtil.logException(e3, log);
+					}
+				}
+				//String sql = GpromProcess.getReenactSQL(newSql);
+				ResultSet rs = DBManager.getInstance().executeQuery(sql);
+				//ResultSetMetaData rsmd = null;
 
-					int numCell = totalNumtables/tNameCount.size();
-					log.info("current row size : "+currentRow.getIntervals().size());
-					for(int i=0; i<tableNames.size() + 1;i++)
+
+
+				//store rs data into a list map and store column name into a list
+				//rsReset = rs;
+				List<Map<Integer, Object>> rsList = null;
+				List<String> rsNameList = new ArrayList<String>();
+				rsNameList.add(" ");
+
+				try {
+					rsList = convertList(rs);		
+					for(int i=1; i< rs.getMetaData().getColumnCount()+1; i++)
 					{
-						int index = i;
-						for(int m=0; m<distinctTableNames.size(); m++)
-						{
-							if(tableName.equals(distinctTableNames.get(m)))
-							{
-							    index = index + m*numCell;
-							}
-						}
-												
-						JTable jtb = tables.get(index);
-						// set up indexList
-						List<Integer> indexList = new ArrayList<Integer>();
-						String currentTableName = tableName;
+						rsNameList.add(rs.getMetaData().getColumnName(i));	
+						log.info("name: "+rs.getMetaData().getColumnName(i));
+					}
+				} catch (SQLException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				}		
 
-						//log.info("test columncont + 1 = "+rsmd.getColumnCount());
-						for (int j = 1; j < rsNameList.size(); j++)
-						{
-							if (i == 0 && Pattern.matches("PROV_(?!U|query).*", rsNameList.get(j)))
-							{
-								log.info("i=0, j = "+j);
-								indexList.add(j);
-							} 
-							else if (Pattern.matches("PROV_U" + i + "__.*", rsNameList.get(j)))
-							{
-								log.info("i !=0, j = "+j);
-								indexList.add(j);
-							}		
-						}
+				//remove the prefix of each column name
+				List<String> rsRealNameList = new ArrayList<String>();
+				rsRealNameList = getRealNameList(rsNameList);
+				//print
+				for(int i=0; i<rsRealNameList.size(); i++)
+					log.info("real name: "+rsRealNameList.get(i));
 
-						//log.info("index: " + indexList + currentTableName);
-						if(i > 0)
+
+
+				//check if the result set is empty
+				boolean rsEmptyFlag = checkIsRsEmpty(rs);
+
+				//get how many tuples in the initial table
+				//num of update if update based on diff column
+				int numUp = getNumUps(rs, rsList, currentTableName);
+
+				int numCell = totalNumtables/tNameCount.size();
+				log.info("current row size : "+currentRow.getIntervals().size());
+				for(int i=0; i<tableNames.size() + 1;i++)
+				{
+					int index = i;
+					for(int m=0; m<distinctTableNames.size(); m++)
+					{
+						if(currentTableName.equals(distinctTableNames.get(m)))
 						{
-							EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i-1);
-							String sqlType = currentInterval.getType();
-							if(sqlType.equals("INSERT"))
-								numUp++;
+							index = index + m*numCell;
 						}
-						numUps.add(numUp);			
-						//DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i, currentRow, numUp, tables);
-						
-						//if showTableFlag, this table should be empty
-						boolean showTableFlag = tableEmptyFlagList.get(index);
-//						boolean showTableFlag = false;				
-//						if(i > 0)
-//							if(!currentTableName.equals(tableNames.get(i-1)))
-//								showTableFlag = true;
-						
+					}
+
+					JTable jtb = tables.get(index);
+					// set up indexList
+					List<Integer> indexList = parseResult(i, rsNameList);
+
+					if(i > 0)
+					{
+						EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i-1);
+						String sqlType = currentInterval.getType();
+						if(sqlType.equals("INSERT"))
+							numUp++;
+					}
+					numUps.add(numUp);			
+					//DebuggerTableModel tm = new DebuggerTableModel(rs, indexList, i, currentRow, numUp, tables);
+
+					//if showTableFlag, this table should be empty
+					boolean showTableFlag = tableEmptyFlagList.get(index);
+					//						boolean showTableFlag = false;				
+					//						if(i > 0)
+					//							if(!currentTableName.equals(tableNames.get(i-1)))
+					//								showTableFlag = true;
+
 					DebuggerTableModel tm = new DebuggerTableModel(rsList, indexList, i, currentRow, numUp, rsNameList, rsRealNameList,  showTableFlag, rsEmptyFlag, currentTableName);	
 					if(!lOldMap.isEmpty() && !lNewMap.isEmpty())
 						changeFirstTableWhenReenactRC(currentTableName,tm);
 					jtb.setModel(tm);
 				}
-				
 
-				}
+
 			}
+			//}
 		}
 
 
 
 		if (e.getSource() == show_all_button)
 		{
-			if(clickWhatIf)
+			//			if(clickWhatIf)
+			//			{
+			lStmtMap.clear();
+			numUps.clear();
+			for(int t=0; t<distinctTableNames.size(); t++)
 			{
-				lStmtMap.clear();
-				numUps.clear();
-				for(int t=0; t<distinctTableNames.size(); t++)
+
+				String currentTableName = distinctTableNames.get(t);					
+				String sql = "";
+
+				if(clickWhatIf)
 				{
-					
-					String tableName = distinctTableNames.get(t);
-					
-					String sql = "";
 					if(lNewMap.containsKey(distinctTableNames.get(t)))
 					{
-						String newSql = storeSqlList.get(tableName);
-						log.info("table name: " + tableName +" new sqls: "+newSql);
-						
+						String newSql = storeSqlList.get(currentTableName);
+						log.info("table name: " + currentTableName +" new sqls: "+newSql);
+
 						if(currentRow.getIsoLevel().equals("1")) {
 							try {
-								sql = GpromProcess.getReenactAllSQL(currentRow.getStartSCN(),newSql,tableName);
+								sql = GpromProcess.getReenactAllSQL(currentRow.getStartSCN(),newSql,currentTableName);
 							}
 							catch (Exception e3) {
 								LoggerUtil.logException(e3, log);
@@ -1425,7 +1430,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 							//if serializable, each scn same, get first one
 							EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(0);
 							try {
-								sql = GpromProcess.getSerializableReenactAllSQL(currentInterval.getSCN(), newSql, tableName);
+								sql = GpromProcess.getSerializableReenactAllSQL(currentInterval.getSCN(), newSql, currentTableName);
 							}
 							catch (Exception e3) {
 								LoggerUtil.logException(e3, log);
@@ -1441,119 +1446,105 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
 							LoggerUtil.logException(e3, log);
 						}
 					}
-					
-					ResultSet rs = DBManager.getInstance().executeQuery(sql);
+				}
+				else
+				{
+					try {
+						sql = GpromProcess.getWholeTransactionIntermediateSQL(currentRow.getXID(), distinctTableNames.get(t));
+					}
+					catch (Exception e3) {
+						LoggerUtil.logException(e3, log);
+					}
+				}
+
+				ResultSet rs = DBManager.getInstance().executeQuery(sql);
 
 
-						
+				//store rs data into a list map and store column name into a list
+				//rsReset = rs;
+				List<Map<Integer, Object>> rsList = null;
+				List<String> rsNameList = new ArrayList<String>();
+				rsNameList.add(" ");
 
-						//store rs data into a list map and store column name into a list
-						//rsReset = rs;
-						List<Map<Integer, Object>> rsList = null;
-						List<String> rsNameList = new ArrayList<String>();
-						rsNameList.add(" ");
+				try {
+					rsList = convertList(rs);		
+					for(int i=1; i< rs.getMetaData().getColumnCount()+1; i++)
+					{
+						rsNameList.add(rs.getMetaData().getColumnName(i));	
+						log.info("name: "+rs.getMetaData().getColumnName(i));
+					}
+				} catch (SQLException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				}		
 
-						try {
-							rsList = convertList(rs);		
-							for(int i=1; i< rs.getMetaData().getColumnCount()+1; i++)
-							{
-								rsNameList.add(rs.getMetaData().getColumnName(i));	
-								log.info("name: "+rs.getMetaData().getColumnName(i));
-							}
-						} catch (SQLException e2) {
-							// TODO Auto-generated catch block
-							e2.printStackTrace();
-						}		
-						
-						//remove the prefix of each column name
-						List<String> rsRealNameList = new ArrayList<String>();
-						rsRealNameList = getRealNameList(rsNameList);
-			            //print
-						for(int i=0; i<rsRealNameList.size(); i++)
-							log.info("real name: "+rsRealNameList.get(i));
+				//remove the prefix of each column name
+				List<String> rsRealNameList = new ArrayList<String>();
+				rsRealNameList = getRealNameList(rsNameList);
+				//print
+				for(int i=0; i<rsRealNameList.size(); i++)
+					log.info("real name: "+rsRealNameList.get(i));
 
-						
-						//check if the result set is empty
-						boolean rsEmptyFlag = checkIsRsEmpty(rs);
-						
-						//get how many tuples in the initial table
-						//num of update if update based on diff column
-						int numUp = getNumUps(rs, rsList, tableName);
 
-						try {
-							rs.close();
-						} catch (SQLException e2) {
-							// TODO Auto-generated catch block
-							e2.printStackTrace();
-						}
-						
-						int numCell = totalNumtables/tNameCount.size();
-						log.info("current row size : "+currentRow.getIntervals().size());
-						for(int i=0; i<tableNames.size() + 1;i++)
+				//check if the result set is empty
+				boolean rsEmptyFlag = checkIsRsEmpty(rs);
+
+				//get how many tuples in the initial table
+				//num of update if update based on diff column
+				int numUp = getNumUps(rs, rsList, currentTableName);
+				closeResultSet(rs);
+
+				int numCell = totalNumtables/tNameCount.size();
+				log.info("current row size : "+currentRow.getIntervals().size());
+				for(int i=0; i<tableNames.size() + 1;i++)
+				{
+					int index = i;
+					for(int m=0; m<distinctTableNames.size(); m++)
+					{
+						if(currentTableName.equals(distinctTableNames.get(m)))
 						{
-							int index = i;
-							for(int m=0; m<distinctTableNames.size(); m++)
-							{
-								if(tableName.equals(distinctTableNames.get(m)))
-								{
-									index = index + m*numCell;
-								}
-							}
-
-							JTable jtb = tables.get(index);
-							// set up indexList
-							List<Integer> indexList = new ArrayList<Integer>();
-							String currentTableName = tableName;
-
-							//log.info("test columncont + 1 = "+rsmd.getColumnCount());
-							for (int j = 1; j < rsNameList.size(); j++)
-							{
-								if (i == 0 && Pattern.matches("PROV_(?!U|query).*", rsNameList.get(j)))
-								{
-									log.info("i=0, j = "+j);
-									indexList.add(j);
-								} 
-								else if (Pattern.matches("PROV_U" + i + "__.*", rsNameList.get(j)))
-								{
-									log.info("i !=0, j = "+j);
-									indexList.add(j);
-								}		
-							}
-					
-							//log.info("index: " + indexList + currentTableName);
-							if(i > 0)
-							{
-								EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i-1);
-								String sqlType = currentInterval.getType();
-								if(sqlType.equals("INSERT"))
-									numUp++;
-							}
-							numUps.add(numUp);			
-		
-							//if showTableFlag, this table should be empty
-							boolean showTableFlag = tableEmptyFlagList.get(index);
-							//						boolean showTableFlag = false;				
-							//						if(i > 0)
-							//							if(!currentTableName.equals(tableNames.get(i-1)))
-							//								showTableFlag = true;
-
-							DebuggerTableModel tm = new DebuggerTableModel(rsList, indexList, i, currentRow, numUp, rsNameList, rsRealNameList, showTableFlag,rsEmptyFlag, currentTableName);	
-							if(!lOldMap.isEmpty() && !lNewMap.isEmpty())
-								changeFirstTableWhenReenactRC(currentTableName,tm);
-							jtb.setModel(tm);
+							index = index + m*numCell;
 						}
+					}
+
+					JTable jtb = tables.get(index);
+					// set up indexList
+					List<Integer> indexList  = parseResult(i, rsNameList);
+
+					//log.info("index: " + indexList + currentTableName);
+					if(i > 0)
+					{
+						EventInterval currentInterval = (EventInterval) currentRow.getIntervals().get(i-1);
+						String sqlType = currentInterval.getType();
+						if(sqlType.equals("INSERT"))
+							numUp++;
+					}
+					numUps.add(numUp);			
+
+					//if showTableFlag, this table should be empty
+					boolean showTableFlag = tableEmptyFlagList.get(index);
+					//						boolean showTableFlag = false;				
+					//						if(i > 0)
+					//							if(!currentTableName.equals(tableNames.get(i-1)))
+					//								showTableFlag = true;
+
+					DebuggerTableModel tm = new DebuggerTableModel(rsList, indexList, i, currentRow, numUp, rsNameList, rsRealNameList, showTableFlag,rsEmptyFlag, currentTableName);	
+					if(!lOldMap.isEmpty() && !lNewMap.isEmpty())
+						changeFirstTableWhenReenactRC(currentTableName,tm);
+					jtb.setModel(tm);
 				}
 			}
+			//	}
 		}
-		
+
 		//set the table not in the first column is unable to edit
 		int numCell = totalNumtables/tNameCount.size();
-		
+
 		for(int t=0,i=0; t<tables.size(); t++,i++)
 		{
 			if(i == numCell)
 				i=0;
-			
+
 			if(i != 0)
 				tables.get(t).setEnabled(false);
 		}
@@ -1616,7 +1607,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
         	if(tName.equals(model.getTableName()))
         	{
         		int fCountCol = fTable.getColumnCount();
-        		List<Object> nList = new ArrayList();
+        		List<Object> nList = new ArrayList<Object>();
         		
         		if(!lNewMap.containsKey(tName))
         		{
@@ -1645,7 +1636,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
         		{
         			Map<Integer, List<Object>> oldMap1 = new HashMap<Integer, List<Object>>();
         			Map<Integer, List<Object>> old = lOld.get(tName);
-            		List l = old.get(row);    
+            		List<Object> l = old.get(row);    
             		oldMap1.put(row, l);
             		lOldMap.put(tName, oldMap1);
         		}
@@ -1655,7 +1646,7 @@ public class TransactionDebuggerFrame extends JFrame implements ActionListener, 
             		if(!oldMap1.containsKey(row))
             		{
             			Map<Integer, List<Object>> old = lOld.get(tName);
-            			List l = old.get(row);    
+            			List<Object> l = old.get(row);    
             			oldMap1.put(row, l);
             			lOldMap.put(tName, oldMap1);
             		} 
