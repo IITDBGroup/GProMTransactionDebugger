@@ -394,7 +394,7 @@ try {
 					
 					end.setDateTime(map1.get(key).getTimeStamp().getDate(),
 							(map1.get(key).getTimeStamp().getMonth() + 1), map1.get(key).getTimeStamp().getYear() + 1900,
-							map1.get(key).getTimeStamp().getHours(), map1.get(key).getTimeStamp().getMinutes(), map1.get(key).getTimeStamp().getSeconds());					
+							map1.get(key).getTimeStamp().getHours(), map1.get(key).getTimeStamp().getMinutes(), map1.get(key).getTimeStamp().getSeconds()+3);					
 					
 					
 //					EventInterval interval = new EventInterval(start.copy().advanceHours(c1), end.copy().advanceHours(c2));
@@ -440,7 +440,7 @@ try {
 					}
 					start.setDateTime(map1.get(key).getTimeStamp().getDate(),
 					      (map1.get(key).getTimeStamp().getMonth() + 1), map1.get(key).getTimeStamp().getYear() + 1900,
-					       map1.get(key).getTimeStamp().getHours(), map1.get(key).getTimeStamp().getMinutes(), map1.get(key).getTimeStamp().getSeconds());
+					       map1.get(key).getTimeStamp().getHours(), map1.get(key).getTimeStamp().getMinutes(), map1.get(key).getTimeStamp().getSeconds()+3);
 					
 					//EventInterval interval = new EventInterval(end.copy().advanceHours(c1), start.copy().advanceHours(c2));
 					EventInterval interval = new EventInterval(end.copy().advanceHours(0), start.copy().advanceHours(0));
