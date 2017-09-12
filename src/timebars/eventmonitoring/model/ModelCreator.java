@@ -20,12 +20,15 @@
 package timebars.eventmonitoring.model;
 
 import java.sql.ResultSet;
+import java.sql.Timestamp;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 import org.gprom.tdebug.db_connection.DBManager;
@@ -329,6 +332,43 @@ try {
 			ln.AddNode(nodes.get(k));	
 		}
 		
+		for (Entry<String, ListNode> entry : map.entrySet()) 
+		{
+			String key = entry.getKey();
+			ListNode v = entry.getValue();
+			
+			if(map2.containsKey(key) && map1.containsKey(key))
+			{
+				if(!map2.get(key).equals("1"))
+				{
+					Timestamp tc = map1.get(key).getTimeStamp();
+					Timestamp tb = v.GetNode(0).getTimeStamp();
+					long milliseconds = tc.getTime() - tb.getTime();
+					int seconds = (int) milliseconds / 1000;
+					
+					seconds = seconds / v.Size();
+					// calculate hours minutes and seconds
+					//int hours = seconds / 3600;
+				    int minutes = (seconds % 3600) / 60;
+				    seconds = (seconds % 3600) % 60;
+				    
+				    for(int i=0; i<v.Size(); i++)
+				    {
+				    	TransactionNode n = v.GetNode(i);
+				    	Timestamp t = n.getTimeStamp();
+				    	if(i > 0)
+				    	{
+				    		t.setMinutes(v.GetNode(i-1).getTimeStamp().getMinutes() + minutes);
+				    		t.setSeconds(v.GetNode(i-1).getTimeStamp().getSeconds() + seconds);
+				    	}
+				    }
+				}
+			}
+			
+			
+		}
+		
+		
 		for (String key : map.keySet())
 		{
 			log.info("map tid: "+ key);
@@ -394,7 +434,7 @@ try {
 					
 					end.setDateTime(map1.get(key).getTimeStamp().getDate(),
 							(map1.get(key).getTimeStamp().getMonth() + 1), map1.get(key).getTimeStamp().getYear() + 1900,
-							map1.get(key).getTimeStamp().getHours(), map1.get(key).getTimeStamp().getMinutes(), map1.get(key).getTimeStamp().getSeconds()+3);					
+							map1.get(key).getTimeStamp().getHours(), map1.get(key).getTimeStamp().getMinutes(), map1.get(key).getTimeStamp().getSeconds());					
 					
 					
 //					EventInterval interval = new EventInterval(start.copy().advanceHours(c1), end.copy().advanceHours(c2));
@@ -440,7 +480,7 @@ try {
 					}
 					start.setDateTime(map1.get(key).getTimeStamp().getDate(),
 					      (map1.get(key).getTimeStamp().getMonth() + 1), map1.get(key).getTimeStamp().getYear() + 1900,
-					       map1.get(key).getTimeStamp().getHours(), map1.get(key).getTimeStamp().getMinutes(), map1.get(key).getTimeStamp().getSeconds()+3);
+					       map1.get(key).getTimeStamp().getHours(), map1.get(key).getTimeStamp().getMinutes(), map1.get(key).getTimeStamp().getSeconds());
 					
 					//EventInterval interval = new EventInterval(end.copy().advanceHours(c1), start.copy().advanceHours(c2));
 					EventInterval interval = new EventInterval(end.copy().advanceHours(0), start.copy().advanceHours(0));
